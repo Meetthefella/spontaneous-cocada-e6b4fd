@@ -1,0 +1,55 @@
+{
+  "eyebrow": "Treatments",
+  "heading": "Treatment menu",
+  "intro": "Replace these placeholders with the client’s final treatments, prices and durations.",
+  "items": [
+    {
+      "id": "microblading",
+      "active": true,
+      "icon": "⌁",
+      "name": "Microblading",
+      "description": "Hair-stroke brow enhancement for a soft, natural look.",
+      "price": "From £___"
+    },
+    {
+      "id": "powder-brows",
+      "active": true,
+      "icon": "◐",
+      "name": "Powder Brows",
+      "description": "Soft-shaded brows with a polished makeup finish.",
+      "price": "From £___"
+    },
+    {
+      "id": "lip-blush",
+      "active": true,
+      "icon": "♡",
+      "name": "Lip Blush",
+      "description": "Subtle colour enhancement and definition for lips.",
+      "price": "From £___"
+    },
+    {
+      "id": "eyeliner",
+      "active": true,
+      "icon": "✦",
+      "name": "Eyeliner",
+      "description": "Lash-enhancing liner for everyday definition.",
+      "price": "From £___"
+    },
+    {
+      "id": "consultation",
+      "active": true,
+      "icon": "○",
+      "name": "Consultation",
+      "description": "Discuss colour, shape, suitability and expectations.",
+      "price": "From £___"
+    },
+    {
+      "id": "colour-boost",
+      "active": true,
+      "icon": "↺",
+      "name": "Colour Boost",
+      "description": "Maintenance appointment for existing permanent makeup.",
+      "price": "From £___"
+    }
+  ]
+}

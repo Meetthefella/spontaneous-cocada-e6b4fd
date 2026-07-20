@@ -1,0 +1,55 @@
+{
+  "eyebrow": "Aftercare",
+  "heading": "The Brow Healing Rollercoaster",
+  "intro": "The client specifically requested this aftercare feature, so it is included as a main website section.",
+  "stages": [
+    {
+      "className": "day1",
+      "day": "Day 1",
+      "text": "OMG! I’m in love with my new brows. Thank you!",
+      "image": "assets/images/day1_love.png",
+      "alt": "Happy emoji with hearts",
+      "imageClass": "bounce"
+    },
+    {
+      "className": "day2",
+      "day": "Day 2–4",
+      "text": "I don’t like this colour, it’s too dark.",
+      "image": "assets/images/day2_dark.png",
+      "alt": "Worried emoji scratching head",
+      "imageClass": "scratch"
+    },
+    {
+      "className": "day5",
+      "day": "Day 5–7",
+      "text": "Oh no! My brows are scabbing and falling off.",
+      "image": "assets/images/day5_panic.png",
+      "alt": "Panicked emoji",
+      "imageClass": "shake"
+    },
+    {
+      "className": "day8",
+      "day": "Day 8–10",
+      "text": "WTF? My brows are gone!",
+      "image": "assets/images/day8_gone.png",
+      "alt": "Shocked emoji with question marks",
+      "imageClass": "wobble"
+    },
+    {
+      "className": "day14",
+      "day": "Day 14–28",
+      "text": "Thank God my brows are coming back! Still looking patchy and uneven.",
+      "image": "assets/images/day14_patchy.png",
+      "alt": "Calm emoji",
+      "imageClass": "fade-brows"
+    },
+    {
+      "className": "day42",
+      "day": "Day 42",
+      "text": "After touch up: Aww, they’re beautiful! I love them! Thanks again!",
+      "image": "assets/images/day42_beautiful.png",
+      "alt": "Happy glamorous emoji",
+      "imageClass": "glow"
+    }
+  ]
+}

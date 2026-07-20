@@ -1,17 +1,30 @@
-Effortless Beauty Netlify Starter
+Effortless Beauty — Editable Content Foundation
 
-How to deploy:
-1. Go to Netlify.
-2. Add new site > Deploy manually.
-3. Drag this ZIP file into Netlify.
+This version separates client-editable website content from the locked page design.
 
-Included:
-- Home page using the EB monogram and mermaid/angel brand figure.
-- Treatments tab with placeholder prices.
-- Client-requested brow aftercare tab.
-- Contact tab with placeholders and map block.
-- Working demo booking calendar using browser localStorage.
-- Privacy/policy placeholder page.
+Editable files:
+- content/site.json
+- content/homepage.json
+- content/treatments.json
+- content/aftercare.json
+- content/booking.json
+- content/contact.json
+- content/privacy.json
 
-Notes:
-The booking calendar works as a front-end demo only. For live bookings, connect a proper booking service such as Fresha, Calendly, Square Appointments or a backend form/database.
+The website reads these files automatically. Layout, colours, artwork, responsive styling and navigation remain controlled by index.html and style.css.
+
+Current client-editable examples:
+- Treatment names, descriptions, prices and active/hidden state
+- Homepage wording and feature text
+- Aftercare stage wording
+- Booking opening days and appointment times
+- Contact details and opening hours
+- Privacy and policy copy
+
+Deployment:
+1. Commit all files to the Git repository.
+2. Connect the repository to Netlify, or deploy the folder manually.
+3. Netlify publish directory remains the repository root.
+
+Next phase:
+Add a Decap CMS /admin interface so the client edits friendly forms rather than JSON files.

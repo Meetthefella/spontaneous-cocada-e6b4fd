@@ -1,0 +1,10 @@
+{
+  "eyebrow": "Privacy",
+  "heading": "Privacy & policies",
+  "intro": "Starter placeholders for the pages normally needed before launch.",
+  "sections": [
+    {"heading":"Privacy policy placeholder","text":"Add how enquiries, bookings and client information are stored and processed."},
+    {"heading":"Patch test / suitability placeholder","text":"Add wording for consultations, patch testing, contraindications and consent forms."},
+    {"heading":"Cancellation policy placeholder","text":"Add deposit, rescheduling and no-show terms."}
+  ]
+}

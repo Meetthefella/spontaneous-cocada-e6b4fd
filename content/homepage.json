@@ -1,0 +1,25 @@
+{
+  "heroTitleFirst": "Effortless",
+  "heroTitleSecond": "Beauty",
+  "heroLine": "Enhance. Simplify.",
+  "heroLineEmphasis": "Feel beautiful.",
+  "intro": "Soft, natural-looking brows and permanent makeup designed to make everyday beauty feel effortless.",
+  "primaryButton": "Book online",
+  "secondaryButton": "Aftercare guide",
+  "sectionKicker": "Why clients choose us",
+  "sectionHeading": "Polished results, calm appointments, clear aftercare.",
+  "features": [
+    {
+      "title": "Natural finish",
+      "text": "Designed to complement your face rather than overpower it."
+    },
+    {
+      "title": "Low-maintenance beauty",
+      "text": "Wake up with shape, definition and softness already in place."
+    },
+    {
+      "title": "Client-friendly care",
+      "text": "Aftercare is explained clearly, including the normal healing stages."
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+backend:
+  name: git-gateway
+  branch: main
+
+publish_mode: editorial_workflow
+media_folder: "assets/images/uploads"
+public_folder: "/assets/images/uploads"
+site_url: "/"
+display_url: "/"
+logo_url: "/assets/images/eb-monogram-glyph.png"
+
+collections:
+  - name: "site_content"
+    label: "Website Content"
+    files:
+      - name: "site"
+        label: "Business & Site Settings"
+        file: "content/site.json"
+        format: "json"
+        fields:
+          - { label: "Business name", name: "businessName", widget: "string" }
+          - { label: "Browser page title", name: "pageTitle", widget: "string" }
+          - { label: "Search description", name: "metaDescription", widget: "text" }
+          - { label: "Footer text", name: "footerText", widget: "string" }
+
+      - name: "homepage"
+        label: "Homepage"
+        file: "content/homepage.json"
+        format: "json"
+        fields:
+          - { label: "Hero title — first line", name: "heroTitleFirst", widget: "string" }
+          - { label: "Hero title — second line", name: "heroTitleSecond", widget: "string" }
+          - { label: "Hero strapline", name: "heroLine", widget: "string" }
+          - { label: "Hero emphasised words", name: "heroLineEmphasis", widget: "string" }
+          - { label: "Introductory paragraph", name: "intro", widget: "text" }
+          - { label: "Primary button text", name: "primaryButton", widget: "string" }
+          - { label: "Secondary button text", name: "secondaryButton", widget: "string" }
+          - { label: "Benefits section label", name: "sectionKicker", widget: "string" }
+          - { label: "Benefits section heading", name: "sectionHeading", widget: "string" }
+          - label: "Benefits"
+            name: "features"
+            widget: "list"
+            min: 1
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Text", name: "text", widget: "text" }
+
+      - name: "treatments"
+        label: "Treatments & Prices"
+        file: "content/treatments.json"
+        format: "json"
+        fields:
+          - { label: "Section label", name: "eyebrow", widget: "string" }
+          - { label: "Heading", name: "heading", widget: "string" }
+          - { label: "Introductory text", name: "intro", widget: "text" }
+          - label: "Treatments"
+            name: "items"
+            widget: "list"
+            summary: "{{fields.name}} — {{fields.price}}"
+            min: 1
+            fields:
+              - { label: "Internal ID", name: "id", widget: "string", hint: "Do not change after publishing." }
+              - { label: "Show on website", name: "active", widget: "boolean", default: true }
+              - { label: "Small icon", name: "icon", widget: "string", required: false }
+              - { label: "Treatment name", name: "name", widget: "string" }
+              - { label: "Description", name: "description", widget: "text" }
+              - { label: "Price", name: "price", widget: "string", hint: "Examples: £250, From £250, Price on consultation" }
+
+      - name: "aftercare"
+        label: "Aftercare Guide"
+        file: "content/aftercare.json"
+        format: "json"
+        fields:
+          - { label: "Section label", name: "eyebrow", widget: "string" }
+          - { label: "Heading", name: "heading", widget: "string" }
+          - { label: "Introductory text", name: "intro", widget: "text" }
+          - label: "Healing stages"
+            name: "stages"
+            widget: "list"
+            min: 1
+            fields:
+              - { label: "Style key", name: "className", widget: "hidden" }
+              - { label: "Day or stage", name: "day", widget: "string" }
+              - { label: "Stage wording", name: "text", widget: "text" }
+              - { label: "Illustration", name: "image", widget: "image" }
+              - { label: "Image description", name: "alt", widget: "string" }
+              - { label: "Animation key", name: "imageClass", widget: "hidden" }
+
+      - name: "booking"
+        label: "Booking"
+        file: "content/booking.json"
+        format: "json"
+        fields:
+          - { label: "Section label", name: "eyebrow", widget: "string" }
+          - { label: "Heading", name: "heading", widget: "string" }
+          - { label: "Introductory text", name: "intro", widget: "text" }
+          - label: "Closed weekdays"
+            name: "closedWeekdays"
+            widget: "select"
+            multiple: true
+            options:
+              - { label: "Sunday", value: 0 }
+              - { label: "Monday", value: 1 }
+              - { label: "Tuesday", value: 2 }
+              - { label: "Wednesday", value: 3 }
+              - { label: "Thursday", value: 4 }
+              - { label: "Friday", value: 5 }
+              - { label: "Saturday", value: 6 }
+          - label: "Appointment times"
+            name: "slotTimes"
+            widget: "list"
+            field: { label: "Time", name: "time", widget: "string", pattern: ['^([01]\\d|2[0-3]):[0-5]\\d$', 'Use 24-hour time, for example 09:30 or 14:00'] }
+
+      - name: "contact"
+        label: "Contact & Opening Hours"
+        file: "content/contact.json"
+        format: "json"
+        fields:
+          - { label: "Section label", name: "eyebrow", widget: "string" }
+          - { label: "Heading", name: "heading", widget: "string" }
+          - { label: "Introductory text", name: "intro", widget: "text" }
+          - label: "Studio address"
+            name: "studio"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string" }
+              - { label: "Address lines", name: "lines", widget: "list", field: { label: "Line", name: "line", widget: "string" } }
+          - label: "Contact details"
+            name: "contact"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string" }
+              - { label: "Email", name: "email", widget: "string" }
+              - { label: "Phone", name: "phone", widget: "string" }
+              - { label: "Instagram", name: "instagram", widget: "string" }
+          - label: "Opening hours"
+            name: "hours"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string" }
+              - { label: "Hours", name: "lines", widget: "list", field: { label: "Line", name: "line", widget: "string" } }
+          - { label: "Map placeholder text", name: "mapText", widget: "string" }
+
+      - name: "privacy"
+        label: "Privacy & Policies"
+        file: "content/privacy.json"
+        format: "json"
+        fields:
+          - { label: "Section label", name: "eyebrow", widget: "string" }
+          - { label: "Heading", name: "heading", widget: "string" }
+          - { label: "Introductory text", name: "intro", widget: "text" }
+          - label: "Policy sections"
+            name: "sections"
+            widget: "list"
+            min: 1
+            fields:
+              - { label: "Heading", name: "heading", widget: "string" }
+              - { label: "Text", name: "text", widget: "text" }
