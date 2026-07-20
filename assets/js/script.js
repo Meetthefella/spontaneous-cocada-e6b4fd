@@ -78,6 +78,14 @@ function renderAftercare(data) {
   setText('#aftercareIntro', data.intro);
   const timeline = document.querySelector('#aftercareTimeline');
   if (!timeline) return;
+
+  if (data.posterImage) {
+    timeline.classList.add('timeline-poster');
+    timeline.innerHTML = `<figure class="aftercare-poster"><img src="${escapeHtml(data.posterImage)}" alt="${escapeHtml(data.posterAlt || 'Illustrated eyebrow aftercare journey')}" />${data.posterCaption ? `<figcaption>${escapeHtml(data.posterCaption)}</figcaption>` : ''}</figure>`;
+    return;
+  }
+
+  timeline.classList.remove('timeline-poster');
   timeline.innerHTML = (data.stages || []).map((stage) =>
     `<article class="card ${escapeHtml(stage.className)}"><div class="stage"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" class="emoji ${escapeHtml(stage.imageClass)}" />${stageDecorations(stage.className)}</div><h2>${escapeHtml(stage.day)}</h2><p>${escapeHtml(stage.text)}</p></article>`
   ).join('');
