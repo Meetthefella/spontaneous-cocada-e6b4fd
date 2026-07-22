@@ -1,0 +1,61 @@
+{
+  "eyebrow": "Aftercare",
+  "heading": "The Brow Healing Rollercoaster",
+  "intro": "A gentle guide to the natural stages your brows may move through as they heal.",
+  "stages": [
+    {
+      "className": "day1",
+      "day": "Day 1",
+      "text": "Fresh treatment",
+      "image": "assets/images/aftercare/day-1-fresh-treatment.png",
+      "alt": "Day 1 fresh eyebrow treatment aftercare stage",
+      "imageClass": "",
+      "artworkOnly": true
+    },
+    {
+      "className": "day2",
+      "day": "Day 2",
+      "text": "Healing begins",
+      "image": "assets/images/aftercare/day-2-healing-begins.png",
+      "alt": "Day 2 eyebrow healing begins with slightly darker brows and mild redness",
+      "imageClass": "",
+      "artworkOnly": true
+    },
+    {
+      "className": "day3",
+      "day": "Day 3",
+      "text": "Flaking",
+      "image": "assets/images/aftercare/day-3-flaking.png",
+      "alt": "Day 3 eyebrow healing stage showing normal flaking",
+      "imageClass": "",
+      "artworkOnly": true
+    },
+    {
+      "className": "day4",
+      "day": "Day 4",
+      "text": "Patchy — trust the process",
+      "image": "assets/images/aftercare/day-4-patchy.png",
+      "alt": "Day 4 eyebrow healing stage showing temporary patchiness",
+      "imageClass": "",
+      "artworkOnly": true
+    },
+    {
+      "className": "day5",
+      "day": "Day 5",
+      "text": "Colour returning",
+      "image": "assets/images/aftercare/day-5-colour-returning.png",
+      "alt": "Day 5 eyebrow healing stage with soft pigment returning",
+      "imageClass": "",
+      "artworkOnly": true
+    },
+    {
+      "className": "day6",
+      "day": "Day 6",
+      "text": "Healed result",
+      "image": "assets/images/aftercare/day-6-healed-result.png",
+      "alt": "Day 6 natural balanced healed eyebrow result",
+      "imageClass": "",
+      "artworkOnly": true
+    }
+  ]
+}

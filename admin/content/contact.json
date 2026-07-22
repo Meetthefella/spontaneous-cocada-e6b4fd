@@ -1,0 +1,20 @@
+{
+  "eyebrow": "Contact",
+  "heading": "Get in touch",
+  "intro": "Placeholder contact details ready for the client’s real address, number and social links.",
+  "studio": {
+    "heading": "Studio",
+    "lines": ["Effortless Beauty", "Address line 1", "Town / City", "Postcode"]
+  },
+  "contact": {
+    "heading": "Contact",
+    "email": "hello@example.com",
+    "phone": "01234 567890",
+    "instagram": "@effortlessbeauty"
+  },
+  "hours": {
+    "heading": "Opening hours",
+    "lines": ["Monday: Closed", "Tuesday–Friday: 10:00–18:00", "Saturday: 10:00–16:00", "Sunday: Closed"]
+  },
+  "mapText": "Map placeholder"
+}
