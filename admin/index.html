@@ -1,116 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title id="pageTitle">Effortless Beauty | Permanent Makeup & Brows</title>
-  <meta id="metaDescription" name="description" content="Effortless Beauty permanent makeup, brows, aftercare and booking website." />
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Effortless Beauty — Website Editor</title>
 </head>
 <body>
-  <header class="site-header">
-    <a class="brand" href="#home" data-tab-link="home" aria-label="Effortless Beauty home">
-      <span class="brand-mark" aria-hidden="true"><span class="brow-stroke"></span>EB</span>
-      <span class="brand-name">Effortless Beauty</span>
-    </a>
-    <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
-    <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
-      <a href="#home" data-tab-link="home" class="active">Home</a>
-      <a href="#treatments" data-tab-link="treatments">Treatments</a>
-      <a href="#aftercare" data-tab-link="aftercare">Aftercare</a>
-      <a href="#booking" data-tab-link="booking">Book Online</a>
-      <a href="#contact" data-tab-link="contact">Contact</a>
-      <a href="#privacy" data-tab-link="privacy">Privacy</a>
-    </nav>
-  </header>
-
-  <main>
-    <section id="home" class="tab-panel active">
-      <div class="hero-shell">
-        <div class="hero-copy">
-          <div class="hero-logo" aria-label="Effortless Beauty logo">
-            <img class="hero-monogram" src="assets/images/eb-monogram-glyph.png" alt="EB monogram" />
-            <h1><span id="heroTitleFirst">Effortless</span> <span id="heroTitleSecond">Beauty</span></h1>
-          </div>
-          <p class="hero-line"><span id="heroLine">Enhance. Simplify.</span> <em id="heroLineEmphasis">Feel beautiful.</em></p>
-          <p id="heroIntro" class="intro">Soft, natural-looking brows and permanent makeup designed to make everyday beauty feel effortless.</p>
-          <div class="hero-actions">
-            <a id="primaryButton" class="button primary" href="#booking" data-tab-link="booking">Book online</a>
-            <a id="secondaryButton" class="button secondary" href="#aftercare" data-tab-link="aftercare">Aftercare guide</a>
-          </div>
-        </div>
-        <div class="hero-art" aria-label="Effortless Beauty brand figure">
-          <img class="hero-mermangel-orb" src="assets/images/mermangel-orb.png" alt="Effortless Beauty winged mermaid brand illustration" />
-        </div>
-      </div>
-
-      <section class="intro-panel">
-        <p id="homeSectionKicker" class="section-kicker">Why clients choose us</p>
-        <h2 id="homeSectionHeading">Polished results, calm appointments, clear aftercare.</h2>
-        <div id="featureRow" class="feature-row"></div>
-      </section>
-    </section>
-
-    <section id="treatments" class="tab-panel">
-      <header class="page-hero compact">
-        <p id="treatmentsEyebrow" class="eyebrow">Treatments</p>
-        <h1 id="treatmentsHeading">Treatment menu</h1>
-        <p id="treatmentsIntro" class="intro"></p>
-      </header>
-      <div id="treatmentGrid" class="treatment-grid"></div>
-    </section>
-
-    <section id="aftercare" class="tab-panel">
-      <header class="page-hero compact">
-        <p id="aftercareEyebrow" class="eyebrow">Aftercare</p>
-        <h1 id="aftercareHeading">The Brow Healing Rollercoaster</h1>
-        <p id="aftercareIntro" class="intro"></p>
-      </header>
-      <section id="aftercareTimeline" class="timeline" aria-label="Brow healing timeline"></section>
-    </section>
-
-    <section id="booking" class="tab-panel">
-      <header class="page-hero compact"><p id="bookingEyebrow" class="eyebrow">Book Online</p><h1 id="bookingHeading">Booking calendar</h1><p id="bookingIntro" class="intro"></p></header>
-      <div class="booking-layout">
-        <section class="calendar-card" aria-label="Booking calendar">
-          <div class="calendar-head"><button id="prevMonth" type="button">‹</button><h2 id="monthLabel"></h2><button id="nextMonth" type="button">›</button></div>
-          <div class="weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-          <div id="calendarGrid" class="calendar-grid"></div>
-        </section>
-        <section class="booking-card">
-          <h2>Your appointment</h2>
-          <p id="selectedDateText" class="selected-date">Select a date from the calendar.</p>
-          <div id="timeSlots" class="time-slots" aria-label="Available times"></div>
-          <form id="bookingForm" class="booking-form">
-            <label>Name<input name="name" autocomplete="name" required placeholder="Client name" /></label>
-            <label>Email<input name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></label>
-            <label>Phone<input name="phone" autocomplete="tel" placeholder="Phone number" /></label>
-            <label>Treatment<select id="bookingTreatment" name="treatment"></select></label>
-            <button class="button primary full" type="submit">Request booking</button>
-          </form>
-          <p id="bookingMessage" class="booking-message" role="status"></p>
-        </section>
-      </div>
-    </section>
-
-    <section id="contact" class="tab-panel">
-      <header class="page-hero compact"><p id="contactEyebrow" class="eyebrow">Contact</p><h1 id="contactHeading">Get in touch</h1><p id="contactIntro" class="intro"></p></header>
-      <div class="contact-grid">
-        <article><h2 id="studioHeading">Studio</h2><p id="studioLines"></p></article>
-        <article><h2 id="contactDetailsHeading">Contact</h2><p id="contactDetails"></p></article>
-        <article><h2 id="hoursHeading">Opening hours</h2><p id="hoursLines"></p></article>
-        <form class="contact-form"><label>Name<input placeholder="Your name" /></label><label>Email<input type="email" placeholder="Your email" /></label><label>Message<textarea placeholder="How can we help?"></textarea></label><button class="button secondary" type="button">Message placeholder</button></form>
-        <div id="mapText" class="map-placeholder">Map placeholder</div>
-      </div>
-    </section>
-
-    <section id="privacy" class="tab-panel">
-      <header class="page-hero compact"><p id="privacyEyebrow" class="eyebrow">Privacy</p><h1 id="privacyHeading">Privacy & policies</h1><p id="privacyIntro" class="intro"></p></header>
-      <div id="policyCard" class="policy-card"></div>
-    </section>
-  </main>
-
-  <footer class="site-footer"><span class="brand-mark small"><span class="brow-stroke"></span>EB</span><p>© <span id="year"></span> <span id="footerText">Effortless Beauty.</span></p></footer>
-  <script src="assets/js/script.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script src="https://unpkg.com/decap-cms@^3.8.0/dist/decap-cms.js"></script>
 </body>
 </html>

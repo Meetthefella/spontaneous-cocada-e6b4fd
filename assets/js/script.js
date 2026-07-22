@@ -86,9 +86,12 @@ function renderAftercare(data) {
   }
 
   timeline.classList.remove('timeline-poster');
-  timeline.innerHTML = (data.stages || []).map((stage) =>
-    `<article class="card ${escapeHtml(stage.className)}"><div class="stage"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" class="emoji ${escapeHtml(stage.imageClass)}" />${stageDecorations(stage.className)}</div><h2>${escapeHtml(stage.day)}</h2><p>${escapeHtml(stage.text)}</p></article>`
-  ).join('');
+  timeline.innerHTML = (data.stages || []).map((stage) => {
+    if (stage.artworkOnly) {
+      return `<article class="card aftercare-art-card ${escapeHtml(stage.className)}"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" loading="lazy" /></article>`;
+    }
+    return `<article class="card ${escapeHtml(stage.className)}"><div class="stage"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" class="emoji ${escapeHtml(stage.imageClass)}" />${stageDecorations(stage.className)}</div><h2>${escapeHtml(stage.day)}</h2><p>${escapeHtml(stage.text)}</p></article>`;
+  }).join('');
   observeCards();
 }
 
