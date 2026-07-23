@@ -6,7 +6,7 @@ const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 
 const contentState = {
-  booking: { closedWeekdays: [0], slotTimes: ['09:30', '10:30', '11:30', '13:00', '14:00', '15:00'] },
+  booking: {},
   treatments: []
 };
 
@@ -58,10 +58,6 @@ function renderTreatments(data) {
   const grid = document.querySelector('#treatmentGrid');
   if (grid) grid.innerHTML = contentState.treatments.map((item) =>
     `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(item.icon)}</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description)}</p><strong>${escapeHtml(item.price)}</strong></article>`
-  ).join('');
-  const select = document.querySelector('#bookingTreatment');
-  if (select) select.innerHTML = contentState.treatments.map((item) =>
-    `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`
   ).join('');
 }
 
@@ -160,12 +156,22 @@ function renderBooking(data) {
   setText('#bookingEyebrow', data.eyebrow);
   setText('#bookingHeading', data.heading);
   setText('#bookingIntro', data.intro);
-  contentState.booking = {
-    closedWeekdays: Array.isArray(data.closedWeekdays)
-      ? data.closedWeekdays.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
-      : [0],
-    slotTimes: Array.isArray(data.slotTimes) ? data.slotTimes : contentState.booking.slotTimes
-  };
+  setText('#bookingStudioNote', data.studioNote);
+  setText('#bookingSecurityNote', data.securityNote);
+  setText('#squareBookingButton', data.buttonText || 'Continue to secure booking');
+
+  const steps = document.querySelector('#bookingSteps');
+  if (steps) {
+    steps.innerHTML = (data.steps || []).map((step, index) =>
+      `<article class="booking-step"><span aria-hidden="true">${index + 1}</span><div><h3>${escapeHtml(step.title)}</h3><p>${escapeHtml(step.text)}</p></div></article>`
+    ).join('');
+  }
+
+  const bookingButton = document.querySelector('#squareBookingButton');
+  if (bookingButton && typeof data.bookingUrl === 'string') {
+    bookingButton.href = data.bookingUrl;
+  }
+  contentState.booking = data;
 }
 
 function renderContact(data) {
@@ -219,8 +225,6 @@ async function loadEditableContent() {
   if (content.booking) renderBooking(content.booking);
   if (content.contact) renderContact(content.contact);
   if (content.privacy) renderPrivacy(content.privacy);
-  renderCalendar();
-  renderSlots();
 }
 
 function showTab(tabName) {
@@ -257,134 +261,6 @@ function observeCards() {
     observer.observe(card);
   });
 }
-
-const monthLabel = document.querySelector('#monthLabel');
-const calendarGrid = document.querySelector('#calendarGrid');
-const prevMonth = document.querySelector('#prevMonth');
-const nextMonth = document.querySelector('#nextMonth');
-const selectedDateText = document.querySelector('#selectedDateText');
-const timeSlots = document.querySelector('#timeSlots');
-const bookingForm = document.querySelector('#bookingForm');
-const bookingMessage = document.querySelector('#bookingMessage');
-
-let viewDate = new Date();
-viewDate.setDate(1);
-let selectedDate = null;
-let selectedTime = null;
-
-function getBookings() {
-  return JSON.parse(localStorage.getItem('effortlessBeautyBookings') || '[]');
-}
-
-function saveBooking(booking) {
-  const bookings = getBookings();
-  bookings.push(booking);
-  localStorage.setItem('effortlessBeautyBookings', JSON.stringify(bookings));
-}
-
-function dateKey(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function isPast(date) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date < today;
-}
-
-function isClosed(date) {
-  return contentState.booking.closedWeekdays.includes(date.getDay());
-}
-
-function renderCalendar() {
-  if (!calendarGrid || !monthLabel) return;
-  calendarGrid.innerHTML = '';
-  monthLabel.textContent = viewDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-  const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
-  const mondayIndex = (firstDay.getDay() + 6) % 7;
-  for (let i = 0; i < mondayIndex; i += 1) calendarGrid.appendChild(document.createElement('span'));
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    const key = dateKey(date);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'day-button';
-    button.textContent = day;
-    if (isPast(date) || isClosed(date)) button.disabled = true;
-    else {
-      button.classList.add('available');
-      button.addEventListener('click', () => {
-        selectedDate = date;
-        selectedTime = null;
-        renderCalendar();
-        renderSlots();
-      });
-    }
-    if (selectedDate && key === dateKey(selectedDate)) button.classList.add('selected');
-    calendarGrid.appendChild(button);
-  }
-}
-
-function renderSlots() {
-  if (!timeSlots || !selectedDateText) return;
-  timeSlots.innerHTML = '';
-  if (!selectedDate) {
-    selectedDateText.textContent = 'Select a date from the calendar.';
-    return;
-  }
-  const key = dateKey(selectedDate);
-  selectedDateText.textContent = selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const bookings = getBookings().filter((booking) => booking.date === key);
-  contentState.booking.slotTimes.forEach((time) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = time;
-    const booked = bookings.some((booking) => booking.time === time);
-    if (booked) {
-      button.disabled = true;
-      button.textContent = `${time} booked`;
-    } else {
-      button.addEventListener('click', () => {
-        selectedTime = time;
-        renderSlots();
-      });
-    }
-    if (selectedTime === time) button.classList.add('selected');
-    timeSlots.appendChild(button);
-  });
-}
-
-prevMonth?.addEventListener('click', () => {
-  viewDate.setMonth(viewDate.getMonth() - 1);
-  renderCalendar();
-});
-nextMonth?.addEventListener('click', () => {
-  viewDate.setMonth(viewDate.getMonth() + 1);
-  renderCalendar();
-});
-bookingForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!selectedDate || !selectedTime) {
-    bookingMessage.textContent = 'Please choose a date and time first.';
-    return;
-  }
-  const data = new FormData(bookingForm);
-  saveBooking({
-    date: dateKey(selectedDate),
-    time: selectedTime,
-    name: data.get('name'),
-    email: data.get('email'),
-    phone: data.get('phone'),
-    treatment: data.get('treatment'),
-    createdAt: new Date().toISOString()
-  });
-  bookingMessage.textContent = `Booking requested for ${selectedDateText.textContent} at ${selectedTime}.`;
-  bookingForm.reset();
-  selectedTime = null;
-  renderCalendar();
-  renderSlots();
-});
 
 const startTab = location.hash?.replace('#', '') || 'home';
 if (document.getElementById(startTab)) showTab(startTab);

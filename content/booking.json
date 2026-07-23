@@ -1,7 +1,23 @@
 {
   "eyebrow": "Book Online",
-  "heading": "Booking calendar",
-  "intro": "Working static demo: choose a date/time and it saves the request in this browser. Replace with Fresha, Calendly, Square or a real backend when ready.",
-  "closedWeekdays": [0],
-  "slotTimes": ["09:30", "10:30", "11:30", "13:00", "14:00", "15:00"]
+  "heading": "Book your appointment",
+  "intro": "Choose your treatment and a convenient appointment time through our secure Square booking page.",
+  "steps": [
+    {
+      "title": "Choose your treatment",
+      "text": "View the available services and select the treatment that is right for you."
+    },
+    {
+      "title": "Pick a date and time",
+      "text": "See current availability and choose an appointment that suits you."
+    },
+    {
+      "title": "Receive confirmation",
+      "text": "Your appointment details will be confirmed securely through Square."
+    }
+  ],
+  "studioNote": "Treatments take place in a private home-based studio. Full location details are provided after your appointment is confirmed.",
+  "buttonText": "Continue to secure booking",
+  "bookingUrl": "https://app.squareup.com/appointments/book/wu9glwwanb77xh/L908Z86ANZ41V/start",
+  "securityNote": "Booking opens securely in a new window and is managed by Square Appointments."
 }

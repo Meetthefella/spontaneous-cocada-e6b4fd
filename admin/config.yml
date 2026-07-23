@@ -89,27 +89,20 @@ collections:
       - name: "booking"
         label: "Booking"
         file: "content/booking.json"
-        format: "json"
         fields:
           - { label: "Section label", name: "eyebrow", widget: "string" }
           - { label: "Heading", name: "heading", widget: "string" }
-          - { label: "Introductory text", name: "intro", widget: "text" }
-          - label: "Closed weekdays"
-            name: "closedWeekdays"
-            widget: "select"
-            multiple: true
-            options:
-              - { label: "Sunday", value: 0 }
-              - { label: "Monday", value: 1 }
-              - { label: "Tuesday", value: 2 }
-              - { label: "Wednesday", value: 3 }
-              - { label: "Thursday", value: 4 }
-              - { label: "Friday", value: 5 }
-              - { label: "Saturday", value: 6 }
-          - label: "Appointment times"
-            name: "slotTimes"
+          - { label: "Introduction", name: "intro", widget: "text" }
+          - label: "Booking steps"
+            name: "steps"
             widget: "list"
-            field: { label: "Time", name: "time", widget: "string", pattern: ['^([01]\\d|2[0-3]):[0-5]\\d$', 'Use 24-hour time, for example 09:30 or 14:00'] }
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Text", name: "text", widget: "text" }
+          - { label: "Home studio note", name: "studioNote", widget: "text" }
+          - { label: "Button text", name: "buttonText", widget: "string" }
+          - { label: "Square booking URL", name: "bookingUrl", widget: "string" }
+          - { label: "Security note", name: "securityNote", widget: "text" }
 
       - name: "contact"
         label: "Contact & Opening Hours"

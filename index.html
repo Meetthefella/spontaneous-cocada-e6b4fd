@@ -70,25 +70,23 @@
     </section>
 
     <section id="booking" class="tab-panel">
-      <header class="page-hero compact"><p id="bookingEyebrow" class="eyebrow">Book Online</p><h1 id="bookingHeading">Booking calendar</h1><p id="bookingIntro" class="intro"></p></header>
-      <div class="booking-layout">
-        <section class="calendar-card" aria-label="Booking calendar">
-          <div class="calendar-head"><button id="prevMonth" type="button">‹</button><h2 id="monthLabel"></h2><button id="nextMonth" type="button">›</button></div>
-          <div class="weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-          <div id="calendarGrid" class="calendar-grid"></div>
+      <header class="page-hero compact">
+        <p id="bookingEyebrow" class="eyebrow">Book Online</p>
+        <h1 id="bookingHeading">Book your appointment</h1>
+        <p id="bookingIntro" class="intro"></p>
+      </header>
+      <div class="booking-layout booking-gateway">
+        <section class="calendar-card booking-steps" aria-labelledby="bookingStepsHeading">
+          <p class="section-kicker">Simple and secure</p>
+          <h2 id="bookingStepsHeading">How online booking works</h2>
+          <div id="bookingSteps" class="booking-step-list"></div>
         </section>
-        <section class="booking-card">
-          <h2>Your appointment</h2>
-          <p id="selectedDateText" class="selected-date">Select a date from the calendar.</p>
-          <div id="timeSlots" class="time-slots" aria-label="Available times"></div>
-          <form id="bookingForm" class="booking-form">
-            <label>Name<input name="name" autocomplete="name" required placeholder="Client name" /></label>
-            <label>Email<input name="email" type="email" autocomplete="email" required placeholder="name@example.com" /></label>
-            <label>Phone<input name="phone" autocomplete="tel" placeholder="Phone number" /></label>
-            <label>Treatment<select id="bookingTreatment" name="treatment"></select></label>
-            <button class="button primary full" type="submit">Request booking</button>
-          </form>
-          <p id="bookingMessage" class="booking-message" role="status"></p>
+        <section class="booking-card booking-cta" aria-labelledby="bookingCtaHeading">
+          <span class="booking-lock" aria-hidden="true">◇</span>
+          <h2 id="bookingCtaHeading">Continue to booking</h2>
+          <p id="bookingStudioNote" class="booking-studio-note"></p>
+          <a id="squareBookingButton" class="button primary full" href="#" target="_blank" rel="noopener noreferrer">Continue to secure booking</a>
+          <p id="bookingSecurityNote" class="booking-security-note"></p>
         </section>
       </div>
     </section>
