@@ -86,12 +86,73 @@ function renderAftercare(data) {
   }
 
   timeline.classList.remove('timeline-poster');
-  timeline.innerHTML = (data.stages || []).map((stage) => {
+  timeline.classList.add('aftercare-carousel');
+  timeline.innerHTML = (data.stages || []).map((stage, index) => {
     if (stage.artworkOnly) {
-      return `<article class="card aftercare-art-card ${escapeHtml(stage.className)}"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" loading="lazy" /></article>`;
+      return `<article class="card aftercare-art-card ${escapeHtml(stage.className)}" data-carousel-slide="${index}"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" loading="lazy" /></article>`;
     }
-    return `<article class="card ${escapeHtml(stage.className)}"><div class="stage"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" class="emoji ${escapeHtml(stage.imageClass)}" />${stageDecorations(stage.className)}</div><h2>${escapeHtml(stage.day)}</h2><p>${escapeHtml(stage.text)}</p></article>`;
+    return `<article class="card ${escapeHtml(stage.className)}" data-carousel-slide="${index}"><div class="stage"><img src="${escapeHtml(stage.image)}" alt="${escapeHtml(stage.alt)}" class="emoji ${escapeHtml(stage.imageClass)}" />${stageDecorations(stage.className)}</div><h2>${escapeHtml(stage.day)}</h2><p>${escapeHtml(stage.text)}</p></article>`;
   }).join('');
+
+  const previousNav = timeline.parentElement?.querySelector('.aftercare-carousel-nav');
+  if (previousNav) previousNav.remove();
+  const slides = [...timeline.querySelectorAll('[data-carousel-slide]')];
+  if (slides.length > 1) {
+    const nav = document.createElement('div');
+    nav.className = 'aftercare-carousel-nav';
+    nav.setAttribute('aria-label', 'Choose an aftercare stage');
+    nav.innerHTML = slides.map((_, index) => `<button type="button" class="aftercare-carousel-dot${index === 0 ? ' active' : ''}" aria-label="Show aftercare day ${index + 1}" aria-current="${index === 0 ? 'true' : 'false'}"></button>`).join('');
+    timeline.insertAdjacentElement('afterend', nav);
+    const dots = [...nav.querySelectorAll('.aftercare-carousel-dot')];
+    const selectSlide = (index, smooth = true) => {
+      slides[index]?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'nearest', inline: 'start' });
+      dots.forEach((dot, dotIndex) => {
+        const active = dotIndex === index;
+        dot.classList.toggle('active', active);
+        dot.setAttribute('aria-current', active ? 'true' : 'false');
+      });
+    };
+    dots.forEach((dot, index) => dot.addEventListener('click', () => selectSlide(index)));
+
+    let scrollTimer;
+    timeline.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const index = Math.max(0, Math.min(slides.length - 1, Math.round(timeline.scrollLeft / Math.max(1, timeline.clientWidth))));
+        dots.forEach((dot, dotIndex) => {
+          const active = dotIndex === index;
+          dot.classList.toggle('active', active);
+          dot.setAttribute('aria-current', active ? 'true' : 'false');
+        });
+      }, 60);
+    }, { passive: true });
+
+    let dragging = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+    timeline.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      dragging = true;
+      startX = event.clientX;
+      startScrollLeft = timeline.scrollLeft;
+      timeline.classList.add('is-dragging');
+      timeline.setPointerCapture?.(event.pointerId);
+    });
+    timeline.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      timeline.scrollLeft = startScrollLeft - (event.clientX - startX);
+    });
+    const finishDrag = (event) => {
+      if (!dragging) return;
+      dragging = false;
+      timeline.classList.remove('is-dragging');
+      timeline.releasePointerCapture?.(event.pointerId);
+      const index = Math.max(0, Math.min(slides.length - 1, Math.round(timeline.scrollLeft / Math.max(1, timeline.clientWidth))));
+      selectSlide(index);
+    };
+    timeline.addEventListener('pointerup', finishDrag);
+    timeline.addEventListener('pointercancel', finishDrag);
+  }
   observeCards();
 }
 

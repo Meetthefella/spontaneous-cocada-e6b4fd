@@ -1,7 +1,0 @@
-{
-  "eyebrow": "Book Online",
-  "heading": "Booking calendar",
-  "intro": "Working static demo: choose a date/time and it saves the request in this browser. Replace with Fresha, Calendly, Square or a real backend when ready.",
-  "closedWeekdays": [0],
-  "slotTimes": ["09:30", "10:30", "11:30", "13:00", "14:00", "15:00"]
-}
