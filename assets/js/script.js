@@ -232,46 +232,6 @@ function renderContact(data) {
   }
 }
 
-function initialiseContactForm() {
-  const form = document.querySelector('#contactForm');
-  const status = document.querySelector('#contactFormStatus');
-  if (!form || !status) return;
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form.reportValidity()) return;
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.textContent = 'Sending…';
-    }
-    status.className = 'form-status';
-    status.textContent = 'Sending your message…';
-
-    try {
-      const body = new URLSearchParams(new FormData(form));
-      const response = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      });
-      if (!response.ok) throw new Error(`Form submission failed: ${response.status}`);
-      form.reset();
-      status.className = 'form-status is-success';
-      status.textContent = 'Thank you. Your message has been sent to Effortless Beauty.';
-    } catch (error) {
-      console.error(error);
-      status.className = 'form-status is-error';
-      status.textContent = 'Sorry, your message could not be sent. Please email effortlessbeauty726@gmail.com instead.';
-    } finally {
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Send message';
-      }
-    }
-  });
-}
 
 function renderPrivacy(data) {
   setText('#privacyEyebrow', data.eyebrow);
@@ -304,7 +264,6 @@ async function loadEditableContent() {
   if (content.booking) renderBooking(content.booking);
   if (content.contact) renderContact(content.contact);
   if (content.privacy) renderPrivacy(content.privacy);
-  initialiseContactForm();
 }
 
 function showTab(tabName) {

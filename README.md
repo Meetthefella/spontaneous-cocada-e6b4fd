@@ -29,13 +29,15 @@ The CMS uses an editorial workflow: edits become drafts first and can be preview
 The CMS edits content files only. Page layout, CSS, JavaScript and brand artwork are not exposed in the editor.
 
 
-## Contact form email notifications
+## Contact form setup and email notifications
 
-The Contact form is registered with Netlify Forms under the name `contact`. After the first deployment, configure an email notification in Netlify:
+The Contact form is registered with Netlify Forms under the name `contact` and redirects successful submissions to the branded `/thank-you.html` page.
 
-1. Open the site in Netlify.
-2. Go to **Forms** and select the `contact` form.
-3. Open **Form notifications** / **Notifications**.
+After deployment:
+
+1. In Netlify, open **Forms** and select **Enable form detection**.
+2. Redeploy the site so Netlify scans the HTML form.
+3. Go to **Configuration → Notifications → Form submission notifications**.
 4. Add an email notification for `effortlessbeauty726@gmail.com`.
 
-The destination email is configured in Netlify rather than exposed as a form action in the public HTML.
+The destination email is configured in Netlify rather than exposed as a form action in the public HTML. Submissions also remain available in the Netlify dashboard.
