@@ -17,58 +17,38 @@
         <img src="/assets/images/eb-monogram-glyph.png" alt="" />
         <span><strong>Effortless Beauty</strong><small>Website Manager</small></span>
       </a>
-      <button id="logoutButton" class="manage-link-button" type="button" hidden>Log out</button>
     </header>
 
-    <section id="loginPanel" class="manage-login" aria-labelledby="loginTitle">
+    <section id="loadingPanel" class="manage-card" aria-live="polite">
       <p class="eyebrow">Private editor</p>
-      <h1 id="loginTitle">Manage your website</h1>
-      <p>Authorised editors can update treatments, preview the real website and publish when everything looks right.</p>
-      <button id="loginButton" class="button primary" type="button">Log in</button>
+      <h1>Checking your access…</h1>
+      <p>Please wait a moment.</p>
+    </section>
+
+    <section id="loginPanel" class="manage-card" aria-labelledby="loginTitle" hidden>
+      <p class="eyebrow">Private editor</p>
+      <h1 id="loginTitle">Sign in</h1>
+      <p>Use the email address and password from your Effortless Beauty editor invitation.</p>
+      <button id="loginButton" class="button primary" type="button">Sign in</button>
+      <button id="recoveryButton" class="manage-text-button" type="button">Forgotten your password?</button>
       <p class="manage-help">Accounts are invitation-only. There is no public registration.</p>
     </section>
 
-    <section id="managerPanel" hidden>
-      <div class="manage-welcome">
-        <div>
-          <p class="eyebrow">Website manager</p>
-          <h1>Treatments</h1>
-          <p>Edit what appears on the Treatments page. Design and layout remain protected.</p>
-        </div>
-        <button id="addTreatmentButton" class="button secondary" type="button">Add treatment</button>
-      </div>
+    <section id="successPanel" class="manage-card manage-success" aria-labelledby="successTitle" hidden>
+      <div class="manage-success-mark" aria-hidden="true">✓</div>
+      <p class="eyebrow">Website manager</p>
+      <h1 id="successTitle">Authentication successful</h1>
+      <p>You are securely signed in. The Effortless Beauty editing tools will appear here as they are completed.</p>
+      <p id="signedInAs" class="manage-help"></p>
+      <button id="logoutButton" class="button secondary" type="button">Sign out</button>
+    </section>
 
-      <div id="statusMessage" class="manage-status" role="status" aria-live="polite"></div>
-      <div id="treatmentList" class="manage-treatment-list"></div>
-
-      <div class="manage-actions" aria-label="Treatment publishing actions">
-        <button id="resetButton" class="button secondary" type="button">Discard changes</button>
-        <button id="previewButton" class="button secondary" type="button">Preview website</button>
-        <button id="publishButton" class="button primary" type="button">Publish website</button>
-      </div>
-      <p class="manage-publish-note">Publishing updates the live treatment content immediately. Website code and design remain unchanged.</p>
+    <section id="errorPanel" class="manage-card" role="alert" hidden>
+      <p class="eyebrow">Unable to continue</p>
+      <h1>Something went wrong</h1>
+      <p id="errorMessage">The login service could not complete that request.</p>
+      <button id="retryButton" class="button secondary" type="button">Return to sign in</button>
     </section>
   </main>
-
-  <dialog id="treatmentDialog" class="manage-dialog">
-    <form id="treatmentForm" method="dialog">
-      <div class="manage-dialog-header">
-        <h2 id="dialogTitle">Edit treatment</h2>
-        <button id="closeDialogButton" class="manage-close" type="button" aria-label="Close">×</button>
-      </div>
-      <input id="treatmentIndex" type="hidden" />
-      <label>Treatment name<input id="treatmentName" required maxlength="80" /></label>
-      <label>Price<input id="treatmentPrice" required maxlength="40" placeholder="£150 or From £150" /></label>
-      <label>Duration<input id="treatmentDuration" maxlength="40" placeholder="1 hr 30 min" /></label>
-      <label>Description<textarea id="treatmentDescription" required maxlength="500" rows="5"></textarea></label>
-      <label>Square booking link<input id="treatmentBookingUrl" type="url" placeholder="https://app.squareup.com/..." /></label>
-      <label>Card symbol<input id="treatmentIcon" maxlength="4" placeholder="⌁" /></label>
-      <label class="manage-switch"><input id="treatmentActive" type="checkbox" /><span>Show this treatment on the website</span></label>
-      <div class="manage-dialog-actions">
-        <button id="deleteTreatmentButton" class="manage-danger" type="button">Delete</button>
-        <button class="button primary" value="save" type="submit">Save treatment</button>
-      </div>
-    </form>
-  </dialog>
 </body>
 </html>

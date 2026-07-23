@@ -41,3 +41,17 @@ The Contact form is registered as `contact` and redirects to `/thank-you.html`.
 ## Safety boundary
 
 The client can change treatment content only. HTML structure, CSS, JavaScript, branding and artwork are not editable through `/manage/`.
+
+## `/manage` authentication milestone
+
+The private `/manage/` route currently contains authentication only:
+
+- invited-user password creation through Netlify Identity
+- sign in
+- password recovery
+- authentication success screen
+- sign out
+
+Default Netlify invitation and recovery links may land on the site root. The homepage immediately forwards recognised Identity tokens to `/manage/` while preserving the secure URL fragment.
+
+Registration must remain **Invite only** in Netlify. No editing dashboard or content tools are included in this milestone.
