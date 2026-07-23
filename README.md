@@ -27,3 +27,15 @@ The CMS uses an editorial workflow: edits become drafts first and can be preview
 ## Safe editing boundary
 
 The CMS edits content files only. Page layout, CSS, JavaScript and brand artwork are not exposed in the editor.
+
+
+## Contact form email notifications
+
+The Contact form is registered with Netlify Forms under the name `contact`. After the first deployment, configure an email notification in Netlify:
+
+1. Open the site in Netlify.
+2. Go to **Forms** and select the `contact` form.
+3. Open **Form notifications** / **Notifications**.
+4. Add an email notification for `effortlessbeauty726@gmail.com`.
+
+The destination email is configured in Netlify rather than exposed as a form action in the public HTML.

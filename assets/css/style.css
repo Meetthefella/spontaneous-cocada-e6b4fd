@@ -116,7 +116,7 @@ label { display: grid; gap: 6px; color: var(--muted); font-size: .85rem; }
 input, select, textarea { width: 100%; border: 1px solid var(--line); background: rgba(255,255,255,.8); padding: 13px 12px; border-radius: 12px; font: inherit; color: var(--ink); }
 textarea { min-height: 132px; resize: vertical; }
 .booking-message { color: var(--gold-dark); min-height: 24px; }
-.contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.contact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .contact-grid article, .contact-form { padding: 26px; }
 .site-footer { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 30px 18px 44px; color: var(--muted); border-top: 1px solid var(--line); }
 @media (max-width: 950px) { .hero-shell, .booking-layout, .contact-grid { grid-template-columns: 1fr; } .hero-shell { min-height: auto; } .service-grid, .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero-copy { text-align: center; } .hero-actions { justify-content: center; } .brand-name { display: none; } }
@@ -138,9 +138,8 @@ textarea { min-height: 132px; resize: vertical; }
 .treatment-grid article { padding: 28px; min-height: 230px; }
 .treatment-grid span { color: var(--gold-dark); font-size: 2.2rem; }
 .treatment-grid strong { color: var(--gold-dark); }
-.contact-grid { grid-template-columns: repeat(3, 1fr); }
-.contact-form { grid-column: span 2; }
-.map-placeholder { min-height: 330px; display: grid; place-items: center; color: var(--muted); text-transform: uppercase; letter-spacing: .18em; background: linear-gradient(135deg, rgba(239,208,200,.35), rgba(255,253,249,.9)); }
+.contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.contact-form { grid-column: 1 / -1; }
 .policy-card { text-align: left; max-width: 860px; margin: 0 auto; }
 .policy-card h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; color: var(--gold-dark); }
 @media (max-width: 950px) { .feature-row, .treatment-grid, .contact-grid { grid-template-columns: 1fr; } .contact-form { grid-column: auto; } }
@@ -819,3 +818,27 @@ body {
     min-width: 17px;
   }
 }
+
+
+/* Contact enquiry form */
+.form-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.field-optional { color: var(--muted); font-size: .85em; font-weight: 400; }
+.contact-consent {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400 !important;
+  line-height: 1.5;
+}
+.contact-consent input[type="checkbox"] {
+  width: 18px !important;
+  min-width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  padding: 0 !important;
+}
+.contact-form button[disabled] { opacity: .65; cursor: wait; }
+.form-status { min-height: 1.5em; margin: 0; color: var(--muted); }
+.form-status.is-success { color: #496b51; }
+.form-status.is-error { color: #8a3f3f; }
+.contact-grid a { color: inherit; text-underline-offset: 3px; }

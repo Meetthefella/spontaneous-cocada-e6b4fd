@@ -1,20 +1,20 @@
 {
   "eyebrow": "Contact",
   "heading": "Get in touch",
-  "intro": "Placeholder contact details ready for the client’s real address, number and social links.",
-  "studio": {
-    "heading": "Studio",
-    "lines": ["Effortless Beauty", "Address line 1", "Town / City", "Postcode"]
-  },
+  "intro": "Have a question about Microblading, patch testing or your appointment? Send a message and Effortless Beauty will get back to you.",
   "contact": {
     "heading": "Contact",
-    "email": "hello@example.com",
-    "phone": "01234 567890",
+    "email": "effortlessbeauty726@gmail.com",
+    "phone": "",
     "instagram": "@effortlessbeauty"
   },
   "hours": {
     "heading": "Opening hours",
-    "lines": ["Monday: Closed", "Tuesday–Friday: 10:00–18:00", "Saturday: 10:00–16:00", "Sunday: Closed"]
-  },
-  "mapText": "Map placeholder"
+    "lines": [
+      "Monday–Friday: 09:00–17:00",
+      "Saturday: Closed",
+      "Sunday: Closed",
+      "Appointments are subject to availability."
+    ]
+  }
 }

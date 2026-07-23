@@ -218,20 +218,59 @@ function renderContact(data) {
   setText('#contactEyebrow', data.eyebrow);
   setText('#contactHeading', data.heading);
   setText('#contactIntro', data.intro);
-  setText('#studioHeading', data.studio?.heading);
   setText('#contactDetailsHeading', data.contact?.heading);
   setText('#hoursHeading', data.hours?.heading);
-  setText('#mapText', data.mapText);
-  const studioLines = document.querySelector('#studioLines');
-  if (studioLines) studioLines.innerHTML = linesToHtml(data.studio?.lines);
   const hoursLines = document.querySelector('#hoursLines');
   if (hoursLines) hoursLines.innerHTML = linesToHtml(data.hours?.lines);
   const contactDetails = document.querySelector('#contactDetails');
-  if (contactDetails) contactDetails.innerHTML = [
-    `Email: ${escapeHtml(data.contact?.email || '')}`,
-    `Phone: ${escapeHtml(data.contact?.phone || '')}`,
-    `Instagram: ${escapeHtml(data.contact?.instagram || '')}`
-  ].join('<br />');
+  if (contactDetails) {
+    const details = [];
+    if (data.contact?.email) details.push(`Email: <a href="mailto:${escapeHtml(data.contact.email)}">${escapeHtml(data.contact.email)}</a>`);
+    if (data.contact?.phone) details.push(`Phone: <a href="tel:${escapeHtml(data.contact.phone.replace(/\s+/g, ''))}">${escapeHtml(data.contact.phone)}</a>`);
+    if (data.contact?.instagram) details.push(`Instagram: ${escapeHtml(data.contact.instagram)}`);
+    contactDetails.innerHTML = details.join('<br />');
+  }
+}
+
+function initialiseContactForm() {
+  const form = document.querySelector('#contactForm');
+  const status = document.querySelector('#contactFormStatus');
+  if (!form || !status) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending…';
+    }
+    status.className = 'form-status';
+    status.textContent = 'Sending your message…';
+
+    try {
+      const body = new URLSearchParams(new FormData(form));
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      if (!response.ok) throw new Error(`Form submission failed: ${response.status}`);
+      form.reset();
+      status.className = 'form-status is-success';
+      status.textContent = 'Thank you. Your message has been sent to Effortless Beauty.';
+    } catch (error) {
+      console.error(error);
+      status.className = 'form-status is-error';
+      status.textContent = 'Sorry, your message could not be sent. Please email effortlessbeauty726@gmail.com instead.';
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send message';
+      }
+    }
+  });
 }
 
 function renderPrivacy(data) {
@@ -265,6 +304,7 @@ async function loadEditableContent() {
   if (content.booking) renderBooking(content.booking);
   if (content.contact) renderContact(content.contact);
   if (content.privacy) renderPrivacy(content.privacy);
+  initialiseContactForm();
 }
 
 function showTab(tabName) {

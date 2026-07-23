@@ -121,11 +121,31 @@
     <section id="contact" class="tab-panel">
       <header class="page-hero compact"><p id="contactEyebrow" class="eyebrow">Contact</p><h1 id="contactHeading">Get in touch</h1><p id="contactIntro" class="intro"></p></header>
       <div class="contact-grid">
-        <article><h2 id="studioHeading">Studio</h2><p id="studioLines"></p></article>
         <article><h2 id="contactDetailsHeading">Contact</h2><p id="contactDetails"></p></article>
         <article><h2 id="hoursHeading">Opening hours</h2><p id="hoursLines"></p></article>
-        <form class="contact-form"><label>Name<input placeholder="Your name" /></label><label>Email<input type="email" placeholder="Your email" /></label><label>Message<textarea placeholder="How can we help?"></textarea></label><button class="button secondary" type="button">Message placeholder</button></form>
-        <div id="mapText" class="map-placeholder">Map placeholder</div>
+        <form
+          id="contactForm"
+          class="contact-form"
+          name="contact"
+          method="POST"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+        >
+          <input type="hidden" name="form-name" value="contact" />
+          <p class="form-hidden" aria-hidden="true">
+            <label>Do not fill this in if you are human: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+          </p>
+          <label>Name<input name="name" type="text" autocomplete="name" placeholder="Your name" required /></label>
+          <label>Email<input name="email" type="email" autocomplete="email" placeholder="Your email" required /></label>
+          <label>Phone <span class="field-optional">(optional)</span><input name="phone" type="tel" autocomplete="tel" placeholder="Your phone number" /></label>
+          <label>Message<textarea name="message" placeholder="How can we help?" required></textarea></label>
+          <label class="contact-consent">
+            <input name="privacy-consent" type="checkbox" value="agreed" required />
+            <span>I agree that Effortless Beauty may use these details to respond to my enquiry.</span>
+          </label>
+          <button class="button secondary" type="submit">Send message</button>
+          <p id="contactFormStatus" class="form-status" aria-live="polite"></p>
+        </form>
       </div>
     </section>
 
