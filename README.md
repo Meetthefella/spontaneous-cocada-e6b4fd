@@ -41,3 +41,25 @@ After deployment:
 4. Add an email notification for `effortlessbeauty726@gmail.com`.
 
 The destination email is configured in Netlify rather than exposed as a form action in the public HTML. Submissions also remain available in the Netlify dashboard.
+
+## Private `/manage` editor — Treatments milestone
+
+The first private editor is available at `/manage/`. It uses invite-only Netlify Identity and edits the Treatments collection.
+
+### Required Netlify configuration
+
+1. Enable **Netlify Identity** and keep registration set to **Invite only**.
+2. Invite the authorised editor from the Netlify dashboard.
+3. Add these environment variables under **Site configuration → Environment variables**:
+   - `GITHUB_REPOSITORY`: `OWNER/REPOSITORY` (for example `yourname/beauty-business-platform`)
+   - `GITHUB_BRANCH`: `main`
+   - `GITHUB_CONTENT_TOKEN`: a fine-grained GitHub token with **Contents: Read and write** access to this repository only.
+4. Redeploy after adding the variables.
+
+The GitHub token is used only inside the protected Netlify Function. It is never sent to the browser.
+
+### Editor workflow
+
+`Edit → Preview website → Publish`
+
+Preview is stored only in the editor's browser. Publish commits `content/treatments.json` to GitHub, which triggers the existing Netlify deployment.

@@ -29,6 +29,18 @@ function escapeHtml(value = '') {
 }
 
 async function loadJson(path) {
+  const isTreatmentPreview = new URLSearchParams(window.location.search).get('preview') === 'treatments' && path.endsWith('/treatments.json');
+  if (isTreatmentPreview) {
+    try {
+      const draft = localStorage.getItem('eb-treatments-preview-v1');
+      if (draft) {
+        document.documentElement.dataset.previewMode = 'true';
+        return JSON.parse(draft);
+      }
+    } catch (error) {
+      console.warn('Unable to load treatment preview.', error);
+    }
+  }
   const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Unable to load ${path}`);
   return response.json();

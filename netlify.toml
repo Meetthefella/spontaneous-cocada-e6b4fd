@@ -1,2 +1,14 @@
 [build]
   publish = "."
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/manage/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "no-store"

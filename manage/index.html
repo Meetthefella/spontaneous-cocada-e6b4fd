@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Effortless Beauty Website Manager</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/manage/manage.css" />
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" defer></script>
+  <script src="/manage/manage.js" defer></script>
+</head>
+<body class="manage-page">
+  <main class="manage-shell">
+    <header class="manage-header">
+      <a class="manage-brand" href="/" aria-label="Return to Effortless Beauty">
+        <img src="/assets/images/eb-monogram-glyph.png" alt="" />
+        <span><strong>Effortless Beauty</strong><small>Website Manager</small></span>
+      </a>
+      <button id="logoutButton" class="manage-link-button" type="button" hidden>Log out</button>
+    </header>
+
+    <section id="loginPanel" class="manage-login" aria-labelledby="loginTitle">
+      <p class="eyebrow">Private editor</p>
+      <h1 id="loginTitle">Manage your website</h1>
+      <p>Authorised editors can update treatments, preview the real website and publish when everything looks right.</p>
+      <button id="loginButton" class="button primary" type="button">Log in</button>
+      <p class="manage-help">Accounts are invitation-only. There is no public registration.</p>
+    </section>
+
+    <section id="managerPanel" hidden>
+      <div class="manage-welcome">
+        <div>
+          <p class="eyebrow">Website manager</p>
+          <h1>Treatments</h1>
+          <p>Edit what appears on the Treatments page. Design and layout remain protected.</p>
+        </div>
+        <button id="addTreatmentButton" class="button secondary" type="button">Add treatment</button>
+      </div>
+
+      <div id="statusMessage" class="manage-status" role="status" aria-live="polite"></div>
+      <div id="treatmentList" class="manage-treatment-list"></div>
+
+      <div class="manage-actions" aria-label="Treatment publishing actions">
+        <button id="resetButton" class="button secondary" type="button">Discard changes</button>
+        <button id="previewButton" class="button secondary" type="button">Preview website</button>
+        <button id="publishButton" class="button primary" type="button">Publish</button>
+      </div>
+      <p class="manage-publish-note">Publishing updates the Git repository and starts a normal Netlify deployment. The live website changes only after that deployment succeeds.</p>
+    </section>
+  </main>
+
+  <dialog id="treatmentDialog" class="manage-dialog">
+    <form id="treatmentForm" method="dialog">
+      <div class="manage-dialog-header">
+        <h2 id="dialogTitle">Edit treatment</h2>
+        <button id="closeDialogButton" class="manage-close" type="button" aria-label="Close">×</button>
+      </div>
+      <input id="treatmentIndex" type="hidden" />
+      <label>Treatment name<input id="treatmentName" required maxlength="80" /></label>
+      <label>Price<input id="treatmentPrice" required maxlength="40" placeholder="£150 or From £150" /></label>
+      <label>Duration<input id="treatmentDuration" maxlength="40" placeholder="1 hr 30 min" /></label>
+      <label>Description<textarea id="treatmentDescription" required maxlength="500" rows="5"></textarea></label>
+      <label>Square booking link<input id="treatmentBookingUrl" type="url" placeholder="https://app.squareup.com/..." /></label>
+      <label>Card symbol<input id="treatmentIcon" maxlength="4" placeholder="⌁" /></label>
+      <label class="manage-switch"><input id="treatmentActive" type="checkbox" /><span>Show this treatment on the website</span></label>
+      <div class="manage-dialog-actions">
+        <button id="deleteTreatmentButton" class="manage-danger" type="button">Delete</button>
+        <button class="button primary" value="save" type="submit">Save treatment</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

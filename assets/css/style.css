@@ -842,3 +842,5 @@ body {
 .form-status.is-success { color: #496b51; }
 .form-status.is-error { color: #8a3f3f; }
 .contact-grid a { color: inherit; text-underline-offset: 3px; }
+
+.preview-banner{position:sticky;top:0;z-index:9999;padding:10px 16px;text-align:center;background:#4b3e34;color:#fff;font-weight:700}.preview-banner a{color:#fff;text-decoration:underline}html[data-preview-mode="true"] #previewBanner{display:block!important}
