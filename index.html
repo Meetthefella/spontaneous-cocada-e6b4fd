@@ -83,9 +83,36 @@
         </section>
         <section class="booking-card booking-cta" aria-labelledby="bookingCtaHeading">
           <span class="booking-lock" aria-hidden="true">◇</span>
-          <h2 id="bookingCtaHeading">Continue to booking</h2>
+          <h2 id="bookingEligibilityHeading">Before you continue</h2>
           <p id="bookingStudioNote" class="booking-studio-note"></p>
-          <a id="squareBookingButton" class="button primary full" href="#" target="_blank" rel="noopener noreferrer">Continue to secure booking</a>
+
+          <fieldset class="booking-checks">
+            <legend id="bookingClientTypeQuestion">Are you a new or returning Effortless Beauty client?</legend>
+            <label class="booking-choice">
+              <input type="radio" name="bookingClientType" value="new" />
+              <span id="bookingNewClientLabel">I am a new client</span>
+            </label>
+            <label class="booking-choice">
+              <input type="radio" name="bookingClientType" value="returning" />
+              <span id="bookingReturningClientLabel">I am a returning client</span>
+            </label>
+          </fieldset>
+
+          <div id="bookingRouteMessage" class="booking-route-message" aria-live="polite"></div>
+
+          <div class="booking-confirmations">
+            <label class="booking-choice">
+              <input id="bookingAgeConfirmation" type="checkbox" />
+              <span id="bookingAgeConfirmationLabel">I confirm that I am 18 years of age or older.</span>
+            </label>
+            <label class="booking-choice">
+              <input id="bookingPatchConfirmation" type="checkbox" />
+              <span id="bookingPatchConfirmationLabel">I understand that new clients must complete a Patch Test at least 7 days before Microblading.</span>
+            </label>
+          </div>
+
+          <a id="squareBookingButton" class="button primary full is-disabled" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true">Choose an option to continue</a>
+          <p id="bookingComplianceNote" class="booking-compliance-note"></p>
           <p id="bookingSecurityNote" class="booking-security-note"></p>
         </section>
       </div>

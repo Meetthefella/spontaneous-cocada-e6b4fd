@@ -158,7 +158,13 @@ function renderBooking(data) {
   setText('#bookingIntro', data.intro);
   setText('#bookingStudioNote', data.studioNote);
   setText('#bookingSecurityNote', data.securityNote);
-  setText('#squareBookingButton', data.buttonText || 'Continue to secure booking');
+  setText('#bookingComplianceNote', data.complianceNote);
+  setText('#bookingEligibilityHeading', data.eligibilityHeading || 'Before you continue');
+  setText('#bookingClientTypeQuestion', data.clientTypeQuestion);
+  setText('#bookingNewClientLabel', data.newClientLabel);
+  setText('#bookingReturningClientLabel', data.returningClientLabel);
+  setText('#bookingAgeConfirmationLabel', data.ageConfirmation);
+  setText('#bookingPatchConfirmationLabel', data.patchConfirmation);
 
   const steps = document.querySelector('#bookingSteps');
   if (steps) {
@@ -168,9 +174,43 @@ function renderBooking(data) {
   }
 
   const bookingButton = document.querySelector('#squareBookingButton');
-  if (bookingButton && typeof data.bookingUrl === 'string') {
-    bookingButton.href = data.bookingUrl;
-  }
+  const routeMessage = document.querySelector('#bookingRouteMessage');
+  const ageConfirmation = document.querySelector('#bookingAgeConfirmation');
+  const patchConfirmation = document.querySelector('#bookingPatchConfirmation');
+  const clientTypeInputs = [...document.querySelectorAll('input[name="bookingClientType"]')];
+
+  const updateBookingRoute = () => {
+    const selectedType = clientTypeInputs.find((input) => input.checked)?.value || '';
+    const confirmed = Boolean(selectedType && ageConfirmation?.checked && patchConfirmation?.checked);
+
+    if (routeMessage) {
+      routeMessage.textContent = selectedType === 'new'
+        ? (data.newClientMessage || '')
+        : selectedType === 'returning'
+          ? (data.returningClientMessage || '')
+          : 'Choose the option that applies to you.';
+      routeMessage.dataset.route = selectedType;
+    }
+
+    if (!bookingButton) return;
+    bookingButton.textContent = selectedType === 'new'
+      ? (data.newClientButtonText || 'Book your free Patch Test')
+      : selectedType === 'returning'
+        ? (data.returningClientButtonText || 'Continue to Microblading booking')
+        : (data.buttonText || 'Choose an option to continue');
+
+    bookingButton.href = confirmed && typeof data.bookingUrl === 'string' ? data.bookingUrl : '#';
+    bookingButton.classList.toggle('is-disabled', !confirmed);
+    bookingButton.setAttribute('aria-disabled', String(!confirmed));
+  };
+
+  clientTypeInputs.forEach((input) => input.addEventListener('change', updateBookingRoute));
+  ageConfirmation?.addEventListener('change', updateBookingRoute);
+  patchConfirmation?.addEventListener('change', updateBookingRoute);
+  bookingButton?.addEventListener('click', (event) => {
+    if (bookingButton.getAttribute('aria-disabled') === 'true') event.preventDefault();
+  });
+  updateBookingRoute();
   contentState.booking = data;
 }
 

@@ -17,7 +17,18 @@
     }
   ],
   "studioNote": "Treatments take place in a private home-based studio. Full location details are provided after your appointment is confirmed.",
-  "buttonText": "Continue to secure booking",
+  "buttonText": "Choose an option to continue",
   "bookingUrl": "https://app.squareup.com/appointments/book/wu9glwwanb77xh/L908Z86ANZ41V/start",
-  "securityNote": "Booking opens securely in a new window and is managed by Square Appointments."
+  "securityNote": "Booking opens securely in a new window and is managed by Square Appointments.",
+  "eligibilityHeading": "Before you continue",
+  "clientTypeQuestion": "Are you a new or returning Effortless Beauty client?",
+  "newClientLabel": "I am a new client",
+  "returningClientLabel": "I am a returning client",
+  "newClientMessage": "All new clients must book and complete a free Patch Test at least 7 days before Microblading.",
+  "returningClientMessage": "Returning clients who have already completed a successful patch test with Effortless Beauty can continue to Microblading booking.",
+  "ageConfirmation": "I confirm that I am 18 years of age or older.",
+  "patchConfirmation": "I understand that new clients must complete a Patch Test at least 7 days before Microblading.",
+  "newClientButtonText": "Book your free Patch Test",
+  "returningClientButtonText": "Continue to Microblading booking",
+  "complianceNote": "Microblading appointments cannot proceed for anyone under 18 or for a new client whose required patch test has not been completed at least 7 days beforehand. Photo ID may be requested."
 }
