@@ -1,65 +1,43 @@
-# Effortless Beauty website
+# Effortless Beauty — Golden Master v1 with Treatments Manager
 
-Static Netlify website with client-editable JSON content and a Decap CMS editor at `/admin/`.
+The public site remains the approved Golden Master. The private `/manage/` area edits only treatment content.
 
-## Project structure
+## Architecture
 
-- `index.html` — locked page structure
-- `assets/css/` — locked styling
-- `assets/js/` — content loading and website behaviour
-- `assets/images/` — approved website artwork and CMS uploads
-- `content/` — client-editable text, treatments, prices, hours and policies
-- `admin/` — Decap CMS editor configuration
+- **GitHub:** website code, layout, styling and approved artwork
+- **Netlify:** hosting, Functions, Identity and Forms
+- **Netlify Blobs:** published treatment content
+- **`/manage/`:** invite-only treatment editor
 
-## Deploying
+No GitHub write token or content-publishing environment variables are required.
 
-1. Push this folder to the repository's `main` branch.
-2. Connect the GitHub repository to Netlify.
-3. Keep Netlify's publish directory as `.`.
-4. In Netlify, enable Identity.
-5. Set Identity registration to **Invite only**.
-6. Enable **Git Gateway**.
-7. Invite the client's email address as an Identity user.
-8. Open `https://YOUR-SITE.netlify.app/admin/` and log in.
+## Treatments workflow
 
-The CMS uses an editorial workflow: edits become drafts first and can be previewed before publication.
+1. Log in at `/manage/` with an invited Netlify Identity account.
+2. Add, edit, hide or reorder treatments.
+3. Select **Preview website**.
+4. Select **Publish website** only after checking the preview.
+5. The function writes `treatments` to the site-wide `effortless-beauty-content` Blob store.
+6. The live website reads that content immediately, with `content/treatments.json` retained as the Golden Master fallback until the first publish.
 
-## Safe editing boundary
+## Netlify setup
 
-The CMS edits content files only. Page layout, CSS, JavaScript and brand artwork are not exposed in the editor.
+1. Deploy the repository normally.
+2. Keep Netlify Identity enabled.
+3. Set registration to **Invite only**.
+4. Invite authorised editor accounts.
+5. No Git Gateway and no GitHub personal access token are needed.
+6. Netlify installs `@netlify/blobs` and `@netlify/identity` from `package.json` during deployment.
 
+## Contact form
 
-## Contact form setup and email notifications
+The Contact form is registered as `contact` and redirects to `/thank-you.html`.
 
-The Contact form is registered with Netlify Forms under the name `contact` and redirects successful submissions to the branded `/thank-you.html` page.
+1. Enable **Form detection**.
+2. Redeploy.
+3. Add a form-submission email notification to `effortlessbeauty726@gmail.com`.
+4. Use the subject `New Enquiry - Effortless Beauty`.
 
-After deployment:
+## Safety boundary
 
-1. In Netlify, open **Forms** and select **Enable form detection**.
-2. Redeploy the site so Netlify scans the HTML form.
-3. Go to **Configuration → Notifications → Form submission notifications**.
-4. Add an email notification for `effortlessbeauty726@gmail.com`.
-
-The destination email is configured in Netlify rather than exposed as a form action in the public HTML. Submissions also remain available in the Netlify dashboard.
-
-## Private `/manage` editor — Treatments milestone
-
-The first private editor is available at `/manage/`. It uses invite-only Netlify Identity and edits the Treatments collection.
-
-### Required Netlify configuration
-
-1. Enable **Netlify Identity** and keep registration set to **Invite only**.
-2. Invite the authorised editor from the Netlify dashboard.
-3. Add these environment variables under **Site configuration → Environment variables**:
-   - `GITHUB_REPOSITORY`: `OWNER/REPOSITORY` (for example `yourname/beauty-business-platform`)
-   - `GITHUB_BRANCH`: `main`
-   - `GITHUB_CONTENT_TOKEN`: a fine-grained GitHub token with **Contents: Read and write** access to this repository only.
-4. Redeploy after adding the variables.
-
-The GitHub token is used only inside the protected Netlify Function. It is never sent to the browser.
-
-### Editor workflow
-
-`Edit → Preview website → Publish`
-
-Preview is stored only in the editor's browser. Publish commits `content/treatments.json` to GitHub, which triggers the existing Netlify deployment.
+The client can change treatment content only. HTML structure, CSS, JavaScript, branding and artwork are not editable through `/manage/`.

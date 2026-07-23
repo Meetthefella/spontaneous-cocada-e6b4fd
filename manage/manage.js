@@ -1,5 +1,8 @@
-const DRAFT_KEY = 'eb-manage-treatments-draft-v1';
-const PREVIEW_KEY = 'eb-treatments-preview-v1';
+const DRAFT_KEY = 'eb-manage-treatments-draft-v2';
+const PREVIEW_KEY = 'eb-treatments-preview-v2';
+const API_URL = '/.netlify/functions/treatments';
+const FALLBACK_URL = '/content/treatments.json';
+
 const loginPanel = document.querySelector('#loginPanel');
 const managerPanel = document.querySelector('#managerPanel');
 const loginButton = document.querySelector('#loginButton');
@@ -16,23 +19,45 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const escapeHtml = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 const makeId = name => String(name || 'treatment').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60) || `treatment-${Date.now()}`;
 
-function setStatus(message='', isError=false){ statusMessage.textContent=message; statusMessage.classList.toggle('error',isError); }
+function setStatus(message='', isError=false){
+  statusMessage.textContent=message;
+  statusMessage.classList.toggle('error',isError);
+}
 function getUser(){ return window.netlifyIdentity?.currentUser(); }
 
+async function fetchFallback(){
+  const response = await fetch(FALLBACK_URL,{cache:'no-store'});
+  if(!response.ok) throw new Error('Unable to load the treatment list.');
+  return response.json();
+}
+
+async function fetchPublishedTreatments(){
+  try {
+    const response = await fetch(API_URL,{cache:'no-store'});
+    if(response.ok){
+      const result = await response.json();
+      if(result?.data?.items) return result.data;
+    }
+    if(response.status !== 404) throw new Error('Unable to load published treatments.');
+  } catch(error) {
+    console.warn('Blob content unavailable; using the Golden Master fallback.', error);
+  }
+  return fetchFallback();
+}
+
 async function loadTreatments(){
-  const response = await fetch('/content/treatments.json',{cache:'no-store'});
-  if(!response.ok) throw new Error('Unable to load treatments.');
-  sourceDocument = await response.json();
+  sourceDocument = await fetchPublishedTreatments();
   const stored = localStorage.getItem(DRAFT_KEY);
   treatments = stored ? JSON.parse(stored) : clone(sourceDocument.items || []);
   dirty = Boolean(stored);
   render();
+  setStatus(dirty ? 'Your unpublished draft has been restored.' : 'Published treatments loaded.');
 }
 
 function persistDraft(){
   localStorage.setItem(DRAFT_KEY,JSON.stringify(treatments));
   dirty=true;
-  setStatus('Changes saved as a private draft. Preview them before publishing.');
+  setStatus('Changes saved privately on this device. Preview them before publishing.');
   render();
 }
 
@@ -71,7 +96,9 @@ function openEditor(index=null){
 }
 
 function showManager(user){
-  loginPanel.hidden=true; managerPanel.hidden=false; logoutButton.hidden=false;
+  loginPanel.hidden=true;
+  managerPanel.hidden=false;
+  logoutButton.hidden=false;
   setStatus(`Logged in as ${user?.email || 'authorised editor'}.`);
   loadTreatments().catch(error=>setStatus(error.message,true));
 }
@@ -133,21 +160,29 @@ document.querySelector('#previewButton').addEventListener('click',()=>{
   const preview={...sourceDocument,items:clone(treatments)};
   localStorage.setItem(PREVIEW_KEY,JSON.stringify(preview));
   window.open('/?preview=treatments#treatments','eb-preview');
-  setStatus('Preview opened in a new tab. The live site has not changed.');
+  setStatus('Preview opened in a new tab. The live website has not changed.');
 });
 
 document.querySelector('#publishButton').addEventListener('click',async()=>{
-  if(!getUser()) return setStatus('Please log in again before publishing.',true);
+  const user=getUser();
+  if(!user) return setStatus('Please log in again before publishing.',true);
   if(!confirm('Publish these treatment changes to the live website?')) return;
-  const button=document.querySelector('#publishButton'); button.disabled=true; setStatus('Publishing…');
+  const button=document.querySelector('#publishButton'); button.disabled=true; setStatus('Publishing website…');
   try{
-    const token=await getUser().jwt();
+    const token=await user.jwt();
     const payload={...sourceDocument,items:clone(treatments)};
-    const response=await fetch('/.netlify/functions/publish-treatments',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify(payload)});
+    const response=await fetch(API_URL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+      body:JSON.stringify(payload)
+    });
     const result=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(result.error || 'Publishing failed.');
-    sourceDocument=clone(payload); localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(PREVIEW_KEY); dirty=false;
-    setStatus('Published successfully. Netlify is deploying the update now.');
+    sourceDocument=clone(payload);
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(PREVIEW_KEY);
+    dirty=false;
+    setStatus('Published successfully. The live Treatments page now uses the new content.');
   }catch(error){ setStatus(error.message,true); }
   finally{ button.disabled=false; }
 });

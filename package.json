@@ -1,0 +1,10 @@
+{
+  "name": "effortless-beauty",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Effortless Beauty public website and private content manager",
+  "dependencies": {
+    "@netlify/blobs": "^10.0.0",
+    "@netlify/identity": "^3.0.0"
+  }
+}

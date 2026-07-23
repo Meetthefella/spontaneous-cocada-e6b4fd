@@ -29,18 +29,6 @@ function escapeHtml(value = '') {
 }
 
 async function loadJson(path) {
-  const isTreatmentPreview = new URLSearchParams(window.location.search).get('preview') === 'treatments' && path.endsWith('/treatments.json');
-  if (isTreatmentPreview) {
-    try {
-      const draft = localStorage.getItem('eb-treatments-preview-v1');
-      if (draft) {
-        document.documentElement.dataset.previewMode = 'true';
-        return JSON.parse(draft);
-      }
-    } catch (error) {
-      console.warn('Unable to load treatment preview.', error);
-    }
-  }
   const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Unable to load ${path}`);
   return response.json();
@@ -255,14 +243,49 @@ function renderPrivacy(data) {
   ).join('');
 }
 
+async function loadPublishedTreatments() {
+  const previewRequested = new URLSearchParams(location.search).get('preview') === 'treatments';
+  if (previewRequested) {
+    try {
+      const preview = JSON.parse(localStorage.getItem('eb-treatments-preview-v2') || 'null');
+      if (preview?.items) {
+        const banner = document.createElement('div');
+        banner.className = 'preview-banner';
+        banner.textContent = 'Preview only — these changes are not live.';
+        document.body.prepend(banner);
+        return preview;
+      }
+    } catch (error) {
+      console.warn('Unable to load treatment preview.', error);
+    }
+  }
+
+  try {
+    const response = await fetch('/.netlify/functions/treatments', { cache: 'no-store' });
+    if (response.ok) {
+      const result = await response.json();
+      if (result?.data?.items) return result.data;
+    }
+  } catch (error) {
+    console.warn('Published treatment content is temporarily unavailable.', error);
+  }
+
+  return loadJson('content/treatments.json');
+}
+
 async function loadEditableContent() {
-  const files = ['site', 'homepage', 'treatments', 'aftercare', 'booking', 'contact', 'privacy'];
+  const files = ['site', 'homepage', 'aftercare', 'booking', 'contact', 'privacy'];
   const results = await Promise.allSettled(files.map((name) => loadJson(`content/${name}.json`)));
   const content = {};
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') content[files[index]] = result.value;
     else console.error(result.reason);
   });
+  try {
+    content.treatments = await loadPublishedTreatments();
+  } catch (error) {
+    console.error(error);
+  }
 
   if (content.site) {
     document.title = content.site.pageTitle || document.title;
