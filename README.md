@@ -55,3 +55,10 @@ The private `/manage/` route currently contains authentication only:
 Default Netlify invitation and recovery links may land on the site root. The homepage immediately forwards recognised Identity tokens to `/manage/` while preserving the secure URL fragment.
 
 Registration must remain **Invite only** in Netlify. No editing dashboard or content tools are included in this milestone.
+
+
+## Authentication testing
+
+Netlify invitation and password-recovery links may land on the site root with a URL fragment. The homepage forwards those tokens to `/manage/`, and the manager keeps the token intact until Netlify Identity completes the password flow.
+
+The current patch-test rule shown on the public site is a minimum of **48 hours** before Microblading for new clients.

@@ -31,7 +31,6 @@ function showSuccess(user) {
 function showLogin() {
   signedInAs.textContent = '';
   showPanel('login');
-  cleanIdentityHash();
 }
 
 function showError(error) {
