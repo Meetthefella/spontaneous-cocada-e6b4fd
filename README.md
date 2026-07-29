@@ -27,7 +27,7 @@ No GitHub write token or content-publishing environment variables are required.
 3. Set registration to **Invite only**.
 4. Invite authorised editor accounts.
 5. No Git Gateway and no GitHub personal access token are needed.
-6. Netlify installs `@netlify/blobs` and `@netlify/identity` from `package.json` during deployment.
+6. Netlify installs `@netlify/blobs` and `@netlify/identity` (currently `^1.2.0`) from `package.json` during deployment.
 
 ## Contact form
 
