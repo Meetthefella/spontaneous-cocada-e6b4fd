@@ -7,15 +7,17 @@
   <title>Effortless Beauty Website Manager</title>
   <link rel="stylesheet" href="/assets/css/style.css" />
   <link rel="stylesheet" href="/manage/manage.css" />
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" defer></script>
-  <script src="/manage/manage.js" defer></script>
+  <script type="module" src="/manage/manage.js"></script>
 </head>
 <body class="manage-page">
   <main class="manage-shell">
     <header class="manage-header">
       <a class="manage-brand" href="/" aria-label="Return to Effortless Beauty">
         <img src="/assets/images/eb-monogram-glyph.png" alt="" />
-        <span><strong>Effortless Beauty</strong><small>Website Manager</small></span>
+        <span>
+          <strong>Effortless Beauty</strong>
+          <small>Website Manager</small>
+        </span>
       </a>
     </header>
 
@@ -28,16 +30,70 @@
     <section id="loginPanel" class="manage-card" aria-labelledby="loginTitle" hidden>
       <p class="eyebrow">Private editor</p>
       <h1 id="loginTitle">Sign in</h1>
-      <p>Use the email address and password from your Effortless Beauty editor invitation.</p>
-      <button id="loginButton" class="button primary" type="button">Sign in</button>
-      <p class="manage-help">Accounts are invitation-only. Password recovery is available inside the secure sign-in window.</p>
+      <p>Use your Effortless Beauty editor email address and password.</p>
+
+      <form id="loginForm" class="manage-form">
+        <label>
+          <span>Email address</span>
+          <input id="loginEmail" name="email" type="email" autocomplete="username" required />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+        </label>
+
+        <button id="loginButton" class="button primary" type="submit">Sign in</button>
+      </form>
+
+      <p class="manage-help">Accounts are invitation-only. Password recovery is available through Netlify’s secure account email.</p>
+    </section>
+
+    <section id="invitePanel" class="manage-card" aria-labelledby="inviteTitle" hidden>
+      <p class="eyebrow">Editor invitation</p>
+      <h1 id="inviteTitle">Create your password</h1>
+      <p>Choose a password to finish activating your Effortless Beauty editor account.</p>
+
+      <form id="inviteForm" class="manage-form">
+        <label>
+          <span>New password</span>
+          <input id="invitePassword" name="password" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <label>
+          <span>Confirm new password</span>
+          <input id="invitePasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <button class="button primary" type="submit">Activate account</button>
+      </form>
+    </section>
+
+    <section id="recoveryPanel" class="manage-card" aria-labelledby="recoveryTitle" hidden>
+      <p class="eyebrow">Password recovery</p>
+      <h1 id="recoveryTitle">Choose a new password</h1>
+      <p>Enter a new password for your Effortless Beauty editor account.</p>
+
+      <form id="recoveryForm" class="manage-form">
+        <label>
+          <span>New password</span>
+          <input id="recoveryPassword" name="password" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <label>
+          <span>Confirm new password</span>
+          <input id="recoveryPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+
+        <button class="button primary" type="submit">Save new password</button>
+      </form>
     </section>
 
     <section id="successPanel" class="manage-card manage-success" aria-labelledby="successTitle" hidden>
       <div class="manage-success-mark" aria-hidden="true">✓</div>
       <p class="eyebrow">Website manager</p>
       <h1 id="successTitle">Authentication successful</h1>
-      <p>You are securely signed in. The Effortless Beauty editing tools will appear here as they are completed.</p>
+      <p id="successMessage">You are securely signed in.</p>
       <p id="signedInAs" class="manage-help"></p>
       <button id="logoutButton" class="button secondary" type="button">Sign out</button>
     </section>

@@ -1,12 +1,26 @@
+import {
+  acceptInvite,
+  getUser,
+  handleAuthCallback,
+  login,
+  logout,
+  updateUser
+} from '@netlify/identity';
+
 const panels = {
   loading: document.querySelector('#loadingPanel'),
   login: document.querySelector('#loginPanel'),
+  invite: document.querySelector('#invitePanel'),
+  recovery: document.querySelector('#recoveryPanel'),
   success: document.querySelector('#successPanel'),
   error: document.querySelector('#errorPanel')
 };
 
 const signedInAs = document.querySelector('#signedInAs');
+const successMessage = document.querySelector('#successMessage');
 const errorMessage = document.querySelector('#errorMessage');
+
+let inviteToken = null;
 
 function showPanel(name) {
   Object.entries(panels).forEach(([key, panel]) => {
@@ -14,59 +28,158 @@ function showPanel(name) {
   });
 }
 
-function clearCompletedIdentityCallback() {
-  const isIdentityToken = /^#(?:invite_token|recovery_token|confirmation_token)=/.test(window.location.hash);
-  const hasCallbackFlag = new URLSearchParams(window.location.search).has('identity_callback');
-
-  if (isIdentityToken || hasCallbackFlag) {
-    history.replaceState(null, document.title, '/manage/');
-  }
-}
-
-function showSuccess(user) {
-  signedInAs.textContent = user?.email ? `Signed in as ${user.email}` : '';
-  showPanel('success');
-  clearCompletedIdentityCallback();
+function clearIdentityCallbackUrl() {
+  history.replaceState(null, document.title, '/manage/');
 }
 
 function showLogin() {
   signedInAs.textContent = '';
+  successMessage.textContent = 'You are securely signed in.';
   showPanel('login');
 }
 
+function showSuccess(user, message = 'You are securely signed in.') {
+  successMessage.textContent = message;
+  signedInAs.textContent = user?.email ? `Signed in as ${user.email}` : '';
+  showPanel('success');
+}
+
 function showError(error) {
-  const message = error?.message || error?.msg || 'The login service could not complete that request.';
+  const message =
+    error?.message ||
+    error?.msg ||
+    'The login service could not complete that request.';
+
   errorMessage.textContent = message;
   showPanel('error');
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const identity = window.netlifyIdentity;
-
-  if (!identity) {
-    showError(new Error('The login service could not load. Please refresh the page and try again.'));
-    return;
+function passwordsMatch(password, confirmation) {
+  if (password !== confirmation) {
+    throw new Error('The two passwords do not match.');
   }
 
-  identity.on('init', user => {
-    if (user) showSuccess(user);
-    else showLogin();
-  });
+  if (password.length < 8) {
+    throw new Error('Your password must contain at least 8 characters.');
+  }
+}
 
-  identity.on('login', user => {
-    identity.close();
+async function initialiseAuthentication() {
+  try {
+    const callback = await handleAuthCallback();
+
+    if (callback) {
+      switch (callback.type) {
+        case 'invite':
+          inviteToken = callback.token;
+          showPanel('invite');
+          return;
+
+        case 'recovery':
+          clearIdentityCallbackUrl();
+          showPanel('recovery');
+          return;
+
+        case 'confirmation':
+        case 'email_change':
+        case 'oauth':
+          clearIdentityCallbackUrl();
+          showSuccess(
+            callback.user,
+            callback.type === 'confirmation'
+              ? 'Your account has been confirmed and you are securely signed in.'
+              : 'You are securely signed in.'
+          );
+          return;
+
+        default:
+          clearIdentityCallbackUrl();
+
+          if (callback.user) {
+            showSuccess(callback.user);
+            return;
+          }
+      }
+    }
+
+    const user = await getUser();
+
+    if (user) {
+      showSuccess(user);
+    } else {
+      showLogin();
+    }
+  } catch (error) {
+    showError(error);
+  }
+}
+
+document.querySelector('#loginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  showPanel('loading');
+
+  const email = document.querySelector('#loginEmail').value.trim();
+  const password = document.querySelector('#loginPassword').value;
+
+  try {
+    const user = await login(email, password);
     showSuccess(user);
-  });
-
-  identity.on('logout', showLogin);
-  identity.on('error', showError);
-
-  // Netlify Identity reads invitation, recovery and confirmation tokens from
-  // the current URL hash during initialisation. Do not redirect or clear the
-  // hash before this call has completed.
-  identity.init();
-
-  document.querySelector('#loginButton').addEventListener('click', () => identity.open('login'));
-  document.querySelector('#logoutButton').addEventListener('click', () => identity.logout());
-  document.querySelector('#retryButton').addEventListener('click', showLogin);
+  } catch (error) {
+    showError(error);
+  }
 });
+
+document.querySelector('#inviteForm').addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const password = document.querySelector('#invitePassword').value;
+  const confirmation = document.querySelector('#invitePasswordConfirm').value;
+
+  try {
+    passwordsMatch(password, confirmation);
+
+    if (!inviteToken) {
+      throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');
+    }
+
+    showPanel('loading');
+    const user = await acceptInvite(inviteToken, password);
+    inviteToken = null;
+    clearIdentityCallbackUrl();
+    showSuccess(user, 'Your editor account is active and you are securely signed in.');
+  } catch (error) {
+    showError(error);
+  }
+});
+
+document.querySelector('#recoveryForm').addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const password = document.querySelector('#recoveryPassword').value;
+  const confirmation = document.querySelector('#recoveryPasswordConfirm').value;
+
+  try {
+    passwordsMatch(password, confirmation);
+    showPanel('loading');
+    const user = await updateUser({ password });
+    showSuccess(user, 'Your password has been updated and you are securely signed in.');
+  } catch (error) {
+    showError(error);
+  }
+});
+
+document.querySelector('#logoutButton').addEventListener('click', async () => {
+  try {
+    await logout();
+    showLogin();
+  } catch (error) {
+    showError(error);
+  }
+});
+
+document.querySelector('#retryButton').addEventListener('click', () => {
+  clearIdentityCallbackUrl();
+  showLogin();
+});
+
+initialiseAuthentication();
