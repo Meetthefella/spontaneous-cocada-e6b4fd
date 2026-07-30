@@ -18,7 +18,8 @@ function cleanIdentityHash() {
   const identityTokens = ['invite_token', 'recovery_token', 'confirmation_token'];
   const hash = window.location.hash.replace(/^#/, '');
   if (identityTokens.some(token => hash.startsWith(`${token}=`))) {
-    history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    try { sessionStorage.removeItem('ebIdentityCallbackHash'); } catch (error) {}
+    history.replaceState(null, document.title, window.location.pathname);
   }
 }
 

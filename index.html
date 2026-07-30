@@ -5,7 +5,12 @@
     (function () {
       var hash = window.location.hash || '';
       if (/^#(?:invite_token|recovery_token|confirmation_token)=/.test(hash)) {
-        window.location.replace('/manage/' + hash);
+        try {
+          sessionStorage.setItem('ebIdentityCallbackHash', hash);
+        } catch (error) {
+          // The hash is also preserved in the fallback redirect below.
+        }
+        window.location.replace('/manage/?identity_callback=1' + hash);
       }
     }());
   </script>
