@@ -99,7 +99,7 @@
         <div>
           <p class="eyebrow">Website manager</p>
           <h1 id="successTitle">Welcome back</h1>
-          <p id="successMessage">Your website is ready to manage.</p>
+          <p id="successMessage">Manage your Effortless Beauty website from one place.</p>
         </div>
 
         <button id="logoutButton" class="button secondary dashboard-logout" type="button">Sign out</button>
@@ -136,16 +136,16 @@
               <strong>Homepage</strong>
               <small>Headings, introduction and calls to action</small>
             </span>
-            <span id="homepageStatus" class="dashboard-card-status">Coming next</span>
+            <span id="homepageStatus" class="dashboard-card-status">Planned</span>
           </button>
 
-          <button class="dashboard-card" type="button" aria-describedby="treatmentsStatus" disabled>
+          <button class="dashboard-card dashboard-card-current" type="button" aria-describedby="treatmentsStatus" disabled>
             <span class="dashboard-icon" aria-hidden="true">✦</span>
             <span class="dashboard-card-copy">
               <strong>Treatments</strong>
-              <small>Services, descriptions, duration and prices</small>
+              <small>Signature, beauty and coming-soon treatments</small>
             </span>
-            <span id="treatmentsStatus" class="dashboard-card-status">Planned</span>
+            <span id="treatmentsStatus" class="dashboard-card-status dashboard-card-status-current">Next milestone</span>
           </button>
 
           <button class="dashboard-card" type="button" aria-describedby="aftercareStatus" disabled>
@@ -157,11 +157,29 @@
             <span id="aftercareStatus" class="dashboard-card-status">Planned</span>
           </button>
 
+          <button class="dashboard-card" type="button" aria-describedby="galleryStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">▧</span>
+            <span class="dashboard-card-copy">
+              <strong>Gallery</strong>
+              <small>Client photos, captions and display order</small>
+            </span>
+            <span id="galleryStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="merchandiseStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">◇</span>
+            <span class="dashboard-card-copy">
+              <strong>Merchandise</strong>
+              <small>Products, descriptions, photos and prices</small>
+            </span>
+            <span id="merchandiseStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
           <button class="dashboard-card" type="button" aria-describedby="bookingStatus" disabled>
             <span class="dashboard-icon" aria-hidden="true">▣</span>
             <span class="dashboard-card-copy">
-              <strong>Booking</strong>
-              <small>Booking guidance and Square link</small>
+              <strong>Booking &amp; Payments</strong>
+              <small>Square bookings and Pockit payment requests</small>
             </span>
             <span id="bookingStatus" class="dashboard-card-status">Planned</span>
           </button>

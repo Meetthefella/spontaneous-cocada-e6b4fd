@@ -414,3 +414,22 @@
     justify-self: start;
   }
 }
+
+/* Phase 2.1: clearly identify the next completed development milestone. */
+.dashboard-card-current {
+  border-color: rgba(91,68,52,.34);
+  background: rgba(255,255,255,.64);
+  box-shadow: 0 10px 24px rgba(91,68,52,.08);
+}
+
+.dashboard-card-current .dashboard-icon {
+  background: rgba(91,68,52,.08);
+  border-color: rgba(91,68,52,.32);
+}
+
+.dashboard-card-status-current {
+  border-color: rgba(82,116,79,.32);
+  background: rgba(82,116,79,.1);
+  color: #405f3e;
+  opacity: 1;
+}
