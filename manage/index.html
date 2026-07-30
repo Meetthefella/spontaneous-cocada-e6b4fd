@@ -94,175 +94,120 @@
       </form>
     </section>
 
-    <section id="successPanel" class="manager-dashboard" aria-labelledby="successTitle" hidden>
-      <div class="dashboard-heading">
-        <div>
-          <p class="eyebrow">Website manager</p>
-          <h1 id="successTitle">Welcome back</h1>
-          <p id="successMessage">Manage your Effortless Beauty website from one place.</p>
+    <section id="successPanel" class="manager-app" aria-labelledby="successTitle" hidden>
+      <div id="dashboardView">
+        <div class="dashboard-heading">
+          <div>
+            <p class="eyebrow">Website manager</p>
+            <h1 id="successTitle">Welcome back</h1>
+            <p id="successMessage">Manage your Effortless Beauty website from one place.</p>
+          </div>
+          <button id="logoutButton" class="button secondary dashboard-logout" type="button">Sign out</button>
         </div>
 
-        <button id="logoutButton" class="button secondary dashboard-logout" type="button">Sign out</button>
+        <section class="dashboard-status" aria-label="Website status">
+          <div class="status-item"><span class="status-label">Website status</span><strong class="status-live"><span aria-hidden="true"></span>Live</strong></div>
+          <div class="status-item"><span class="status-label">Last published</span><strong>Not available yet</strong></div>
+          <div class="status-item status-account"><span class="status-label">Signed in as</span><strong id="signedInAs"></strong></div>
+        </section>
+
+        <section class="dashboard-sections" aria-labelledby="sectionsTitle">
+          <div class="section-heading"><div><p class="eyebrow">Website sections</p><h2 id="sectionsTitle">Choose an area</h2></div><p>Editing tools are added one completed section at a time.</p></div>
+          <div class="dashboard-grid">
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">⌂</span><span class="dashboard-card-copy"><strong>Homepage</strong><small>Headings, introduction and calls to action</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button id="openTreatmentsButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">✦</span><span class="dashboard-card-copy"><strong>Treatments</strong><small>Signature, beauty and coming-soon treatments</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">♡</span><span class="dashboard-card-copy"><strong>Aftercare</strong><small>Healing guidance and aftercare information</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">▧</span><span class="dashboard-card-copy"><strong>Gallery</strong><small>Client photos, captions and display order</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">◇</span><span class="dashboard-card-copy"><strong>Merchandise</strong><small>Products, descriptions, photos and prices</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">▣</span><span class="dashboard-card-copy"><strong>Booking &amp; Payments</strong><small>Square bookings and Pockit payment requests</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">✉</span><span class="dashboard-card-copy"><strong>Contact</strong><small>Contact details and enquiry information</small></span><span class="dashboard-card-status">Planned</span></button>
+            <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">⚙</span><span class="dashboard-card-copy"><strong>Settings</strong><small>Website-wide details and manager settings</small></span><span class="dashboard-card-status">Planned</span></button>
+          </div>
+        </section>
       </div>
 
-      <section class="dashboard-status" aria-label="Website status">
-        <div class="status-item">
-          <span class="status-label">Website status</span>
-          <strong class="status-live"><span aria-hidden="true"></span>Live</strong>
+      <div id="treatmentsView" class="manager-workspace" hidden>
+        <header class="workspace-header">
+          <button id="treatmentsBackButton" class="back-button" type="button">← Dashboard</button>
+          <div><p class="eyebrow">Website manager</p><h1>Treatments</h1><p>Choose a treatment to view or update.</p></div>
+        </header>
+        <div class="treatment-tabs" role="tablist" aria-label="Treatment categories">
+          <button type="button" role="tab" data-category="signature" aria-selected="true">Signature</button>
+          <button type="button" role="tab" data-category="beauty" aria-selected="false">Beauty</button>
+          <button type="button" role="tab" data-category="coming-soon" aria-selected="false">Coming Soon</button>
         </div>
-        <div class="status-item">
-          <span class="status-label">Last published</span>
-          <strong>Not available yet</strong>
-        </div>
-        <div class="status-item status-account">
-          <span class="status-label">Signed in as</span>
-          <strong id="signedInAs"></strong>
-        </div>
-      </section>
+        <div id="treatmentList" class="treatment-list"></div>
+      </div>
 
-      <section class="dashboard-sections" aria-labelledby="sectionsTitle">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Website sections</p>
-            <h2 id="sectionsTitle">Choose an area</h2>
+      <div id="treatmentSummaryView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header">
+          <button id="summaryBackButton" class="back-button" type="button">← Treatments</button>
+          <button id="editTreatmentButton" class="button primary" type="button">Edit treatment</button>
+        </header>
+        <article id="treatmentSummary" class="treatment-summary"></article>
+      </div>
+
+      <div id="editorView" class="manager-workspace editor-workspace" hidden>
+        <header class="workspace-header compact-header editor-header">
+          <button id="editorLeaveButton" class="back-button" type="button">← Leave editor</button>
+          <span id="draftStatus" class="draft-status" aria-live="polite">Draft protected</span>
+        </header>
+        <div class="editor-progress" aria-label="Editor progress"><span id="editorProgressBar"></span></div>
+        <form id="treatmentEditorForm" class="step-form" novalidate>
+          <section class="editor-step" data-step="0">
+            <p class="eyebrow">Step 1 of 5</p><h1>Basic information</h1><p>Start with the information customers see first.</p>
+            <label><span>Treatment name</span><input id="editTitle" name="title" type="text" required /></label>
+            <label><span>Short description</span><textarea id="editShortDescription" name="shortDescription" rows="4" required></textarea><small>One or two clear sentences.</small></label>
+            <label class="image-field"><span>Main photo</span><input id="editImage" name="image" type="file" accept="image/*" /><small>Photo upload will be connected to online storage in a later checkpoint. Your selection is previewed for this session.</small></label>
+            <img id="editorImagePreview" class="editor-image-preview" alt="" hidden />
+          </section>
+          <section class="editor-step" data-step="1" hidden>
+            <p class="eyebrow">Step 2 of 5</p><h1>Price and time</h1><p>Keep these short and easy to understand.</p>
+            <label><span>Price</span><input id="editPrice" name="price" type="text" inputmode="decimal" placeholder="£100" /></label>
+            <label><span>Treatment time</span><input id="editDuration" name="duration" type="text" placeholder="2 hours" /></label>
+          </section>
+          <section class="editor-step" data-step="2" hidden>
+            <p class="eyebrow">Step 3 of 5</p><h1>Full description</h1><p>Explain what the treatment involves in your own words.</p>
+            <label><span>Full description</span><textarea id="editFullDescription" name="fullDescription" rows="9"></textarea></label>
+          </section>
+          <section class="editor-step" data-step="3" hidden>
+            <p class="eyebrow">Step 4 of 5</p><h1>Extra pricing</h1><p>Optional details for sessions, follow-ups or price ranges.</p>
+            <label><span>Detailed pricing</span><textarea id="editDetailedPricing" name="detailedPricing" rows="5" placeholder="Initial treatment: £100"></textarea></label>
+            <label><span>Follow-up pricing</span><textarea id="editFollowUpPricing" name="followUpPricing" rows="5" placeholder="Second session: £100"></textarea></label>
+          </section>
+          <section class="editor-step" data-step="4" hidden>
+            <p class="eyebrow">Step 5 of 5</p><h1>Final checks</h1><p>Choose how this treatment should appear.</p>
+            <fieldset class="choice-group"><legend>Patch test</legend><label class="choice-row"><input id="editPatchTest" name="patchTest" type="checkbox" /><span>Patch test required</span></label></fieldset>
+            <label><span>Aftercare link</span><input id="editAftercareLink" name="aftercareLink" type="text" placeholder="/aftercare/" /></label>
+            <fieldset class="choice-group"><legend>Website visibility</legend><label class="choice-row"><input id="editVisible" name="visible" type="checkbox" /><span>Show this treatment on the website</span></label></fieldset>
+          </section>
+          <div class="editor-actions">
+            <button id="editorPreviousButton" class="button secondary" type="button" hidden>Back</button>
+            <button id="editorNextButton" class="button primary" type="button">Next</button>
+            <button id="editorSaveButton" class="button primary" type="button" hidden>Save draft</button>
+            <button id="editorPreviewButton" class="button secondary" type="button" hidden>Preview</button>
           </div>
-          <p>Editing tools will be added one completed section at a time.</p>
-        </div>
+        </form>
+      </div>
 
-        <div class="dashboard-grid">
-          <button class="dashboard-card" type="button" aria-describedby="homepageStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">⌂</span>
-            <span class="dashboard-card-copy">
-              <strong>Homepage</strong>
-              <small>Headings, introduction and calls to action</small>
-            </span>
-            <span id="homepageStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button id="treatmentsButton" class="dashboard-card dashboard-card-current" type="button" aria-describedby="treatmentsStatus">
-            <span class="dashboard-icon" aria-hidden="true">✦</span>
-            <span class="dashboard-card-copy">
-              <strong>Treatments</strong>
-              <small>Signature, beauty and coming-soon treatments</small>
-            </span>
-            <span id="treatmentsStatus" class="dashboard-card-status dashboard-card-status-current">Open</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="aftercareStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">♡</span>
-            <span class="dashboard-card-copy">
-              <strong>Aftercare</strong>
-              <small>Healing guidance and aftercare information</small>
-            </span>
-            <span id="aftercareStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="galleryStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">▧</span>
-            <span class="dashboard-card-copy">
-              <strong>Gallery</strong>
-              <small>Client photos, captions and display order</small>
-            </span>
-            <span id="galleryStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="merchandiseStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">◇</span>
-            <span class="dashboard-card-copy">
-              <strong>Merchandise</strong>
-              <small>Products, descriptions, photos and prices</small>
-            </span>
-            <span id="merchandiseStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="bookingStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">▣</span>
-            <span class="dashboard-card-copy">
-              <strong>Booking &amp; Payments</strong>
-              <small>Square bookings and Pockit payment requests</small>
-            </span>
-            <span id="bookingStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="contactStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">✉</span>
-            <span class="dashboard-card-copy">
-              <strong>Contact</strong>
-              <small>Contact details and enquiry information</small>
-            </span>
-            <span id="contactStatus" class="dashboard-card-status">Planned</span>
-          </button>
-
-          <button class="dashboard-card" type="button" aria-describedby="settingsStatus" disabled>
-            <span class="dashboard-icon" aria-hidden="true">⚙</span>
-            <span class="dashboard-card-copy">
-              <strong>Settings</strong>
-              <small>Website-wide details and manager settings</small>
-            </span>
-            <span id="settingsStatus" class="dashboard-card-status">Planned</span>
-          </button>
-        </div>
-      </section>
+      <div id="previewView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header"><button id="previewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Draft preview</span></header>
+        <article id="treatmentPreview" class="treatment-summary preview-card"></article>
+      </div>
     </section>
 
-    <section id="treatmentsPanel" class="treatments-manager" aria-labelledby="treatmentsTitle" hidden>
-      <header class="manager-toolbar">
-        <button id="backToDashboardButton" class="manager-back" type="button" aria-label="Back to dashboard">
-          <span aria-hidden="true">←</span> Dashboard
-        </button>
-        <button id="treatmentsLogoutButton" class="button secondary" type="button">Sign out</button>
-      </header>
-
-      <section id="treatmentsBrowseView" class="treatments-surface">
-        <div class="treatments-heading">
-          <p class="eyebrow">Website manager</p>
-          <h1 id="treatmentsTitle">Treatments</h1>
-          <p>Choose a section, then select a treatment to view its information.</p>
+    <dialog id="leaveDialog" class="leave-dialog">
+      <form method="dialog">
+        <p class="eyebrow">Unfinished changes</p>
+        <h2>Your work is protected</h2>
+        <p>Would you like to keep editing, save this draft and leave, or discard the changes?</p>
+        <div class="dialog-actions">
+          <button value="continue" class="button primary">Keep editing</button>
+          <button value="save" class="button secondary">Save draft and leave</button>
+          <button value="discard" class="danger-button">Discard changes</button>
         </div>
-
-        <div class="treatment-tabs" role="tablist" aria-label="Treatment sections">
-          <button class="treatment-tab is-active" type="button" role="tab" aria-selected="true" data-category="signature">Signature</button>
-          <button class="treatment-tab" type="button" role="tab" aria-selected="false" data-category="beauty">Beauty</button>
-          <button class="treatment-tab" type="button" role="tab" aria-selected="false" data-category="coming-soon">Coming Soon</button>
-        </div>
-
-        <div class="treatment-section-copy">
-          <h2 id="treatmentCategoryTitle">Signature Treatments</h2>
-          <p id="treatmentCategoryDescription">Longer appointments with detailed treatment and follow-up information.</p>
-        </div>
-
-        <div id="treatmentList" class="treatment-list" aria-live="polite"></div>
-      </section>
-
-      <section id="treatmentSummaryView" class="treatments-surface treatment-summary" hidden>
-        <button id="backToTreatmentsButton" class="manager-back summary-back" type="button">
-          <span aria-hidden="true">←</span> Treatments
-        </button>
-
-        <div id="treatmentSummaryImage" class="treatment-summary-image" aria-hidden="true">✦</div>
-        <p id="treatmentSummaryCategory" class="eyebrow"></p>
-        <h1 id="treatmentSummaryTitle"></h1>
-        <p id="treatmentSummaryDescription" class="treatment-summary-description"></p>
-
-        <dl class="treatment-summary-facts">
-          <div>
-            <dt>Price</dt>
-            <dd id="treatmentSummaryPrice"></dd>
-          </div>
-          <div>
-            <dt>Treatment time</dt>
-            <dd id="treatmentSummaryTime"></dd>
-          </div>
-          <div>
-            <dt>Visibility</dt>
-            <dd id="treatmentSummaryVisibility"></dd>
-          </div>
-        </dl>
-
-        <div id="treatmentSummaryNote" class="treatment-summary-note"></div>
-        <p class="manage-help treatment-summary-help">Editing will be added in the next completed checkpoint.</p>
-      </section>
-    </section>
+      </form>
+    </dialog>
 
     <section id="errorPanel" class="manage-card" role="alert" hidden>
       <p class="eyebrow">Unable to continue</p>

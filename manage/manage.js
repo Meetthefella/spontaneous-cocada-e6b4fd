@@ -8,456 +8,102 @@ import {
   updateUser
 } from '@netlify/identity';
 
-const panels = {
-  loading: document.querySelector('#loadingPanel'),
-  login: document.querySelector('#loginPanel'),
-  invite: document.querySelector('#invitePanel'),
-  recovery: document.querySelector('#recoveryPanel'),
-  success: document.querySelector('#successPanel'),
-  treatments: document.querySelector('#treatmentsPanel'),
-  error: document.querySelector('#errorPanel')
-};
-
+const panels = Object.fromEntries(['loading','login','invite','recovery','success','error'].map(name => [name, document.querySelector(`#${name}Panel`)]));
 const signedInAs = document.querySelector('#signedInAs');
 const successMessage = document.querySelector('#successMessage');
 const errorMessage = document.querySelector('#errorMessage');
-
 let inviteToken = null;
-
-function showPanel(name) {
-  Object.entries(panels).forEach(([key, panel]) => {
-    panel.hidden = key !== name;
-  });
-}
-
-function clearIdentityCallbackUrl() {
-  history.replaceState(null, document.title, '/manage/');
-}
-
-function showLogin() {
-  signedInAs.textContent = '';
-  successMessage.textContent = 'You are securely signed in.';
-  showPanel('login');
-}
-
-function showSuccess(user, message = 'You are securely signed in.') {
-  successMessage.textContent = message;
-  signedInAs.textContent = user?.email || 'Authenticated user';
-  showPanel('success');
-}
-
-function showError(error) {
-  const message =
-    error?.message ||
-    error?.msg ||
-    'The login service could not complete that request.';
-
-  errorMessage.textContent = message;
-  showPanel('error');
-}
-
-function passwordsMatch(password, confirmation) {
-  if (password !== confirmation) {
-    throw new Error('The two passwords do not match.');
-  }
-
-  if (password.length < 8) {
-    throw new Error('Your password must contain at least 8 characters.');
-  }
-}
-document
-  .querySelector('#recoveryRequestButton')
-  .addEventListener('click', async () => {
-    const emailInput = document.querySelector('#loginEmail');
-    const message = document.querySelector('#recoveryRequestMessage');
-    const email = emailInput.value.trim();
-
-    if (!email) {
-      emailInput.focus();
-      message.textContent =
-        'Enter your email address first, then select Forgotten your password?';
-      message.hidden = false;
-      return;
-    }
-
-    try {
-      message.textContent = 'Sending password reset email…';
-      message.hidden = false;
-
-      await requestPasswordRecovery(email);
-
-      message.textContent =
-        'Password reset email sent. Check your inbox and spam folder.';
-    } catch (error) {
-      message.textContent =
-        error?.message ||
-        'The password reset email could not be sent. Please try again.';
-    }
-  });
-async function initialiseAuthentication() {
-  const heading = document.querySelector('#loadingPanel h1');
-  const message = document.querySelector('#loadingPanel p:last-child');
-
-  try {
-    heading.textContent = 'Step 1';
-    message.textContent = 'Starting authentication…';
-
-    const hasIdentityToken =
-      /^#(?:invite_token|recovery_token|confirmation_token)=/.test(
-        window.location.hash
-      );
-
-    let callback = null;
-
-    if (hasIdentityToken) {
-      heading.textContent = 'Step 2';
-      message.textContent = 'Processing the email link…';
-
-      callback = await handleAuthCallback();
-
-      heading.textContent = 'Step 3';
-      message.textContent = 'Identity link processed.';
-    }
-
-    if (callback) {
-      switch (callback.type) {
-        case 'invite':
-          inviteToken = callback.token;
-          showPanel('invite');
-          return;
-
-        case 'recovery':
-          clearIdentityCallbackUrl();
-          showPanel('recovery');
-          return;
-
-        case 'confirmation':
-        case 'email_change':
-        case 'oauth':
-          clearIdentityCallbackUrl();
-          showSuccess(callback.user);
-          return;
-
-        default:
-          clearIdentityCallbackUrl();
-
-          if (callback.user) {
-            showSuccess(callback.user);
-            return;
-          }
-      }
-    }
-
-    heading.textContent = 'Step 4';
-    message.textContent = 'Checking for an existing login…';
-
-    const user = await getUser();
-
-    heading.textContent = 'Step 5';
-    message.textContent = user
-      ? 'Existing login found.'
-      : 'No existing login found.';
-
-    if (user) {
-      showSuccess(user);
-    } else {
-      showLogin();
-    }
-  } catch (error) {
-    showError(error);
-  }
-}
-
-document.querySelector('#loginForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  showPanel('loading');
-
-  const email = document.querySelector('#loginEmail').value.trim();
-  const password = document.querySelector('#loginPassword').value;
-
-  try {
-    const user = await login(email, password);
-    showSuccess(user);
-  } catch (error) {
-    showError(error);
-  }
-});
-
-document.querySelector('#inviteForm').addEventListener('submit', async event => {
-  event.preventDefault();
-
-  const password = document.querySelector('#invitePassword').value;
-  const confirmation = document.querySelector('#invitePasswordConfirm').value;
-
-  try {
-    passwordsMatch(password, confirmation);
-
-    if (!inviteToken) {
-      throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');
-    }
-
-    showPanel('loading');
-    const user = await acceptInvite(inviteToken, password);
-    inviteToken = null;
-    clearIdentityCallbackUrl();
-    showSuccess(user, 'Your editor account is active and you are securely signed in.');
-  } catch (error) {
-    showError(error);
-  }
-});
-
-document.querySelector('#recoveryForm').addEventListener('submit', async event => {
-  event.preventDefault();
-
-  const password = document.querySelector('#recoveryPassword').value;
-  const confirmation = document.querySelector('#recoveryPasswordConfirm').value;
-
-  try {
-    passwordsMatch(password, confirmation);
-    showPanel('loading');
-    const user = await updateUser({ password });
-    showSuccess(user, 'Your password has been updated and you are securely signed in.');
-  } catch (error) {
-    showError(error);
-  }
-});
-
-document.querySelector('#logoutButton').addEventListener('click', async () => {
-  try {
-    await logout();
-    showLogin();
-  } catch (error) {
-    showError(error);
-  }
-});
-
-document.querySelector('#retryButton').addEventListener('click', () => {
-  clearIdentityCallbackUrl();
-  showLogin();
-});
-
-initialiseAuthentication();
-
-
-const treatmentCategories = {
-  signature: {
-    title: 'Signature Treatments',
-    description: 'Longer appointments with detailed treatment and follow-up information.'
-  },
-  beauty: {
-    title: 'Beauty Treatments',
-    description: 'Shorter beauty appointments, shown clearly with price and treatment time.'
-  },
-  'coming-soon': {
-    title: 'Coming Soon',
-    description: 'Treatments being prepared for a future launch.'
-  }
-};
+let activeCategory = 'signature';
+let activeTreatmentId = null;
+let editorStep = 0;
+let editorDirty = false;
+let pendingLeaveTarget = null;
+let sessionImageUrl = '';
 
 const treatments = [
-  {
-    id: 'microblading',
-    category: 'signature',
-    title: 'Microblading',
-    description: 'A precision brow treatment designed to create natural-looking hair strokes and enhance the brow shape.',
-    price: '£100',
-    time: '2 hours',
-    visible: true,
-    note: 'Detailed pricing, follow-up information, patch-test requirements and aftercare will be added during the editing checkpoint.'
-  },
-  {
-    id: 'nano-brows',
-    category: 'signature',
-    title: 'Nano Brows',
-    description: 'Fine machine-created strokes for soft, carefully defined brows with a natural finish.',
-    price: '£100',
-    time: 'To confirm',
-    visible: true
-  },
-  {
-    id: 'blending',
-    category: 'signature',
-    title: 'Blending',
-    description: 'A tailored brow treatment that blends techniques to create balanced shape and definition.',
-    price: '£100',
-    time: 'To confirm',
-    visible: true
-  },
-  {
-    id: 'touch-up',
-    category: 'signature',
-    title: 'Touch-Up',
-    description: 'A maintenance appointment used to refresh colour, shape and definition after an earlier treatment.',
-    price: 'From £50',
-    time: 'To confirm',
-    visible: true
-  },
-  {
-    id: 'removal-repair',
-    category: 'signature',
-    title: 'Removal / Repair',
-    description: 'A consultation-led service for correcting, repairing or lightening previous brow work.',
-    price: '£200',
-    time: '3–4 hours',
-    visible: true
-  },
-  {
-    id: 'beauty-placeholder',
-    category: 'beauty',
-    title: 'Beauty treatments',
-    description: 'Waxing, tinting, lash and brow, nail, piercing and other shorter services will be entered here once their final prices and times are confirmed.',
-    price: 'Prices to confirm',
-    time: 'Times to confirm',
-    visible: false,
-    note: 'This placeholder keeps the agreed section visible without publishing unconfirmed client information.'
-  },
-  {
-    id: 'skin-peeling',
-    category: 'coming-soon',
-    title: 'Skin Peeling',
-    description: 'A skin-resurfacing treatment intended to refresh the appearance and texture of the skin.',
-    price: 'Coming soon',
-    time: 'To be announced',
-    visible: true
-  },
-  {
-    id: 'vitamin-injections',
-    category: 'coming-soon',
-    title: 'Vitamin Injections',
-    description: 'A planned treatment offering selected vitamin injections following appropriate consultation and suitability checks.',
-    price: 'Coming soon',
-    time: 'To be announced',
-    visible: true
-  },
-  {
-    id: 'threading',
-    category: 'coming-soon',
-    title: 'Threading',
-    description: 'A precise hair-removal technique using twisted thread to shape and define areas such as the brows.',
-    price: 'Coming soon',
-    time: 'To be announced',
-    visible: true
-  },
-  {
-    id: 'cream-tanning',
-    category: 'coming-soon',
-    title: 'Cream Tanning',
-    description: 'A carefully applied cream-tanning service designed to create an even, natural-looking glow.',
-    price: 'Coming soon',
-    time: 'To be announced',
-    visible: true
-  },
-  {
-    id: 'spray-tanning',
-    category: 'coming-soon',
-    title: 'Spray Tanning',
-    description: 'A professionally applied spray tan for an even finish with colour selected to suit the client.',
-    price: 'Coming soon',
-    time: 'To be announced',
-    visible: true
-  }
+  {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,aftercareLink:'/aftercare/',visible:true},
+  {id:'nano-brows',category:'signature',title:'Nano Brows',shortDescription:'Fine machine-created strokes for softly defined brows.',fullDescription:'Nano brows use a precision machine technique to create delicate, realistic-looking strokes.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
+  {id:'blending',category:'signature',title:'Blending',shortDescription:'A blended brow treatment tailored to the desired finish.',fullDescription:'Blending combines techniques to create a balanced, softly defined result.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
+  {id:'touch-up',category:'signature',title:'Touch-Up',shortDescription:'A refresh treatment to maintain colour and definition.',fullDescription:'Touch-up appointments refresh previous work and maintain the desired shape and colour.',price:'£50–£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'/aftercare/',visible:true},
+  {id:'removal-repair',category:'signature',title:'Removal / Repair',shortDescription:'Specialist correction or lightening of previous work.',fullDescription:'A consultation-led service for correcting or lightening existing work.',price:'£200',duration:'3–4 hours',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
+  {id:'waxing',category:'beauty',title:'Waxing',shortDescription:'A selection of quick waxing treatments.',fullDescription:'Choose from a range of waxing services. Individual areas and prices can be listed in the detailed pricing.',price:'From £5',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
+  {id:'lash-brow',category:'beauty',title:'Lash & Brow',shortDescription:'A combined lash and brow treatment.',fullDescription:'A convenient combined appointment for lashes and brows.',price:'£20',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'',visible:true},
+  {id:'tinting',category:'beauty',title:'Tinting',shortDescription:'Enhance the appearance of brows or lashes with tint.',fullDescription:'Tinting adds colour and definition for a polished, low-maintenance finish.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'',visible:true},
+  {id:'nail-art',category:'beauty',title:'Nail Art',shortDescription:'Creative nail designs tailored to your chosen style.',fullDescription:'Choose from simple accents through to detailed custom nail art.',price:'£10–£65',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
+  {id:'ear-piercing',category:'beauty',title:'Ear Piercing',shortDescription:'A straightforward ear-piercing appointment.',fullDescription:'Ear piercing provided in a calm and welcoming setting.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
+  {id:'shellac-nails',category:'beauty',title:'Shellac Nails',shortDescription:'Long-lasting, glossy colour for natural nails.',fullDescription:'Shellac provides a durable and polished finish for natural nails.',price:'£25',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
+  ...[
+    ['skin-peeling','Skin Peeling','A skin-renewal treatment designed to improve texture and radiance.'],
+    ['vitamin-injections','Vitamin Injections','Targeted vitamin treatments, subject to consultation and suitability.'],
+    ['threading','Threading','Precise hair removal using a traditional threading technique.'],
+    ['cream-tanning','Cream Tanning','An even, sun-kissed finish applied using a professional tanning cream.'],
+    ['spray-tanning','Spray Tanning','A professionally applied tan for an even, natural-looking glow.']
+  ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true}))
 ];
 
-const treatmentsBrowseView = document.querySelector('#treatmentsBrowseView');
-const treatmentSummaryView = document.querySelector('#treatmentSummaryView');
-const treatmentList = document.querySelector('#treatmentList');
-const treatmentCategoryTitle = document.querySelector('#treatmentCategoryTitle');
-const treatmentCategoryDescription = document.querySelector('#treatmentCategoryDescription');
-let activeTreatmentCategory = 'signature';
+const views = ['dashboardView','treatmentsView','treatmentSummaryView','editorView','previewView'];
+const draftKey = id => `eb-treatment-draft:${id}`;
+const clone = value => JSON.parse(JSON.stringify(value));
+const findTreatment = id => treatments.find(item => item.id === id);
 
-function showTreatments() {
-  showPanel('treatments');
-  treatmentsBrowseView.hidden = false;
-  treatmentSummaryView.hidden = true;
-  renderTreatmentCategory(activeTreatmentCategory);
-  window.scrollTo({ top: 0, behavior: 'auto' });
+function showPanel(name){Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==name;});}
+function showAppView(id){views.forEach(viewId=>{document.querySelector(`#${viewId}`).hidden=viewId!==id;});window.scrollTo({top:0,behavior:'instant'});}
+function clearIdentityCallbackUrl(){history.replaceState(null,document.title,'/manage/');}
+function showLogin(){signedInAs.textContent='';successMessage.textContent='You are securely signed in.';showPanel('login');}
+function showSuccess(user,message='Manage your Effortless Beauty website from one place.'){successMessage.textContent=message;signedInAs.textContent=user?.email||'Authenticated user';showPanel('success');showAppView('dashboardView');}
+function showError(error){errorMessage.textContent=error?.message||error?.msg||'The login service could not complete that request.';showPanel('error');}
+function passwordsMatch(password,confirmation){if(password!==confirmation)throw new Error('The two passwords do not match.');if(password.length<8)throw new Error('Your password must contain at least 8 characters.');}
+function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
+function nl2br(value=''){return escapeHtml(value).replace(/\n/g,'<br>');}
+function getSavedDraft(id){try{return JSON.parse(localStorage.getItem(draftKey(id))||'null');}catch{return null;}}
+function saveDraft(record){localStorage.setItem(draftKey(record.id),JSON.stringify({...record,savedAt:new Date().toISOString()}));editorDirty=false;setDraftStatus('Draft saved');}
+function removeDraft(id){localStorage.removeItem(draftKey(id));}
+function setDraftStatus(text){const el=document.querySelector('#draftStatus');el.textContent=text;}
+function currentRecord(){const base=clone(findTreatment(activeTreatmentId));const form=new FormData(document.querySelector('#treatmentEditorForm'));return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,aftercareLink:form.get('aftercareLink')?.trim()||'',visible:document.querySelector('#editVisible').checked};}
+
+function renderTreatments(){
+  document.querySelectorAll('.treatment-tabs [role="tab"]').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.category===activeCategory)));
+  const list=document.querySelector('#treatmentList');
+  const items=treatments.filter(item=>item.category===activeCategory);
+  list.innerHTML=items.map(item=>{const draft=getSavedDraft(item.id);return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(draft?.title||item.title)}</strong><small>${escapeHtml(draft?.price||item.price)} · ${escapeHtml(draft?.duration||item.duration)}</small></span><span class="row-meta">${draft?'<em>Draft saved</em>':''}<b aria-hidden="true">›</b></span></button>`;}).join('');
 }
-
-function showDashboard() {
-  showPanel('success');
-  window.scrollTo({ top: 0, behavior: 'auto' });
+function summaryMarkup(record,{preview=false}={}){
+  return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is a draft preview only. Nothing has been published.</p>':''}</div>`;
 }
+function openSummary(id){activeTreatmentId=id;const record=getSavedDraft(id)||findTreatment(id);document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(record);showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
+function loadEditor(){const record=getSavedDraft(activeTreatmentId)||clone(findTreatment(activeTreatmentId));document.querySelector('#editTitle').value=record.title||'';document.querySelector('#editShortDescription').value=record.shortDescription||'';document.querySelector('#editPrice').value=record.price||'';document.querySelector('#editDuration').value=record.duration||'';document.querySelector('#editFullDescription').value=record.fullDescription||'';document.querySelector('#editDetailedPricing').value=record.detailedPricing||'';document.querySelector('#editFollowUpPricing').value=record.followUpPricing||'';document.querySelector('#editPatchTest').checked=Boolean(record.patchTest);document.querySelector('#editAftercareLink').value=record.aftercareLink||'';document.querySelector('#editVisible').checked=Boolean(record.visible);editorStep=0;editorDirty=false;sessionImageUrl='';setDraftStatus(getSavedDraft(activeTreatmentId)?'Saved draft loaded':'Draft protected');renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);}
+function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorSaveButton').hidden=editorStep!==4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;}
+function validateStep(){const step=document.querySelector(`.editor-step[data-step="${editorStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
+function requestLeave(target){pendingLeaveTarget=target;if(editorDirty){document.querySelector('#leaveDialog').showModal();}else{leaveEditor(target);}}
+function leaveEditor(target){editorDirty=false;pendingLeaveTarget=null;if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
-function renderTreatmentCategory(category) {
-  activeTreatmentCategory = category;
-  const categoryInfo = treatmentCategories[category];
-  treatmentCategoryTitle.textContent = categoryInfo.title;
-  treatmentCategoryDescription.textContent = categoryInfo.description;
+// Dashboard and treatment browser
+document.querySelector('#openTreatmentsButton').addEventListener('click',()=>{activeCategory='signature';renderTreatments();showAppView('treatmentsView');history.pushState({view:'treatments'},'','#treatments');});
+document.querySelector('#treatmentsBackButton').addEventListener('click',()=>showAppView('dashboardView'));
+document.querySelector('#summaryBackButton').addEventListener('click',()=>{renderTreatments();showAppView('treatmentsView');});
+document.querySelectorAll('.treatment-tabs [role="tab"]').forEach(btn=>btn.addEventListener('click',()=>{activeCategory=btn.dataset.category;renderTreatments();}));
+document.querySelector('#treatmentList').addEventListener('click',event=>{const row=event.target.closest('[data-treatment-id]');if(row)openSummary(row.dataset.treatmentId);});
+document.querySelector('#editTreatmentButton').addEventListener('click',loadEditor);
 
-  document.querySelectorAll('.treatment-tab').forEach(tab => {
-    const selected = tab.dataset.category === category;
-    tab.classList.toggle('is-active', selected);
-    tab.setAttribute('aria-selected', String(selected));
-  });
+// Editor protection and flow
+document.querySelector('#treatmentEditorForm').addEventListener('input',()=>{editorDirty=true;setDraftStatus('Saving locally…');clearTimeout(window.ebDraftTimer);window.ebDraftTimer=setTimeout(()=>{saveDraft(currentRecord());editorDirty=true;setDraftStatus('Changes protected on this device');},450);});
+document.querySelector('#editImage').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(sessionImageUrl)URL.revokeObjectURL(sessionImageUrl);sessionImageUrl=URL.createObjectURL(file);const img=document.querySelector('#editorImagePreview');img.src=sessionImageUrl;img.hidden=false;editorDirty=true;});
+document.querySelector('#editorNextButton').addEventListener('click',()=>{if(validateStep()){editorStep=Math.min(4,editorStep+1);renderEditorStep();}});
+document.querySelector('#editorPreviousButton').addEventListener('click',()=>{editorStep=Math.max(0,editorStep-1);renderEditorStep();});
+document.querySelector('#editorSaveButton').addEventListener('click',()=>{saveDraft(currentRecord());renderTreatments();});
+document.querySelector('#editorPreviewButton').addEventListener('click',()=>{const record=currentRecord();if(sessionImageUrl)record.imageData=sessionImageUrl;document.querySelector('#treatmentPreview').innerHTML=summaryMarkup(record,{preview:true});showAppView('previewView');});
+document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
+document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
+document.querySelector('#leaveDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')return;if(choice==='save'){saveDraft(currentRecord());leaveEditor(pendingLeaveTarget||'summary');}if(choice==='discard'){removeDraft(activeTreatmentId);editorDirty=false;leaveEditor(pendingLeaveTarget||'summary');}});
+window.addEventListener('beforeunload',event=>{if(editorDirty){event.preventDefault();event.returnValue='';}});
+window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden&&editorDirty){history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);requestLeave('summary');}});
 
-  const categoryTreatments = treatments.filter(treatment => treatment.category === category);
-  treatmentList.replaceChildren(...categoryTreatments.map(createTreatmentRow));
-}
-
-function createTreatmentRow(treatment) {
-  const button = document.createElement('button');
-  button.className = 'treatment-row';
-  button.type = 'button';
-  button.dataset.treatmentId = treatment.id;
-
-  const icon = document.createElement('span');
-  icon.className = 'treatment-row-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = treatment.category === 'coming-soon' ? '◌' : treatment.category === 'beauty' ? '♡' : '✦';
-
-  const copy = document.createElement('span');
-  copy.className = 'treatment-row-copy';
-  const title = document.createElement('strong');
-  title.textContent = treatment.title;
-  const details = document.createElement('small');
-  details.textContent = `${treatment.price} · ${treatment.time}`;
-  copy.append(title, details);
-
-  const arrow = document.createElement('span');
-  arrow.className = 'treatment-row-arrow';
-  arrow.setAttribute('aria-hidden', 'true');
-  arrow.textContent = '›';
-
-  button.append(icon, copy, arrow);
-  button.addEventListener('click', () => showTreatmentSummary(treatment.id));
-  return button;
-}
-
-function showTreatmentSummary(treatmentId) {
-  const treatment = treatments.find(item => item.id === treatmentId);
-  if (!treatment) return;
-
-  document.querySelector('#treatmentSummaryCategory').textContent = treatmentCategories[treatment.category].title;
-  document.querySelector('#treatmentSummaryTitle').textContent = treatment.title;
-  document.querySelector('#treatmentSummaryDescription').textContent = treatment.description;
-  document.querySelector('#treatmentSummaryPrice').textContent = treatment.price;
-  document.querySelector('#treatmentSummaryTime').textContent = treatment.time;
-  document.querySelector('#treatmentSummaryVisibility').textContent = treatment.visible ? 'Visible' : 'Hidden placeholder';
-  document.querySelector('#treatmentSummaryNote').textContent = treatment.note || '';
-  document.querySelector('#treatmentSummaryImage').textContent = treatment.category === 'coming-soon' ? '◌' : treatment.category === 'beauty' ? '♡' : '✦';
-
-  treatmentsBrowseView.hidden = true;
-  treatmentSummaryView.hidden = false;
-  window.scrollTo({ top: 0, behavior: 'auto' });
-}
-
-document.querySelector('#treatmentsButton').addEventListener('click', showTreatments);
-document.querySelector('#backToDashboardButton').addEventListener('click', showDashboard);
-document.querySelector('#backToTreatmentsButton').addEventListener('click', () => {
-  treatmentSummaryView.hidden = true;
-  treatmentsBrowseView.hidden = false;
-  window.scrollTo({ top: 0, behavior: 'auto' });
-});
-
-document.querySelectorAll('.treatment-tab').forEach(tab => {
-  tab.addEventListener('click', () => renderTreatmentCategory(tab.dataset.category));
-});
-
-document.querySelector('#treatmentsLogoutButton').addEventListener('click', async () => {
-  try {
-    await logout();
-    showLogin();
-  } catch (error) {
-    showError(error);
-  }
-});
+// Authentication
+document.querySelector('#recoveryRequestButton').addEventListener('click',async()=>{const emailInput=document.querySelector('#loginEmail');const message=document.querySelector('#recoveryRequestMessage');const email=emailInput.value.trim();if(!email){emailInput.focus();message.textContent='Enter your email address first, then select Forgotten your password?';message.hidden=false;return;}try{message.textContent='Sending password reset email…';message.hidden=false;await requestPasswordRecovery(email);message.textContent='Password reset email sent. Check your inbox and spam folder.';}catch(error){message.textContent=error?.message||'The password reset email could not be sent. Please try again.';}});
+async function initialiseAuthentication(){const heading=document.querySelector('#loadingPanel h1');const message=document.querySelector('#loadingPanel p:last-child');try{heading.textContent='Checking your access…';message.textContent='Starting authentication…';const hasIdentityToken=/^#(?:invite_token|recovery_token|confirmation_token)=/.test(window.location.hash);let callback=null;if(hasIdentityToken){message.textContent='Processing the secure email link…';callback=await handleAuthCallback();}if(callback){switch(callback.type){case'invite':inviteToken=callback.token;showPanel('invite');return;case'recovery':clearIdentityCallbackUrl();showPanel('recovery');return;case'confirmation':case'email_change':case'oauth':clearIdentityCallbackUrl();showSuccess(callback.user);return;default:clearIdentityCallbackUrl();if(callback.user){showSuccess(callback.user);return;}}}const user=await getUser();user?showSuccess(user):showLogin();}catch(error){showError(error);}}
+document.querySelector('#loginForm').addEventListener('submit',async event=>{event.preventDefault();showPanel('loading');try{showSuccess(await login(document.querySelector('#loginEmail').value.trim(),document.querySelector('#loginPassword').value));}catch(error){showError(error);}});
+document.querySelector('#inviteForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#invitePassword').value;passwordsMatch(password,document.querySelector('#invitePasswordConfirm').value);if(!inviteToken)throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');showPanel('loading');const user=await acceptInvite(inviteToken,password);inviteToken=null;clearIdentityCallbackUrl();showSuccess(user,'Your editor account is active.');}catch(error){showError(error);}});
+document.querySelector('#recoveryForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#recoveryPassword').value;passwordsMatch(password,document.querySelector('#recoveryPasswordConfirm').value);showPanel('loading');showSuccess(await updateUser({password}),'Your password has been updated.');}catch(error){showError(error);}});
+document.querySelector('#logoutButton').addEventListener('click',async()=>{try{await logout();showLogin();}catch(error){showError(error);}});
+document.querySelector('#retryButton').addEventListener('click',()=>{clearIdentityCallbackUrl();showLogin();});
+initialiseAuthentication();
