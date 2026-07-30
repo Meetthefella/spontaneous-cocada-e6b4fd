@@ -94,13 +94,97 @@
       </form>
     </section>
 
-    <section id="successPanel" class="manage-card manage-success" aria-labelledby="successTitle" hidden>
-      <div class="manage-success-mark" aria-hidden="true">✓</div>
-      <p class="eyebrow">Website manager</p>
-      <h1 id="successTitle">Authentication successful</h1>
-      <p id="successMessage">You are securely signed in.</p>
-      <p id="signedInAs" class="manage-help"></p>
-      <button id="logoutButton" class="button secondary" type="button">Sign out</button>
+    <section id="successPanel" class="manager-dashboard" aria-labelledby="successTitle" hidden>
+      <div class="dashboard-heading">
+        <div>
+          <p class="eyebrow">Website manager</p>
+          <h1 id="successTitle">Welcome back</h1>
+          <p id="successMessage">Your website is ready to manage.</p>
+        </div>
+
+        <button id="logoutButton" class="button secondary dashboard-logout" type="button">Sign out</button>
+      </div>
+
+      <section class="dashboard-status" aria-label="Website status">
+        <div class="status-item">
+          <span class="status-label">Website status</span>
+          <strong class="status-live"><span aria-hidden="true"></span>Live</strong>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Last published</span>
+          <strong>Not available yet</strong>
+        </div>
+        <div class="status-item status-account">
+          <span class="status-label">Signed in as</span>
+          <strong id="signedInAs"></strong>
+        </div>
+      </section>
+
+      <section class="dashboard-sections" aria-labelledby="sectionsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Website sections</p>
+            <h2 id="sectionsTitle">Choose an area</h2>
+          </div>
+          <p>Editing tools will be added one completed section at a time.</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <button class="dashboard-card" type="button" aria-describedby="homepageStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">⌂</span>
+            <span class="dashboard-card-copy">
+              <strong>Homepage</strong>
+              <small>Headings, introduction and calls to action</small>
+            </span>
+            <span id="homepageStatus" class="dashboard-card-status">Coming next</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="treatmentsStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">✦</span>
+            <span class="dashboard-card-copy">
+              <strong>Treatments</strong>
+              <small>Services, descriptions, duration and prices</small>
+            </span>
+            <span id="treatmentsStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="aftercareStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">♡</span>
+            <span class="dashboard-card-copy">
+              <strong>Aftercare</strong>
+              <small>Healing guidance and aftercare information</small>
+            </span>
+            <span id="aftercareStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="bookingStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">▣</span>
+            <span class="dashboard-card-copy">
+              <strong>Booking</strong>
+              <small>Booking guidance and Square link</small>
+            </span>
+            <span id="bookingStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="contactStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">✉</span>
+            <span class="dashboard-card-copy">
+              <strong>Contact</strong>
+              <small>Contact details and enquiry information</small>
+            </span>
+            <span id="contactStatus" class="dashboard-card-status">Planned</span>
+          </button>
+
+          <button class="dashboard-card" type="button" aria-describedby="settingsStatus" disabled>
+            <span class="dashboard-icon" aria-hidden="true">⚙</span>
+            <span class="dashboard-card-copy">
+              <strong>Settings</strong>
+              <small>Website-wide details and manager settings</small>
+            </span>
+            <span id="settingsStatus" class="dashboard-card-status">Planned</span>
+          </button>
+        </div>
+      </section>
     </section>
 
     <section id="errorPanel" class="manage-card" role="alert" hidden>

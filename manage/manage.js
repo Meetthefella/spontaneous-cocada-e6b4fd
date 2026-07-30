@@ -41,7 +41,7 @@ function showLogin() {
 
 function showSuccess(user, message = 'You are securely signed in.') {
   successMessage.textContent = message;
-  signedInAs.textContent = user?.email ? `Signed in as ${user.email}` : '';
+  signedInAs.textContent = user?.email || 'Authenticated user';
   showPanel('success');
 }
 
