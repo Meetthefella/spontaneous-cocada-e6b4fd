@@ -65,8 +65,29 @@ function passwordsMatch(password, confirmation) {
 }
 
 async function initialiseAuthentication() {
+  const heading = document.querySelector('#loadingPanel h1');
+  const message = document.querySelector('#loadingPanel p:last-child');
+
   try {
-    const callback = await handleAuthCallback();
+    heading.textContent = 'Step 1';
+    message.textContent = 'Starting authentication…';
+
+    const hasIdentityToken =
+      /^#(?:invite_token|recovery_token|confirmation_token)=/.test(
+        window.location.hash
+      );
+
+    let callback = null;
+
+    if (hasIdentityToken) {
+      heading.textContent = 'Step 2';
+      message.textContent = 'Processing the email link…';
+
+      callback = await handleAuthCallback();
+
+      heading.textContent = 'Step 3';
+      message.textContent = 'Identity link processed.';
+    }
 
     if (callback) {
       switch (callback.type) {
@@ -84,12 +105,7 @@ async function initialiseAuthentication() {
         case 'email_change':
         case 'oauth':
           clearIdentityCallbackUrl();
-          showSuccess(
-            callback.user,
-            callback.type === 'confirmation'
-              ? 'Your account has been confirmed and you are securely signed in.'
-              : 'You are securely signed in.'
-          );
+          showSuccess(callback.user);
           return;
 
         default:
@@ -101,6 +117,26 @@ async function initialiseAuthentication() {
           }
       }
     }
+
+    heading.textContent = 'Step 4';
+    message.textContent = 'Checking for an existing login…';
+
+    const user = await getUser();
+
+    heading.textContent = 'Step 5';
+    message.textContent = user
+      ? 'Existing login found.'
+      : 'No existing login found.';
+
+    if (user) {
+      showSuccess(user);
+    } else {
+      showLogin();
+    }
+  } catch (error) {
+    showError(error);
+  }
+}
 
     const user = await getUser();
 
