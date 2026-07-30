@@ -148,4 +148,16 @@
     width: 44px;
     height: 44px;
   }
+.manage-text-button {
+  display: block;
+  margin: 18px auto 0;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 }

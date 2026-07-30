@@ -4,6 +4,7 @@ import {
   handleAuthCallback,
   login,
   logout,
+  requestPasswordRecovery,
   updateUser
 } from '@netlify/identity';
 
@@ -63,7 +64,35 @@ function passwordsMatch(password, confirmation) {
     throw new Error('Your password must contain at least 8 characters.');
   }
 }
+document
+  .querySelector('#recoveryRequestButton')
+  .addEventListener('click', async () => {
+    const emailInput = document.querySelector('#loginEmail');
+    const message = document.querySelector('#recoveryRequestMessage');
+    const email = emailInput.value.trim();
 
+    if (!email) {
+      emailInput.focus();
+      message.textContent =
+        'Enter your email address first, then select Forgotten your password?';
+      message.hidden = false;
+      return;
+    }
+
+    try {
+      message.textContent = 'Sending password reset email…';
+      message.hidden = false;
+
+      await requestPasswordRecovery(email);
+
+      message.textContent =
+        'Password reset email sent. Check your inbox and spam folder.';
+    } catch (error) {
+      message.textContent =
+        error?.message ||
+        'The password reset email could not be sent. Please try again.';
+    }
+  });
 async function initialiseAuthentication() {
   const heading = document.querySelector('#loadingPanel h1');
   const message = document.querySelector('#loadingPanel p:last-child');
