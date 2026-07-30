@@ -1,0 +1,26 @@
+MILESTONE 1 – AUTHENTICATION PATCH
+
+1. Replace:
+   /manage/index.html
+   /manage/manage.js
+   /manage/manage.css
+
+2. Add:
+   /assets/js/identity-handoff.js
+
+3. In the ROOT homepage index.html, add this as the first script inside <head>,
+   before any Netlify Identity widget or other redirect/callback code:
+
+   <script src="/assets/js/identity-handoff.js"></script>
+
+4. Remove the old root-page callback code that:
+   - calls handleAuthCallback() on the homepage;
+   - writes ebIdentityCallbackHash to sessionStorage;
+   - redirects to /manage/?identity_callback=1; or
+   - clears invite_token, recovery_token or confirmation_token hashes.
+
+Expected email flow:
+   /#recovery_token=...  ->  /manage/#recovery_token=...
+
+The token must still be visible in the /manage URL when the Netlify Identity
+widget initialises. Netlify then opens the password-reset/invitation interface.

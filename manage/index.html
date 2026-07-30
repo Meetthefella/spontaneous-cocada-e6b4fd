@@ -7,21 +7,6 @@
   <title>Effortless Beauty Website Manager</title>
   <link rel="stylesheet" href="/assets/css/style.css" />
   <link rel="stylesheet" href="/manage/manage.css" />
-  <script>
-    (function () {
-      var isIdentityCallback = new URLSearchParams(window.location.search).get('identity_callback') === '1';
-      if (!isIdentityCallback || window.location.hash) return;
-
-      try {
-        var storedHash = sessionStorage.getItem('ebIdentityCallbackHash');
-        if (/^#(?:invite_token|recovery_token|confirmation_token)=/.test(storedHash || '')) {
-          window.location.hash = storedHash;
-        }
-      } catch (error) {
-        // Netlify Identity will show the normal sign-in view if storage is unavailable.
-      }
-    }());
-  </script>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js" defer></script>
   <script src="/manage/manage.js" defer></script>
 </head>
@@ -45,8 +30,7 @@
       <h1 id="loginTitle">Sign in</h1>
       <p>Use the email address and password from your Effortless Beauty editor invitation.</p>
       <button id="loginButton" class="button primary" type="button">Sign in</button>
-      <button id="recoveryButton" class="manage-text-button" type="button">Forgotten your password?</button>
-      <p class="manage-help">Accounts are invitation-only. There is no public registration.</p>
+      <p class="manage-help">Accounts are invitation-only. Password recovery is available inside the secure sign-in window.</p>
     </section>
 
     <section id="successPanel" class="manage-card manage-success" aria-labelledby="successTitle" hidden>

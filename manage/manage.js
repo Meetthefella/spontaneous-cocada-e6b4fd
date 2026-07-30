@@ -14,19 +14,19 @@ function showPanel(name) {
   });
 }
 
-function cleanIdentityHash() {
-  const identityTokens = ['invite_token', 'recovery_token', 'confirmation_token'];
-  const hash = window.location.hash.replace(/^#/, '');
-  if (identityTokens.some(token => hash.startsWith(`${token}=`))) {
-    try { sessionStorage.removeItem('ebIdentityCallbackHash'); } catch (error) {}
-    history.replaceState(null, document.title, window.location.pathname);
+function clearCompletedIdentityCallback() {
+  const isIdentityToken = /^#(?:invite_token|recovery_token|confirmation_token)=/.test(window.location.hash);
+  const hasCallbackFlag = new URLSearchParams(window.location.search).has('identity_callback');
+
+  if (isIdentityToken || hasCallbackFlag) {
+    history.replaceState(null, document.title, '/manage/');
   }
 }
 
 function showSuccess(user) {
   signedInAs.textContent = user?.email ? `Signed in as ${user.email}` : '';
   showPanel('success');
-  cleanIdentityHash();
+  clearCompletedIdentityCallback();
 }
 
 function showLogin() {
@@ -58,13 +58,15 @@ window.addEventListener('DOMContentLoaded', () => {
     showSuccess(user);
   });
 
-  identity.on('logout', () => showLogin());
-  identity.on('error', error => showError(error));
+  identity.on('logout', showLogin);
+  identity.on('error', showError);
 
+  // Netlify Identity reads invitation, recovery and confirmation tokens from
+  // the current URL hash during initialisation. Do not redirect or clear the
+  // hash before this call has completed.
   identity.init();
 
   document.querySelector('#loginButton').addEventListener('click', () => identity.open('login'));
-  document.querySelector('#recoveryButton').addEventListener('click', () => identity.open('login'));
   document.querySelector('#logoutButton').addEventListener('click', () => identity.logout());
-  document.querySelector('#retryButton').addEventListener('click', () => showLogin());
+  document.querySelector('#retryButton').addEventListener('click', showLogin);
 });
