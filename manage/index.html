@@ -139,13 +139,13 @@
             <span id="homepageStatus" class="dashboard-card-status">Planned</span>
           </button>
 
-          <button class="dashboard-card dashboard-card-current" type="button" aria-describedby="treatmentsStatus" disabled>
+          <button id="treatmentsButton" class="dashboard-card dashboard-card-current" type="button" aria-describedby="treatmentsStatus">
             <span class="dashboard-icon" aria-hidden="true">✦</span>
             <span class="dashboard-card-copy">
               <strong>Treatments</strong>
               <small>Signature, beauty and coming-soon treatments</small>
             </span>
-            <span id="treatmentsStatus" class="dashboard-card-status dashboard-card-status-current">Next milestone</span>
+            <span id="treatmentsStatus" class="dashboard-card-status dashboard-card-status-current">Open</span>
           </button>
 
           <button class="dashboard-card" type="button" aria-describedby="aftercareStatus" disabled>
@@ -202,6 +202,65 @@
             <span id="settingsStatus" class="dashboard-card-status">Planned</span>
           </button>
         </div>
+      </section>
+    </section>
+
+    <section id="treatmentsPanel" class="treatments-manager" aria-labelledby="treatmentsTitle" hidden>
+      <header class="manager-toolbar">
+        <button id="backToDashboardButton" class="manager-back" type="button" aria-label="Back to dashboard">
+          <span aria-hidden="true">←</span> Dashboard
+        </button>
+        <button id="treatmentsLogoutButton" class="button secondary" type="button">Sign out</button>
+      </header>
+
+      <section id="treatmentsBrowseView" class="treatments-surface">
+        <div class="treatments-heading">
+          <p class="eyebrow">Website manager</p>
+          <h1 id="treatmentsTitle">Treatments</h1>
+          <p>Choose a section, then select a treatment to view its information.</p>
+        </div>
+
+        <div class="treatment-tabs" role="tablist" aria-label="Treatment sections">
+          <button class="treatment-tab is-active" type="button" role="tab" aria-selected="true" data-category="signature">Signature</button>
+          <button class="treatment-tab" type="button" role="tab" aria-selected="false" data-category="beauty">Beauty</button>
+          <button class="treatment-tab" type="button" role="tab" aria-selected="false" data-category="coming-soon">Coming Soon</button>
+        </div>
+
+        <div class="treatment-section-copy">
+          <h2 id="treatmentCategoryTitle">Signature Treatments</h2>
+          <p id="treatmentCategoryDescription">Longer appointments with detailed treatment and follow-up information.</p>
+        </div>
+
+        <div id="treatmentList" class="treatment-list" aria-live="polite"></div>
+      </section>
+
+      <section id="treatmentSummaryView" class="treatments-surface treatment-summary" hidden>
+        <button id="backToTreatmentsButton" class="manager-back summary-back" type="button">
+          <span aria-hidden="true">←</span> Treatments
+        </button>
+
+        <div id="treatmentSummaryImage" class="treatment-summary-image" aria-hidden="true">✦</div>
+        <p id="treatmentSummaryCategory" class="eyebrow"></p>
+        <h1 id="treatmentSummaryTitle"></h1>
+        <p id="treatmentSummaryDescription" class="treatment-summary-description"></p>
+
+        <dl class="treatment-summary-facts">
+          <div>
+            <dt>Price</dt>
+            <dd id="treatmentSummaryPrice"></dd>
+          </div>
+          <div>
+            <dt>Treatment time</dt>
+            <dd id="treatmentSummaryTime"></dd>
+          </div>
+          <div>
+            <dt>Visibility</dt>
+            <dd id="treatmentSummaryVisibility"></dd>
+          </div>
+        </dl>
+
+        <div id="treatmentSummaryNote" class="treatment-summary-note"></div>
+        <p class="manage-help treatment-summary-help">Editing will be added in the next completed checkpoint.</p>
       </section>
     </section>
 
