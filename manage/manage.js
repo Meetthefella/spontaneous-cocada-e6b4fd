@@ -138,18 +138,6 @@ async function initialiseAuthentication() {
   }
 }
 
-    const user = await getUser();
-
-    if (user) {
-      showSuccess(user);
-    } else {
-      showLogin();
-    }
-  } catch (error) {
-    showError(error);
-  }
-}
-
 document.querySelector('#loginForm').addEventListener('submit', async event => {
   event.preventDefault();
   showPanel('loading');
