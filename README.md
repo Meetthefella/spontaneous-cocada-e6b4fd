@@ -100,3 +100,8 @@ The Treatments editor now publishes through the authenticated `/.netlify/functio
 - Publish checks the Identity session before sending content to the protected Netlify Function.
 - Netlify Identity remains responsible for full session expiry.
 - Legacy `/admin` and GitHub-writing publication artefacts have been removed.
+
+
+## Milestone 4 — Homepage editor
+
+The authenticated Website Manager now includes a mobile-first Homepage editor with autosave, full-site preview and Netlify Blobs publishing. Published content is stored in the `homepage` key of the site-wide `effortless-beauty-content` Blob store. The static `content/homepage.json` file remains the Golden Master fallback.
