@@ -1219,7 +1219,7 @@ function startEditor(){
   const draft=readDraft(activeTreatmentId);
   const record=draft?clone(draft.record):clone(findTreatment(activeTreatmentId));
   editorDirty=Boolean(draft);
-  populateEditor(record,draft?.editorStep||0);
+  populateEditor(record,0);
   setDraftStatus(draft?`✓ Changes restored · ${relativeTime(draft.savedAt)}`:'✓ Autosave on');
 }
 function requestEditor(){startEditor();}
