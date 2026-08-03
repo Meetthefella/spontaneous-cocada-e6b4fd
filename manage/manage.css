@@ -565,3 +565,45 @@
 
 .publish-status.error { color: #8a3232; }
 .publish-status.success { color: #365f45; }
+
+
+/* Checkpoint 3.5: calm inactivity lock */
+.inactivity-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(59, 45, 36, .58);
+  backdrop-filter: blur(8px);
+}
+
+.inactivity-lock-card {
+  width: min(520px, 100%);
+  padding: 38px 28px;
+  border: 1px solid rgba(91, 68, 52, .2);
+  border-radius: 26px;
+  background: #eee4d5;
+  box-shadow: 0 24px 80px rgba(35, 25, 18, .3);
+  color: #4b3e34;
+  text-align: center;
+}
+
+.inactivity-lock-card h1 {
+  margin: .2em 0 .35em;
+  font-family: Georgia, serif;
+  font-size: clamp(2rem, 8vw, 3.3rem);
+  font-weight: 500;
+}
+
+.inactivity-lock-card p:not(.eyebrow) {
+  max-width: 40ch;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.inactivity-lock-card .button {
+  width: min(100%, 280px);
+  margin-top: 16px;
+}

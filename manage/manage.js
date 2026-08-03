@@ -21,6 +21,11 @@ let sessionImageUrl = '';
 let draftTimer = null;
 let initialPriceLinked = true;
 let publishing = false;
+let inactivityTimer = null;
+let inactivityLocked = false;
+let resumeAfterLogin = false;
+let lockContext = null;
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const TREATMENTS_API = '/.netlify/functions/treatments';
 
 let treatments = [
@@ -91,6 +96,12 @@ async function loadPublishedTreatments(){
 async function publishTreatments(){
   if(publishing)return;
   flushDraft();
+  const user=await getUser().catch(()=>null);
+  if(!user){
+    setPublishStatus('Your session has expired. Sign in again to publish.','error');
+    lockManager();
+    return;
+  }
   publishing=true;
   const button=document.querySelector('#editorPublishButton');
   button.disabled=true;
@@ -123,9 +134,52 @@ async function publishTreatments(){
 
 function showPanel(name){Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==name;});}
 function showAppView(id){views.forEach(viewId=>{document.querySelector(`#${viewId}`).hidden=viewId!==id;});window.scrollTo({top:0,behavior:'instant'});}
+function currentAppView(){return views.find(viewId=>!document.querySelector(`#${viewId}`).hidden)||'dashboardView';}
+function captureLockContext(){return {viewId:currentAppView(),activeTreatmentId,activeCategory,editorStep};}
+function setAppInert(value){views.forEach(viewId=>{document.querySelector(`#${viewId}`).inert=value;});}
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(inactivityLocked||panels.success.hidden)return;
+  inactivityTimer=setTimeout(lockManager,INACTIVITY_TIMEOUT_MS);
+}
+function lockManager(){
+  if(inactivityLocked||panels.success.hidden)return;
+  if(editorDirty)flushDraft();
+  lockContext=captureLockContext();
+  inactivityLocked=true;
+  setAppInert(true);
+  document.querySelector('#inactivityLock').hidden=false;
+  clearTimeout(inactivityTimer);
+}
+function restoreLockedContext(){
+  if(!lockContext){showAppView('dashboardView');return;}
+  activeTreatmentId=lockContext.activeTreatmentId;
+  activeCategory=lockContext.activeCategory||'signature';
+  editorStep=Math.max(0,Math.min(4,lockContext.editorStep||0));
+  if(lockContext.viewId==='treatmentsView')renderTreatments();
+  if(lockContext.viewId==='treatmentSummaryView'&&activeTreatmentId){
+    const draft=readDraft(activeTreatmentId);const record=draft?.record||findTreatment(activeTreatmentId);
+    document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(record,{preview:Boolean(draft)});
+  }
+  if(lockContext.viewId==='editorView')renderEditorStep();
+  showAppView(lockContext.viewId||'dashboardView');
+}
+function unlockManager(){
+  inactivityLocked=false;
+  document.querySelector('#inactivityLock').hidden=true;
+  setAppInert(false);
+  resetInactivityTimer();
+}
 function clearIdentityCallbackUrl(){history.replaceState(null,document.title,'/manage/');}
-function showLogin(){signedInAs.textContent='';successMessage.textContent='You are securely signed in.';showPanel('login');}
-function showSuccess(user,message='Manage your Effortless Beauty website from one place.'){successMessage.textContent=message;signedInAs.textContent=user?.email||'Authenticated user';showPanel('success');showAppView('dashboardView');loadPublishedTreatments();}
+function showLogin(){signedInAs.textContent='';successMessage.textContent='You are securely signed in.';clearTimeout(inactivityTimer);showPanel('login');}
+function showSuccess(user,message='Manage your Effortless Beauty website from one place.'){
+  successMessage.textContent=message;
+  signedInAs.textContent=user?.email||'Authenticated user';
+  showPanel('success');
+  loadPublishedTreatments();
+  if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
+  else{showAppView('dashboardView');unlockManager();lockContext=null;}
+}
 function showError(error){errorMessage.textContent=error?.message||error?.msg||'The login service could not complete that request.';showPanel('error');}
 function passwordsMatch(password,confirmation){if(password!==confirmation)throw new Error('The two passwords do not match.');if(password.length<8)throw new Error('Your password must contain at least 8 characters.');}
 function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
@@ -252,12 +306,25 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden){flushDraft();leaveEditor('summary');}});
 setInterval(refreshDraftTimes,30000);
 
+// Calm inactivity lock. Work is saved before the manager is hidden.
+document.querySelector('#continueSecurelyButton').addEventListener('click',()=>{
+  resumeAfterLogin=true;
+  const email=signedInAs.textContent.trim();
+  if(email&&email.includes('@'))document.querySelector('#loginEmail').value=email;
+  document.querySelector('#loginPassword').value='';
+  showPanel('login');
+  setTimeout(()=>document.querySelector('#loginPassword').focus(),0);
+});
+['pointerdown','keydown','touchstart','input','change'].forEach(eventName=>{
+  document.addEventListener(eventName,()=>{if(!inactivityLocked)resetInactivityTimer();},{passive:true});
+});
+
 // Authentication
 document.querySelector('#recoveryRequestButton').addEventListener('click',async()=>{const emailInput=document.querySelector('#loginEmail');const message=document.querySelector('#recoveryRequestMessage');const email=emailInput.value.trim();if(!email){emailInput.focus();message.textContent='Enter your email address first, then select Forgotten your password?';message.hidden=false;return;}try{message.textContent='Sending password reset email…';message.hidden=false;await requestPasswordRecovery(email);message.textContent='Password reset email sent. Check your inbox and spam folder.';}catch(error){message.textContent=error?.message||'The password reset email could not be sent. Please try again.';}});
 async function initialiseAuthentication(){const heading=document.querySelector('#loadingPanel h1');const message=document.querySelector('#loadingPanel p:last-child');try{heading.textContent='Checking your access…';message.textContent='Starting authentication…';const hasIdentityToken=/^#(?:invite_token|recovery_token|confirmation_token)=/.test(window.location.hash);let callback=null;if(hasIdentityToken){message.textContent='Processing the secure email link…';callback=await handleAuthCallback();}if(callback){switch(callback.type){case'invite':inviteToken=callback.token;showPanel('invite');return;case'recovery':clearIdentityCallbackUrl();showPanel('recovery');return;case'confirmation':case'email_change':case'oauth':clearIdentityCallbackUrl();showSuccess(callback.user);return;default:clearIdentityCallbackUrl();if(callback.user){showSuccess(callback.user);return;}}}const user=await getUser();user?showSuccess(user):showLogin();}catch(error){showError(error);}}
 document.querySelector('#loginForm').addEventListener('submit',async event=>{event.preventDefault();showPanel('loading');try{showSuccess(await login(document.querySelector('#loginEmail').value.trim(),document.querySelector('#loginPassword').value));}catch(error){showError(error);}});
 document.querySelector('#inviteForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#invitePassword').value;passwordsMatch(password,document.querySelector('#invitePasswordConfirm').value);if(!inviteToken)throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');showPanel('loading');const user=await acceptInvite(inviteToken,password);inviteToken=null;clearIdentityCallbackUrl();showSuccess(user,'Your editor account is active.');}catch(error){showError(error);}});
 document.querySelector('#recoveryForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#recoveryPassword').value;passwordsMatch(password,document.querySelector('#recoveryPasswordConfirm').value);showPanel('loading');showSuccess(await updateUser({password}),'Your password has been updated.');}catch(error){showError(error);}});
-document.querySelector('#logoutButton').addEventListener('click',async()=>{try{await logout();showLogin();}catch(error){showError(error);}});
+document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty)flushDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
 document.querySelector('#retryButton').addEventListener('click',()=>{clearIdentityCallbackUrl();showLogin();});
 initialiseAuthentication();

@@ -89,3 +89,14 @@ The Treatments editor now publishes through the authenticated `/.netlify/functio
 - The public site falls back to `content/treatments.json` until the first successful publish or whenever the Blob endpoint is unavailable.
 - Local unpublished changes remain protected until publishing succeeds.
 - Legacy Decap CMS `/admin` files and the old GitHub-writing function have been removed.
+
+## Checkpoint 3.5 — Treatments polish and security
+
+- Public treatment cards separate price and treatment time with a centred dot (`Price · Duration`).
+- The Website Manager locks after 15 minutes without interaction.
+- Current treatment changes are autosaved before the lock appears.
+- **Continue securely** returns the user to the branded sign-in form.
+- Successful re-authentication restores the same manager view, treatment, and editor step.
+- Publish checks the Identity session before sending content to the protected Netlify Function.
+- Netlify Identity remains responsible for full session expiry.
+- Legacy `/admin` and GitHub-writing publication artefacts have been removed.

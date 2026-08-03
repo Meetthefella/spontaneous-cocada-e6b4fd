@@ -199,6 +199,16 @@
         <header class="workspace-header compact-header"><button id="previewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Preview</span></header>
         <article id="treatmentPreview" class="treatment-summary preview-card"></article>
       </div>
+
+      <div id="inactivityLock" class="inactivity-lock" role="dialog" aria-modal="true" aria-labelledby="inactivityLockTitle" hidden>
+        <div class="inactivity-lock-card">
+          <div class="manage-success-mark" aria-hidden="true">✓</div>
+          <p class="eyebrow">Website manager locked</p>
+          <h1 id="inactivityLockTitle">Your changes are safe</h1>
+          <p>For your security, sign in again to continue exactly where you left off.</p>
+          <button id="continueSecurelyButton" class="button primary" type="button">Continue securely</button>
+        </div>
+      </div>
     </section>
 
 

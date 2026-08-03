@@ -60,7 +60,7 @@ function renderTreatments(data) {
     const title = item.title || item.name || '';
     const description = item.shortDescription || item.description || '';
     const icon = item.icon || '✦';
-    const duration = item.duration ? `<small>${escapeHtml(item.duration)}</small>` : '';
+    const duration = item.duration ? `<small aria-label="Treatment time"> · ${escapeHtml(item.duration)}</small>` : '';
     return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}</article>`;
   }).join('');
 }
