@@ -1096,9 +1096,9 @@ let activeCategory = 'signature';
 let activeTreatmentId = null;
 let editorStep = 0;
 let editorDirty = false;
-let pendingLeaveTarget = null;
 let sessionImageUrl = '';
 let draftTimer = null;
+let initialPriceLinked = true;
 
 const treatments = [
   {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
@@ -1148,9 +1148,9 @@ function readDraft(id){
 }
 function writeDraft(record){
   const savedAt=new Date().toISOString();
-  const payload={version:DRAFT_VERSION,treatmentId:record.id,savedAt,record:clone(record)};
+  const payload={version:DRAFT_VERSION,treatmentId:record.id,savedAt,editorStep,record:clone(record)};
   localStorage.setItem(draftKey(record.id),JSON.stringify(payload));
-  setDraftStatus(`Draft saved · ${relativeTime(savedAt)}`);
+  setDraftStatus(`✓ Saved · ${relativeTime(savedAt)}`);
   renderTreatments();
   return payload;
 }
@@ -1172,7 +1172,7 @@ function setDraftStatus(text){document.querySelector('#draftStatus').textContent
 function currentRecord(){
   const base=clone(findTreatment(activeTreatmentId));
   const form=new FormData(document.querySelector('#treatmentEditorForm'));
-  return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,visible:document.querySelector('#editVisible').checked};
+  return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,visible:document.querySelector('#editVisible').checked,initialPriceLinked};
 }
 function flushDraft(){
   if(!activeTreatmentId||document.querySelector('#editorView').hidden)return null;
@@ -1186,50 +1186,46 @@ function renderTreatments(){
   const items=treatments.filter(item=>item.category===activeCategory);
   document.querySelector('#treatmentList').innerHTML=items.map(item=>{
     const draft=readDraft(item.id);
-    const draftLabel=draft?`<em data-draft-time="${escapeHtml(draft.savedAt)}">Draft · ${escapeHtml(relativeTime(draft.savedAt))}</em>`:'';
+    const draftLabel=draft?`<em data-draft-time="${escapeHtml(draft.savedAt)}">Unpublished · ${escapeHtml(relativeTime(draft.savedAt))}</em>`:'';
     return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.price)} · ${escapeHtml(item.duration)}</small></span><span class="row-meta">${draftLabel}<b aria-hidden="true">›</b></span></button>`;
   }).join('');
 }
 function refreshDraftTimes(){
-  document.querySelectorAll('[data-draft-time]').forEach(el=>{el.textContent=`Draft · ${relativeTime(el.dataset.draftTime)}`;});
+  document.querySelectorAll('[data-draft-time]').forEach(el=>{el.textContent=`Unpublished · ${relativeTime(el.dataset.draftTime)}`;});
   const draft=activeTreatmentId&&readDraft(activeTreatmentId);
-  if(draft&&!document.querySelector('#editorView').hidden)setDraftStatus(`Draft saved · ${relativeTime(draft.savedAt)}`);
+  if(draft&&!document.querySelector('#editorView').hidden)setDraftStatus(`✓ Saved · ${relativeTime(draft.savedAt)}`);
 }
 function summaryMarkup(record,{preview=false}={}){
-  return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is a draft preview only. Nothing has been published.</p>':''}</div>`;
+  return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is an unpublished preview. The live website has not changed.</p>':''}</div>`;
 }
 function openSummary(id){activeTreatmentId=id;document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(findTreatment(id));showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
-function populateEditor(record){
+function populateEditor(record,restoredStep=0){
   document.querySelector('#editTitle').value=record.title||'';
   document.querySelector('#editShortDescription').value=record.shortDescription||'';
   document.querySelector('#editPrice').value=record.price||'';
   document.querySelector('#editDuration').value=record.duration||'';
   document.querySelector('#editFullDescription').value=record.fullDescription||'';
-  document.querySelector('#editDetailedPricing').value=record.detailedPricing||'';
+  initialPriceLinked=record.initialPriceLinked ?? (!record.detailedPricing || record.detailedPricing===`Initial treatment: ${record.price||''}`);
+  document.querySelector('#editDetailedPricing').value=record.detailedPricing||(record.price?`Initial treatment: ${record.price}`:'');
+  document.querySelector('#initialPriceHint').textContent=initialPriceLinked?'Uses the main price until you change this field.':'Custom pricing';
   document.querySelector('#editFollowUpPricing').value=record.followUpPricing||'';
   document.querySelector('#editPatchTest').checked=Boolean(record.patchTest);
   document.querySelector('#editVisible').checked=Boolean(record.visible);
   const img=document.querySelector('#editorImagePreview');img.hidden=true;img.removeAttribute('src');
-  editorStep=0;sessionImageUrl='';renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);
+  editorStep=Math.max(0,Math.min(4,restoredStep||0));sessionImageUrl='';renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);
 }
-function startEditor(useDraft=false){
+function startEditor(){
   const draft=readDraft(activeTreatmentId);
-  const record=useDraft&&draft?clone(draft.record):clone(findTreatment(activeTreatmentId));
-  editorDirty=Boolean(useDraft&&draft);
-  populateEditor(record);
-  setDraftStatus(draft&&useDraft?`Draft saved · ${relativeTime(draft.savedAt)}`:'Your changes will save automatically');
+  const record=draft?clone(draft.record):clone(findTreatment(activeTreatmentId));
+  editorDirty=Boolean(draft);
+  populateEditor(record,draft?.editorStep||0);
+  setDraftStatus(draft?`✓ Changes restored · ${relativeTime(draft.savedAt)}`:'✓ Autosave on');
 }
-function requestEditor(){
-  const draft=readDraft(activeTreatmentId);
-  if(!draft){startEditor(false);return;}
-  const base=findTreatment(activeTreatmentId);
-  document.querySelector('#resumeDraftMessage').textContent=`A draft for ${base.title} was saved ${relativeTime(draft.savedAt)}.`;
-  document.querySelector('#resumeDraftDialog').showModal();
-}
-function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorSaveButton').hidden=editorStep!==4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;}
+function requestEditor(){startEditor();}
+function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;}
 function validateStep(){const step=document.querySelector(`.editor-step[data-step="${editorStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
-function requestLeave(target){pendingLeaveTarget=target;if(editorDirty||readDraft(activeTreatmentId)){document.querySelector('#leaveDialog').showModal();}else{leaveEditor(target);}}
-function leaveEditor(target){editorDirty=false;pendingLeaveTarget=null;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
+function requestLeave(target){flushDraft();leaveEditor(target);}
+function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
 // Dashboard and treatment browser
 document.querySelector('#openTreatmentsButton').addEventListener('click',()=>{activeCategory='signature';renderTreatments();showAppView('treatmentsView');history.pushState({view:'treatments'},'','#treatments');});
@@ -1238,7 +1234,6 @@ document.querySelector('#summaryBackButton').addEventListener('click',()=>{rende
 document.querySelectorAll('.treatment-tabs [role="tab"]').forEach(btn=>btn.addEventListener('click',()=>{activeCategory=btn.dataset.category;renderTreatments();}));
 document.querySelector('#treatmentList').addEventListener('click',event=>{const row=event.target.closest('[data-treatment-id]');if(row)openSummary(row.dataset.treatmentId);});
 document.querySelector('#editTreatmentButton').addEventListener('click',requestEditor);
-document.querySelector('#resumeDraftDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')startEditor(true);if(choice==='discard'){removeDraft(activeTreatmentId);startEditor(false);}});
 
 // Editor protection and flow
 document.querySelector('#treatmentEditorForm').addEventListener('input',()=>{
@@ -1247,17 +1242,18 @@ document.querySelector('#treatmentEditorForm').addEventListener('input',()=>{
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{writeDraft(currentRecord());editorDirty=true;},350);
 });
+document.querySelector('#editPrice').addEventListener('input',event=>{if(!initialPriceLinked)return;const value=event.target.value.trim();document.querySelector('#editDetailedPricing').value=value?`Initial treatment: ${value}`:'';document.querySelector('#initialPriceHint').textContent='Uses the main price until you change this field.';});
+document.querySelector('#editDetailedPricing').addEventListener('input',event=>{const price=document.querySelector('#editPrice').value.trim();initialPriceLinked=event.target.value.trim()===(price?`Initial treatment: ${price}`:'');document.querySelector('#initialPriceHint').textContent=initialPriceLinked?'Uses the main price until you change this field.':'Custom pricing';});
 document.querySelector('#editImage').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(sessionImageUrl)URL.revokeObjectURL(sessionImageUrl);sessionImageUrl=URL.createObjectURL(file);const img=document.querySelector('#editorImagePreview');img.src=sessionImageUrl;img.hidden=false;editorDirty=true;setDraftStatus('Photo selected for this preview only');});
 document.querySelector('#editorNextButton').addEventListener('click',()=>{if(validateStep()){flushDraft();editorDirty=true;editorStep=Math.min(4,editorStep+1);renderEditorStep();}});
 document.querySelector('#editorPreviousButton').addEventListener('click',()=>{flushDraft();editorDirty=true;editorStep=Math.max(0,editorStep-1);renderEditorStep();});
-document.querySelector('#editorSaveButton').addEventListener('click',()=>{writeDraft(currentRecord());editorDirty=true;});
+document.querySelector('#discardChangesButton').addEventListener('click',()=>{const treatment=findTreatment(activeTreatmentId);if(!confirm(`Discard unpublished changes to ${treatment.title}?`))return;removeDraft(activeTreatmentId);editorDirty=false;populateEditor(clone(treatment),0);setDraftStatus('✓ Unpublished changes discarded');});
 document.querySelector('#editorPreviewButton').addEventListener('click',()=>{const record=currentRecord();writeDraft(record);editorDirty=true;if(sessionImageUrl)record.imageData=sessionImageUrl;document.querySelector('#treatmentPreview').innerHTML=summaryMarkup(record,{preview:true});showAppView('previewView');});
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
-document.querySelector('#leaveDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')return;if(choice==='save'){flushDraft();leaveEditor(pendingLeaveTarget||'summary');}if(choice==='discard'){removeDraft(activeTreatmentId);editorDirty=false;leaveEditor(pendingLeaveTarget||'summary');}});
 window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&editorDirty)flushDraft();});
-window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden&&(editorDirty||readDraft(activeTreatmentId))){history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);requestLeave('summary');}});
+window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden){flushDraft();leaveEditor('summary');}});
 setInterval(refreshDraftTimes,30000);
 
 // Authentication

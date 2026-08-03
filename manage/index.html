@@ -150,7 +150,7 @@
       <div id="editorView" class="manager-workspace editor-workspace" hidden>
         <header class="workspace-header compact-header editor-header">
           <button id="editorLeaveButton" class="back-button" type="button">← Leave editor</button>
-          <span id="draftStatus" class="draft-status" aria-live="polite">Draft protected</span>
+          <span id="draftStatus" class="draft-status" aria-live="polite">✓ Saved</span>
         </header>
         <div class="editor-progress" aria-label="Editor progress"><span id="editorProgressBar"></span></div>
         <form id="treatmentEditorForm" class="step-form" novalidate>
@@ -172,55 +172,33 @@
           </section>
           <section class="editor-step" data-step="3" hidden>
             <p class="eyebrow">Step 4 of 5</p><h1>Extra pricing</h1><p>Optional details for sessions, follow-ups or price ranges.</p>
-            <label><span>Detailed pricing</span><textarea id="editDetailedPricing" name="detailedPricing" rows="5" placeholder="Initial treatment: £100"></textarea></label>
+            <label><span>Initial treatment and detailed pricing</span><textarea id="editDetailedPricing" name="detailedPricing" rows="5" placeholder="Initial treatment: £100"></textarea><small id="initialPriceHint">Uses the main price until you change this field.</small></label>
             <label><span>Follow-up pricing</span><textarea id="editFollowUpPricing" name="followUpPricing" rows="5" placeholder="Second session: £100"></textarea></label>
           </section>
           <section class="editor-step" data-step="4" hidden>
             <p class="eyebrow">Step 5 of 5</p><h1>Final checks</h1><p>Choose how this treatment should appear.</p>
             <fieldset class="choice-group"><legend>Patch test</legend><label class="choice-row"><input id="editPatchTest" name="patchTest" type="checkbox" /><span>Patch test required</span></label></fieldset>
             <fieldset class="choice-group"><legend>Website visibility</legend><label class="choice-row"><input id="editVisible" name="visible" type="checkbox" /><span>Show this treatment on the website</span></label></fieldset>
+            <div class="final-save-status" aria-live="polite"><strong>✓ Changes saved automatically</strong><small>Your unpublished changes are protected on this device.</small></div>
+            <details class="editor-more-options">
+              <summary>More options</summary>
+              <button id="discardChangesButton" class="danger-button" type="button">Discard unpublished changes</button>
+            </details>
           </section>
           <div class="editor-actions">
             <button id="editorPreviousButton" class="button secondary" type="button" hidden>Back</button>
             <button id="editorNextButton" class="button primary" type="button">Next</button>
-            <button id="editorSaveButton" class="button primary" type="button" hidden>Save draft</button>
             <button id="editorPreviewButton" class="button secondary" type="button" hidden>Preview</button>
           </div>
         </form>
       </div>
 
       <div id="previewView" class="manager-workspace" hidden>
-        <header class="workspace-header compact-header"><button id="previewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Draft preview</span></header>
+        <header class="workspace-header compact-header"><button id="previewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Preview</span></header>
         <article id="treatmentPreview" class="treatment-summary preview-card"></article>
       </div>
     </section>
 
-
-    <dialog id="resumeDraftDialog" class="leave-dialog">
-      <form method="dialog">
-        <p class="eyebrow">Unfinished draft</p>
-        <h2>Continue where you left off?</h2>
-        <p id="resumeDraftMessage">A saved draft is available for this treatment.</p>
-        <div class="dialog-actions">
-          <button value="continue" class="button primary">Continue editing</button>
-          <button value="discard" class="danger-button">Discard draft</button>
-          <button value="cancel" class="button secondary">Not now</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog id="leaveDialog" class="leave-dialog">
-      <form method="dialog">
-        <p class="eyebrow">Unfinished changes</p>
-        <h2>Your work is protected</h2>
-        <p>Would you like to keep editing, save this draft and leave, or discard the changes?</p>
-        <div class="dialog-actions">
-          <button value="continue" class="button primary">Keep editing</button>
-          <button value="save" class="button secondary">Save draft and leave</button>
-          <button value="discard" class="danger-button">Discard changes</button>
-        </div>
-      </form>
-    </dialog>
 
     <section id="errorPanel" class="manage-card" role="alert" hidden>
       <p class="eyebrow">Unable to continue</p>

@@ -533,3 +533,25 @@
     line-height: 1.25;
   }
 }
+
+.final-save-status {
+  display: grid;
+  gap: 4px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid rgba(91,68,52,.18);
+  border-radius: 14px;
+  background: rgba(255,255,255,.38);
+}
+.final-save-status strong { font-weight: 600; }
+.final-save-status small { opacity: .72; }
+.editor-more-options { margin-top: 16px; }
+.editor-more-options summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.editor-more-options .danger-button { margin-top: 8px; }
