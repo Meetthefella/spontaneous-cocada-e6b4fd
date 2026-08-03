@@ -107,8 +107,9 @@ function renderTreatments(){
   const items=treatments.filter(item=>item.category===activeCategory);
   document.querySelector('#treatmentList').innerHTML=items.map(item=>{
     const draft=readDraft(item.id);
+    const displayItem=draft?.record||item;
     const draftLabel=draft?`<em data-draft-time="${escapeHtml(draft.savedAt)}">Unpublished · ${escapeHtml(relativeTime(draft.savedAt))}</em>`:'';
-    return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.price)} · ${escapeHtml(item.duration)}</small></span><span class="row-meta">${draftLabel}<b aria-hidden="true">›</b></span></button>`;
+    return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(displayItem.title)}</strong><small>${escapeHtml(displayItem.price)} · ${escapeHtml(displayItem.duration)}</small></span><span class="row-meta">${draftLabel}<b aria-hidden="true">›</b></span></button>`;
   }).join('');
 }
 function refreshDraftTimes(){
@@ -119,7 +120,7 @@ function refreshDraftTimes(){
 function summaryMarkup(record,{preview=false}={}){
   return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is an unpublished preview. The live website has not changed.</p>':''}</div>`;
 }
-function openSummary(id){activeTreatmentId=id;document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(findTreatment(id));showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
+function openSummary(id){activeTreatmentId=id;const draft=readDraft(id);const record=draft?.record||findTreatment(id);document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(record,{preview:Boolean(draft)});showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
 function populateEditor(record,restoredStep=0){
   document.querySelector('#editTitle').value=record.title||'';
   document.querySelector('#editShortDescription').value=record.shortDescription||'';

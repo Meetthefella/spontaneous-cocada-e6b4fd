@@ -75,3 +75,7 @@ The Treatments editor now protects a separate local draft for every treatment.
 - Leaving the editor offers to keep or discard the saved work.
 - The Aftercare link field has been removed until the Aftercare milestone defines whether treatment-specific linking is needed.
 - Publishing and Netlify Blobs remain deliberately out of scope for this checkpoint.
+
+### Checkpoint 3.3 leave-editor persistence fix
+
+The treatment summary and treatment list now read the latest locally saved unpublished record. Leaving the editor therefore shows the saved changes immediately instead of temporarily displaying the original baseline values.
