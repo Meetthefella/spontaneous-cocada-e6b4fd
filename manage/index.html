@@ -178,7 +178,6 @@
           <section class="editor-step" data-step="4" hidden>
             <p class="eyebrow">Step 5 of 5</p><h1>Final checks</h1><p>Choose how this treatment should appear.</p>
             <fieldset class="choice-group"><legend>Patch test</legend><label class="choice-row"><input id="editPatchTest" name="patchTest" type="checkbox" /><span>Patch test required</span></label></fieldset>
-            <label><span>Aftercare link</span><input id="editAftercareLink" name="aftercareLink" type="text" placeholder="/aftercare/" /></label>
             <fieldset class="choice-group"><legend>Website visibility</legend><label class="choice-row"><input id="editVisible" name="visible" type="checkbox" /><span>Show this treatment on the website</span></label></fieldset>
           </section>
           <div class="editor-actions">
@@ -195,6 +194,20 @@
         <article id="treatmentPreview" class="treatment-summary preview-card"></article>
       </div>
     </section>
+
+
+    <dialog id="resumeDraftDialog" class="leave-dialog">
+      <form method="dialog">
+        <p class="eyebrow">Unfinished draft</p>
+        <h2>Continue where you left off?</h2>
+        <p id="resumeDraftMessage">A saved draft is available for this treatment.</p>
+        <div class="dialog-actions">
+          <button value="continue" class="button primary">Continue editing</button>
+          <button value="discard" class="danger-button">Discard draft</button>
+          <button value="cancel" class="button secondary">Not now</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="leaveDialog" class="leave-dialog">
       <form method="dialog">

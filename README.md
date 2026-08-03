@@ -62,3 +62,16 @@ Registration must remain **Invite only** in Netlify. No editing dashboard or con
 Netlify invitation and password-recovery links may land on the site root with a URL fragment. The homepage forwards those tokens to `/manage/`, and the manager keeps the token intact until Netlify Identity completes the password flow.
 
 The current patch-test rule shown on the public site is a minimum of **48 hours** before Microblading for new clients.
+
+## Treatments Checkpoint 3.3 — Draft persistence
+
+The Treatments editor now protects a separate local draft for every treatment.
+
+- Changes autosave on the current device while typing.
+- Drafts survive refresh, browser close, phone lock and reopening the manager.
+- Reopening a treatment with a draft offers **Continue editing**, **Discard draft**, or **Not now**.
+- Treatment lists show the saved-draft age.
+- Preview uses the current draft and never alters the public website.
+- Leaving the editor offers to keep or discard the saved work.
+- The Aftercare link field has been removed until the Aftercare milestone defines whether treatment-specific linking is needed.
+- Publishing and Netlify Blobs remain deliberately out of scope for this checkpoint.

@@ -19,29 +19,31 @@ let editorStep = 0;
 let editorDirty = false;
 let pendingLeaveTarget = null;
 let sessionImageUrl = '';
+let draftTimer = null;
 
 const treatments = [
-  {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,aftercareLink:'/aftercare/',visible:true},
-  {id:'nano-brows',category:'signature',title:'Nano Brows',shortDescription:'Fine machine-created strokes for softly defined brows.',fullDescription:'Nano brows use a precision machine technique to create delicate, realistic-looking strokes.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
-  {id:'blending',category:'signature',title:'Blending',shortDescription:'A blended brow treatment tailored to the desired finish.',fullDescription:'Blending combines techniques to create a balanced, softly defined result.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
-  {id:'touch-up',category:'signature',title:'Touch-Up',shortDescription:'A refresh treatment to maintain colour and definition.',fullDescription:'Touch-up appointments refresh previous work and maintain the desired shape and colour.',price:'£50–£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'/aftercare/',visible:true},
-  {id:'removal-repair',category:'signature',title:'Removal / Repair',shortDescription:'Specialist correction or lightening of previous work.',fullDescription:'A consultation-led service for correcting or lightening existing work.',price:'£200',duration:'3–4 hours',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'/aftercare/',visible:true},
-  {id:'waxing',category:'beauty',title:'Waxing',shortDescription:'A selection of quick waxing treatments.',fullDescription:'Choose from a range of waxing services. Individual areas and prices can be listed in the detailed pricing.',price:'From £5',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
-  {id:'lash-brow',category:'beauty',title:'Lash & Brow',shortDescription:'A combined lash and brow treatment.',fullDescription:'A convenient combined appointment for lashes and brows.',price:'£20',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'',visible:true},
-  {id:'tinting',category:'beauty',title:'Tinting',shortDescription:'Enhance the appearance of brows or lashes with tint.',fullDescription:'Tinting adds colour and definition for a polished, low-maintenance finish.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,aftercareLink:'',visible:true},
-  {id:'nail-art',category:'beauty',title:'Nail Art',shortDescription:'Creative nail designs tailored to your chosen style.',fullDescription:'Choose from simple accents through to detailed custom nail art.',price:'£10–£65',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
-  {id:'ear-piercing',category:'beauty',title:'Ear Piercing',shortDescription:'A straightforward ear-piercing appointment.',fullDescription:'Ear piercing provided in a calm and welcoming setting.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
-  {id:'shellac-nails',category:'beauty',title:'Shellac Nails',shortDescription:'Long-lasting, glossy colour for natural nails.',fullDescription:'Shellac provides a durable and polished finish for natural nails.',price:'£25',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true},
+  {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
+  {id:'nano-brows',category:'signature',title:'Nano Brows',shortDescription:'Fine machine-created strokes for softly defined brows.',fullDescription:'Nano brows use a precision machine technique to create delicate, realistic-looking strokes.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
+  {id:'blending',category:'signature',title:'Blending',shortDescription:'A blended brow treatment tailored to the desired finish.',fullDescription:'Blending combines techniques to create a balanced, softly defined result.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
+  {id:'touch-up',category:'signature',title:'Touch-Up',shortDescription:'A refresh treatment to maintain colour and definition.',fullDescription:'Touch-up appointments refresh previous work and maintain the desired shape and colour.',price:'£50–£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
+  {id:'removal-repair',category:'signature',title:'Removal / Repair',shortDescription:'Specialist correction or lightening of previous work.',fullDescription:'A consultation-led service for correcting or lightening existing work.',price:'£200',duration:'3–4 hours',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
+  {id:'waxing',category:'beauty',title:'Waxing',shortDescription:'A selection of quick waxing treatments.',fullDescription:'Choose from a range of waxing services. Individual areas and prices can be listed in the detailed pricing.',price:'From £5',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
+  {id:'lash-brow',category:'beauty',title:'Lash & Brow',shortDescription:'A combined lash and brow treatment.',fullDescription:'A convenient combined appointment for lashes and brows.',price:'£20',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
+  {id:'tinting',category:'beauty',title:'Tinting',shortDescription:'Enhance the appearance of brows or lashes with tint.',fullDescription:'Tinting adds colour and definition for a polished, low-maintenance finish.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
+  {id:'nail-art',category:'beauty',title:'Nail Art',shortDescription:'Creative nail designs tailored to your chosen style.',fullDescription:'Choose from simple accents through to detailed custom nail art.',price:'£10–£65',duration:'Varies',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
+  {id:'ear-piercing',category:'beauty',title:'Ear Piercing',shortDescription:'A straightforward ear-piercing appointment.',fullDescription:'Ear piercing provided in a calm and welcoming setting.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
+  {id:'shellac-nails',category:'beauty',title:'Shellac Nails',shortDescription:'Long-lasting, glossy colour for natural nails.',fullDescription:'Shellac provides a durable and polished finish for natural nails.',price:'£25',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
   ...[
     ['skin-peeling','Skin Peeling','A skin-renewal treatment designed to improve texture and radiance.'],
     ['vitamin-injections','Vitamin Injections','Targeted vitamin treatments, subject to consultation and suitability.'],
     ['threading','Threading','Precise hair removal using a traditional threading technique.'],
     ['cream-tanning','Cream Tanning','An even, sun-kissed finish applied using a professional tanning cream.'],
     ['spray-tanning','Spray Tanning','A professionally applied tan for an even, natural-looking glow.']
-  ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,aftercareLink:'',visible:true}))
+  ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true}))
 ];
 
 const views = ['dashboardView','treatmentsView','treatmentSummaryView','editorView','previewView'];
+const DRAFT_VERSION = 1;
 const draftKey = id => `eb-treatment-draft:${id}`;
 const clone = value => JSON.parse(JSON.stringify(value));
 const findTreatment = id => treatments.find(item => item.id === id);
@@ -55,27 +57,100 @@ function showError(error){errorMessage.textContent=error?.message||error?.msg||'
 function passwordsMatch(password,confirmation){if(password!==confirmation)throw new Error('The two passwords do not match.');if(password.length<8)throw new Error('Your password must contain at least 8 characters.');}
 function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
 function nl2br(value=''){return escapeHtml(value).replace(/\n/g,'<br>');}
-function getSavedDraft(id){try{return JSON.parse(localStorage.getItem(draftKey(id))||'null');}catch{return null;}}
-function saveDraft(record){localStorage.setItem(draftKey(record.id),JSON.stringify({...record,savedAt:new Date().toISOString()}));editorDirty=false;setDraftStatus('Draft saved');}
-function removeDraft(id){localStorage.removeItem(draftKey(id));}
-function setDraftStatus(text){const el=document.querySelector('#draftStatus');el.textContent=text;}
-function currentRecord(){const base=clone(findTreatment(activeTreatmentId));const form=new FormData(document.querySelector('#treatmentEditorForm'));return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,aftercareLink:form.get('aftercareLink')?.trim()||'',visible:document.querySelector('#editVisible').checked};}
+
+function readDraft(id){
+  try{
+    const stored=JSON.parse(localStorage.getItem(draftKey(id))||'null');
+    if(!stored)return null;
+    if(stored.record)return stored;
+    const {savedAt,...record}=stored;
+    return {version:DRAFT_VERSION,treatmentId:id,savedAt:savedAt||new Date().toISOString(),record};
+  }catch{return null;}
+}
+function writeDraft(record){
+  const savedAt=new Date().toISOString();
+  const payload={version:DRAFT_VERSION,treatmentId:record.id,savedAt,record:clone(record)};
+  localStorage.setItem(draftKey(record.id),JSON.stringify(payload));
+  setDraftStatus(`Draft saved · ${relativeTime(savedAt)}`);
+  renderTreatments();
+  return payload;
+}
+function removeDraft(id){localStorage.removeItem(draftKey(id));renderTreatments();}
+function relativeTime(value){
+  const elapsed=Math.max(0,Date.now()-new Date(value).getTime());
+  const seconds=Math.floor(elapsed/1000);
+  if(seconds<10)return 'Just now';
+  if(seconds<60)return `${seconds} seconds ago`;
+  const minutes=Math.floor(seconds/60);
+  if(minutes===1)return '1 minute ago';
+  if(minutes<60)return `${minutes} minutes ago`;
+  const hours=Math.floor(minutes/60);
+  if(hours===1)return '1 hour ago';
+  if(hours<24)return `${hours} hours ago`;
+  return new Date(value).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+function setDraftStatus(text){document.querySelector('#draftStatus').textContent=text;}
+function currentRecord(){
+  const base=clone(findTreatment(activeTreatmentId));
+  const form=new FormData(document.querySelector('#treatmentEditorForm'));
+  return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,visible:document.querySelector('#editVisible').checked};
+}
+function flushDraft(){
+  if(!activeTreatmentId||document.querySelector('#editorView').hidden)return null;
+  clearTimeout(draftTimer);
+  draftTimer=null;
+  return writeDraft(currentRecord());
+}
 
 function renderTreatments(){
   document.querySelectorAll('.treatment-tabs [role="tab"]').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.category===activeCategory)));
-  const list=document.querySelector('#treatmentList');
   const items=treatments.filter(item=>item.category===activeCategory);
-  list.innerHTML=items.map(item=>{const draft=getSavedDraft(item.id);return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(draft?.title||item.title)}</strong><small>${escapeHtml(draft?.price||item.price)} · ${escapeHtml(draft?.duration||item.duration)}</small></span><span class="row-meta">${draft?'<em>Draft saved</em>':''}<b aria-hidden="true">›</b></span></button>`;}).join('');
+  document.querySelector('#treatmentList').innerHTML=items.map(item=>{
+    const draft=readDraft(item.id);
+    const draftLabel=draft?`<em data-draft-time="${escapeHtml(draft.savedAt)}">Draft · ${escapeHtml(relativeTime(draft.savedAt))}</em>`:'';
+    return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.price)} · ${escapeHtml(item.duration)}</small></span><span class="row-meta">${draftLabel}<b aria-hidden="true">›</b></span></button>`;
+  }).join('');
+}
+function refreshDraftTimes(){
+  document.querySelectorAll('[data-draft-time]').forEach(el=>{el.textContent=`Draft · ${relativeTime(el.dataset.draftTime)}`;});
+  const draft=activeTreatmentId&&readDraft(activeTreatmentId);
+  if(draft&&!document.querySelector('#editorView').hidden)setDraftStatus(`Draft saved · ${relativeTime(draft.savedAt)}`);
 }
 function summaryMarkup(record,{preview=false}={}){
   return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is a draft preview only. Nothing has been published.</p>':''}</div>`;
 }
-function openSummary(id){activeTreatmentId=id;const record=getSavedDraft(id)||findTreatment(id);document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(record);showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
-function loadEditor(){const record=getSavedDraft(activeTreatmentId)||clone(findTreatment(activeTreatmentId));document.querySelector('#editTitle').value=record.title||'';document.querySelector('#editShortDescription').value=record.shortDescription||'';document.querySelector('#editPrice').value=record.price||'';document.querySelector('#editDuration').value=record.duration||'';document.querySelector('#editFullDescription').value=record.fullDescription||'';document.querySelector('#editDetailedPricing').value=record.detailedPricing||'';document.querySelector('#editFollowUpPricing').value=record.followUpPricing||'';document.querySelector('#editPatchTest').checked=Boolean(record.patchTest);document.querySelector('#editAftercareLink').value=record.aftercareLink||'';document.querySelector('#editVisible').checked=Boolean(record.visible);editorStep=0;editorDirty=false;sessionImageUrl='';setDraftStatus(getSavedDraft(activeTreatmentId)?'Saved draft loaded':'Draft protected');renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);}
+function openSummary(id){activeTreatmentId=id;document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(findTreatment(id));showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
+function populateEditor(record){
+  document.querySelector('#editTitle').value=record.title||'';
+  document.querySelector('#editShortDescription').value=record.shortDescription||'';
+  document.querySelector('#editPrice').value=record.price||'';
+  document.querySelector('#editDuration').value=record.duration||'';
+  document.querySelector('#editFullDescription').value=record.fullDescription||'';
+  document.querySelector('#editDetailedPricing').value=record.detailedPricing||'';
+  document.querySelector('#editFollowUpPricing').value=record.followUpPricing||'';
+  document.querySelector('#editPatchTest').checked=Boolean(record.patchTest);
+  document.querySelector('#editVisible').checked=Boolean(record.visible);
+  const img=document.querySelector('#editorImagePreview');img.hidden=true;img.removeAttribute('src');
+  editorStep=0;sessionImageUrl='';renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);
+}
+function startEditor(useDraft=false){
+  const draft=readDraft(activeTreatmentId);
+  const record=useDraft&&draft?clone(draft.record):clone(findTreatment(activeTreatmentId));
+  editorDirty=Boolean(useDraft&&draft);
+  populateEditor(record);
+  setDraftStatus(draft&&useDraft?`Draft saved · ${relativeTime(draft.savedAt)}`:'Your changes will save automatically');
+}
+function requestEditor(){
+  const draft=readDraft(activeTreatmentId);
+  if(!draft){startEditor(false);return;}
+  const base=findTreatment(activeTreatmentId);
+  document.querySelector('#resumeDraftMessage').textContent=`A draft for ${base.title} was saved ${relativeTime(draft.savedAt)}.`;
+  document.querySelector('#resumeDraftDialog').showModal();
+}
 function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorSaveButton').hidden=editorStep!==4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;}
 function validateStep(){const step=document.querySelector(`.editor-step[data-step="${editorStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
-function requestLeave(target){pendingLeaveTarget=target;if(editorDirty){document.querySelector('#leaveDialog').showModal();}else{leaveEditor(target);}}
-function leaveEditor(target){editorDirty=false;pendingLeaveTarget=null;if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
+function requestLeave(target){pendingLeaveTarget=target;if(editorDirty||readDraft(activeTreatmentId)){document.querySelector('#leaveDialog').showModal();}else{leaveEditor(target);}}
+function leaveEditor(target){editorDirty=false;pendingLeaveTarget=null;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
 // Dashboard and treatment browser
 document.querySelector('#openTreatmentsButton').addEventListener('click',()=>{activeCategory='signature';renderTreatments();showAppView('treatmentsView');history.pushState({view:'treatments'},'','#treatments');});
@@ -83,20 +158,28 @@ document.querySelector('#treatmentsBackButton').addEventListener('click',()=>sho
 document.querySelector('#summaryBackButton').addEventListener('click',()=>{renderTreatments();showAppView('treatmentsView');});
 document.querySelectorAll('.treatment-tabs [role="tab"]').forEach(btn=>btn.addEventListener('click',()=>{activeCategory=btn.dataset.category;renderTreatments();}));
 document.querySelector('#treatmentList').addEventListener('click',event=>{const row=event.target.closest('[data-treatment-id]');if(row)openSummary(row.dataset.treatmentId);});
-document.querySelector('#editTreatmentButton').addEventListener('click',loadEditor);
+document.querySelector('#editTreatmentButton').addEventListener('click',requestEditor);
+document.querySelector('#resumeDraftDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')startEditor(true);if(choice==='discard'){removeDraft(activeTreatmentId);startEditor(false);}});
 
 // Editor protection and flow
-document.querySelector('#treatmentEditorForm').addEventListener('input',()=>{editorDirty=true;setDraftStatus('Saving locally…');clearTimeout(window.ebDraftTimer);window.ebDraftTimer=setTimeout(()=>{saveDraft(currentRecord());editorDirty=true;setDraftStatus('Changes protected on this device');},450);});
-document.querySelector('#editImage').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(sessionImageUrl)URL.revokeObjectURL(sessionImageUrl);sessionImageUrl=URL.createObjectURL(file);const img=document.querySelector('#editorImagePreview');img.src=sessionImageUrl;img.hidden=false;editorDirty=true;});
-document.querySelector('#editorNextButton').addEventListener('click',()=>{if(validateStep()){editorStep=Math.min(4,editorStep+1);renderEditorStep();}});
-document.querySelector('#editorPreviousButton').addEventListener('click',()=>{editorStep=Math.max(0,editorStep-1);renderEditorStep();});
-document.querySelector('#editorSaveButton').addEventListener('click',()=>{saveDraft(currentRecord());renderTreatments();});
-document.querySelector('#editorPreviewButton').addEventListener('click',()=>{const record=currentRecord();if(sessionImageUrl)record.imageData=sessionImageUrl;document.querySelector('#treatmentPreview').innerHTML=summaryMarkup(record,{preview:true});showAppView('previewView');});
+document.querySelector('#treatmentEditorForm').addEventListener('input',()=>{
+  editorDirty=true;
+  setDraftStatus('Saving…');
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{writeDraft(currentRecord());editorDirty=true;},350);
+});
+document.querySelector('#editImage').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(sessionImageUrl)URL.revokeObjectURL(sessionImageUrl);sessionImageUrl=URL.createObjectURL(file);const img=document.querySelector('#editorImagePreview');img.src=sessionImageUrl;img.hidden=false;editorDirty=true;setDraftStatus('Photo selected for this preview only');});
+document.querySelector('#editorNextButton').addEventListener('click',()=>{if(validateStep()){flushDraft();editorDirty=true;editorStep=Math.min(4,editorStep+1);renderEditorStep();}});
+document.querySelector('#editorPreviousButton').addEventListener('click',()=>{flushDraft();editorDirty=true;editorStep=Math.max(0,editorStep-1);renderEditorStep();});
+document.querySelector('#editorSaveButton').addEventListener('click',()=>{writeDraft(currentRecord());editorDirty=true;});
+document.querySelector('#editorPreviewButton').addEventListener('click',()=>{const record=currentRecord();writeDraft(record);editorDirty=true;if(sessionImageUrl)record.imageData=sessionImageUrl;document.querySelector('#treatmentPreview').innerHTML=summaryMarkup(record,{preview:true});showAppView('previewView');});
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
-document.querySelector('#leaveDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')return;if(choice==='save'){saveDraft(currentRecord());leaveEditor(pendingLeaveTarget||'summary');}if(choice==='discard'){removeDraft(activeTreatmentId);editorDirty=false;leaveEditor(pendingLeaveTarget||'summary');}});
-window.addEventListener('beforeunload',event=>{if(editorDirty){event.preventDefault();event.returnValue='';}});
-window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden&&editorDirty){history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);requestLeave('summary');}});
+document.querySelector('#leaveDialog').addEventListener('close',event=>{const choice=event.target.returnValue;if(choice==='continue')return;if(choice==='save'){flushDraft();leaveEditor(pendingLeaveTarget||'summary');}if(choice==='discard'){removeDraft(activeTreatmentId);editorDirty=false;leaveEditor(pendingLeaveTarget||'summary');}});
+window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&editorDirty)flushDraft();});
+window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden&&(editorDirty||readDraft(activeTreatmentId))){history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);requestLeave('summary');}});
+setInterval(refreshDraftTimes,30000);
 
 // Authentication
 document.querySelector('#recoveryRequestButton').addEventListener('click',async()=>{const emailInput=document.querySelector('#loginEmail');const message=document.querySelector('#recoveryRequestMessage');const email=emailInput.value.trim();if(!email){emailInput.focus();message.textContent='Enter your email address first, then select Forgotten your password?';message.hidden=false;return;}try{message.textContent='Sending password reset email…';message.hidden=false;await requestPasswordRecovery(email);message.textContent='Password reset email sent. Check your inbox and spam folder.';}catch(error){message.textContent=error?.message||'The password reset email could not be sent. Please try again.';}});

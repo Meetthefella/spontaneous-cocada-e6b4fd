@@ -509,3 +509,27 @@
   .summary-facts { grid-template-columns:1fr; }
   .editor-actions { position:sticky; bottom:8px; padding:9px; margin:24px -8px -8px; border-radius:16px; background:rgba(238,228,213,.94); backdrop-filter:blur(8px); }
 }
+
+/* Checkpoint 3.3: quiet reassurance that phone edits are protected. */
+.draft-status {
+  max-width: 58%;
+  padding: 6px 10px;
+  border: 1px solid rgba(82,116,79,.22);
+  border-radius: 999px;
+  background: rgba(82,116,79,.09);
+  color: #405f3e;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 430px) {
+  .editor-header {
+    align-items: flex-start;
+  }
+
+  .draft-status {
+    max-width: 52%;
+    font-size: .72rem;
+    line-height: 1.25;
+  }
+}
