@@ -79,3 +79,13 @@ The Treatments editor now protects a separate local draft for every treatment.
 ### Checkpoint 3.3 leave-editor persistence fix
 
 The treatment summary and treatment list now read the latest locally saved unpublished record. Leaving the editor therefore shows the saved changes immediately instead of temporarily displaying the original baseline values.
+
+## Checkpoint 3.4 — Treatments publishing
+
+The Treatments editor now publishes through the authenticated `/.netlify/functions/treatments` endpoint into the site-wide `effortless-beauty-content` Netlify Blob store.
+
+- `GET` is public and supplies the live Treatments content.
+- `PUT` requires a valid Netlify Identity session and validates the entire Treatments document before writing.
+- The public site falls back to `content/treatments.json` until the first successful publish or whenever the Blob endpoint is unavailable.
+- Local unpublished changes remain protected until publishing succeeds.
+- Legacy Decap CMS `/admin` files and the old GitHub-writing function have been removed.

@@ -107,7 +107,7 @@
 
         <section class="dashboard-status" aria-label="Website status">
           <div class="status-item"><span class="status-label">Website status</span><strong class="status-live"><span aria-hidden="true"></span>Live</strong></div>
-          <div class="status-item"><span class="status-label">Last published</span><strong>Not available yet</strong></div>
+          <div class="status-item"><span class="status-label">Last published</span><strong id="lastPublishedValue">Not published yet</strong></div>
           <div class="status-item status-account"><span class="status-label">Signed in as</span><strong id="signedInAs"></strong></div>
         </section>
 
@@ -184,11 +184,13 @@
               <summary>More options</summary>
               <button id="discardChangesButton" class="danger-button" type="button">Discard unpublished changes</button>
             </details>
+            <p id="publishStatus" class="publish-status" role="status" aria-live="polite"></p>
           </section>
           <div class="editor-actions">
             <button id="editorPreviousButton" class="button secondary" type="button" hidden>Back</button>
             <button id="editorNextButton" class="button primary" type="button">Next</button>
             <button id="editorPreviewButton" class="button secondary" type="button" hidden>Preview</button>
+            <button id="editorPublishButton" class="button primary" type="button" hidden>Publish</button>
           </div>
         </form>
       </div>

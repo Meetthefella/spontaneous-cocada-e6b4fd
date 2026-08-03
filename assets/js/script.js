@@ -54,11 +54,15 @@ function renderTreatments(data) {
   setText('#treatmentsEyebrow', data.eyebrow);
   setText('#treatmentsHeading', data.heading);
   setText('#treatmentsIntro', data.intro);
-  contentState.treatments = (data.items || []).filter((item) => item.active !== false);
+  contentState.treatments = (data.items || []).filter((item) => item.visible !== false && item.active !== false);
   const grid = document.querySelector('#treatmentGrid');
-  if (grid) grid.innerHTML = contentState.treatments.map((item) =>
-    `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(item.icon)}</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description)}</p><strong>${escapeHtml(item.price)}</strong></article>`
-  ).join('');
+  if (grid) grid.innerHTML = contentState.treatments.map((item) => {
+    const title = item.title || item.name || '';
+    const description = item.shortDescription || item.description || '';
+    const icon = item.icon || '✦';
+    const duration = item.duration ? `<small>${escapeHtml(item.duration)}</small>` : '';
+    return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}</article>`;
+  }).join('');
 }
 
 function stageDecorations(className) {

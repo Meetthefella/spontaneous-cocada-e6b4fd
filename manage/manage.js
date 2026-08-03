@@ -20,8 +20,10 @@ let editorDirty = false;
 let sessionImageUrl = '';
 let draftTimer = null;
 let initialPriceLinked = true;
+let publishing = false;
+const TREATMENTS_API = '/.netlify/functions/treatments';
 
-const treatments = [
+let treatments = [
   {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
   {id:'nano-brows',category:'signature',title:'Nano Brows',shortDescription:'Fine machine-created strokes for softly defined brows.',fullDescription:'Nano brows use a precision machine technique to create delicate, realistic-looking strokes.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
   {id:'blending',category:'signature',title:'Blending',shortDescription:'A blended brow treatment tailored to the desired finish.',fullDescription:'Blending combines techniques to create a balanced, softly defined result.',price:'£100',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:true,visible:true},
@@ -47,12 +49,83 @@ const DRAFT_VERSION = 1;
 const draftKey = id => `eb-treatment-draft:${id}`;
 const clone = value => JSON.parse(JSON.stringify(value));
 const findTreatment = id => treatments.find(item => item.id === id);
+const treatmentDocument = () => ({
+  schemaVersion: 1,
+  eyebrow: 'Treatments',
+  heading: 'Treatment menu',
+  intro: 'Explore Effortless Beauty treatments, prices and appointment times.',
+  items: treatments.map(item => clone(readDraft(item.id)?.record || item))
+});
+function setPublishStatus(message='', type=''){
+  const element=document.querySelector('#publishStatus');
+  if(!element)return;
+  element.textContent=message;
+  element.classList.toggle('error',type==='error');
+  element.classList.toggle('success',type==='success');
+}
+function formatPublishedAt(value){
+  if(!value)return 'Not published yet';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return 'Published';
+  return date.toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function updatePublishedDisplay(value){
+  const element=document.querySelector('#lastPublishedValue');
+  if(element)element.textContent=formatPublishedAt(value);
+}
+async function loadPublishedTreatments(){
+  try{
+    const response=await fetch(TREATMENTS_API,{cache:'no-store'});
+    if(response.status===404)return;
+    if(!response.ok)throw new Error('Published treatments could not be loaded.');
+    const result=await response.json();
+    if(Array.isArray(result?.data?.items)){
+      treatments=result.data.items.map(item=>({...item}));
+      updatePublishedDisplay(result.data.updatedAt);
+      renderTreatments();
+    }
+  }catch(error){
+    console.warn(error);
+  }
+}
+async function publishTreatments(){
+  if(publishing)return;
+  flushDraft();
+  publishing=true;
+  const button=document.querySelector('#editorPublishButton');
+  button.disabled=true;
+  button.textContent='Publishing…';
+  setPublishStatus('Publishing your changes…');
+  try{
+    const response=await fetch(TREATMENTS_API,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify(treatmentDocument())
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(result.error||'Your changes could not be published.');
+    treatments=result.data.items.map(item=>({...item}));
+    treatments.forEach(item=>localStorage.removeItem(draftKey(item.id)));
+    editorDirty=false;
+    updatePublishedDisplay(result.updatedAt);
+    setDraftStatus(`✓ Published · ${relativeTime(result.updatedAt)}`);
+    setPublishStatus('✓ Published successfully. The live website now uses these changes.','success');
+    renderTreatments();
+  }catch(error){
+    setPublishStatus(error.message||'Your changes could not be published.','error');
+  }finally{
+    publishing=false;
+    button.disabled=false;
+    button.textContent='Publish';
+  }
+}
 
 function showPanel(name){Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==name;});}
 function showAppView(id){views.forEach(viewId=>{document.querySelector(`#${viewId}`).hidden=viewId!==id;});window.scrollTo({top:0,behavior:'instant'});}
 function clearIdentityCallbackUrl(){history.replaceState(null,document.title,'/manage/');}
 function showLogin(){signedInAs.textContent='';successMessage.textContent='You are securely signed in.';showPanel('login');}
-function showSuccess(user,message='Manage your Effortless Beauty website from one place.'){successMessage.textContent=message;signedInAs.textContent=user?.email||'Authenticated user';showPanel('success');showAppView('dashboardView');}
+function showSuccess(user,message='Manage your Effortless Beauty website from one place.'){successMessage.textContent=message;signedInAs.textContent=user?.email||'Authenticated user';showPanel('success');showAppView('dashboardView');loadPublishedTreatments();}
 function showError(error){errorMessage.textContent=error?.message||error?.msg||'The login service could not complete that request.';showPanel('error');}
 function passwordsMatch(password,confirmation){if(password!==confirmation)throw new Error('The two passwords do not match.');if(password.length<8)throw new Error('Your password must contain at least 8 characters.');}
 function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
@@ -144,7 +217,7 @@ function startEditor(){
   setDraftStatus(draft?`✓ Changes restored · ${relativeTime(draft.savedAt)}`:'✓ Autosave on');
 }
 function requestEditor(){startEditor();}
-function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;}
+function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorPublishButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;if(editorStep!==4)setPublishStatus('');}
 function validateStep(){const step=document.querySelector(`.editor-step[data-step="${editorStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
 function requestLeave(target){flushDraft();leaveEditor(target);}
 function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
@@ -171,6 +244,7 @@ document.querySelector('#editorNextButton').addEventListener('click',()=>{if(val
 document.querySelector('#editorPreviousButton').addEventListener('click',()=>{flushDraft();editorDirty=true;editorStep=Math.max(0,editorStep-1);renderEditorStep();});
 document.querySelector('#discardChangesButton').addEventListener('click',()=>{const treatment=findTreatment(activeTreatmentId);if(!confirm(`Discard unpublished changes to ${treatment.title}?`))return;removeDraft(activeTreatmentId);editorDirty=false;populateEditor(clone(treatment),0);setDraftStatus('✓ Unpublished changes discarded');});
 document.querySelector('#editorPreviewButton').addEventListener('click',()=>{const record=currentRecord();writeDraft(record);editorDirty=true;if(sessionImageUrl)record.imageData=sessionImageUrl;document.querySelector('#treatmentPreview').innerHTML=summaryMarkup(record,{preview:true});showAppView('previewView');});
+document.querySelector('#editorPublishButton').addEventListener('click',publishTreatments);
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
 window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();});

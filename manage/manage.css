@@ -555,3 +555,13 @@
   text-underline-offset: 3px;
 }
 .editor-more-options .danger-button { margin-top: 8px; }
+
+.publish-status {
+  min-height: 1.4em;
+  margin: 16px 0 0;
+  font-size: .94rem;
+  font-weight: 600;
+}
+
+.publish-status.error { color: #8a3232; }
+.publish-status.success { color: #365f45; }
