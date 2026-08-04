@@ -28,6 +28,27 @@ function escapeHtml(value = '') {
     .replaceAll("'", '&#039;');
 }
 
+
+function addPreviewBanner(message) {
+  const banner = document.createElement('div');
+  banner.className = 'preview-banner';
+  const label = document.createElement('span');
+  label.textContent = message;
+  const button = document.createElement('button');
+  button.className = 'preview-back-button';
+  button.type = 'button';
+  button.textContent = '← Back to Website Manager';
+  button.addEventListener('click', () => {
+    const returnUrl = localStorage.getItem('eb-preview-return-url-v1') || '/manage/';
+    window.close();
+    setTimeout(() => {
+      if (!window.closed) window.location.href = returnUrl;
+    }, 120);
+  });
+  banner.append(label, button);
+  document.body.prepend(banner);
+}
+
 async function loadJson(path) {
   const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Unable to load ${path}`);
@@ -254,10 +275,7 @@ async function loadPublishedHomepage() {
     try {
       const preview = JSON.parse(localStorage.getItem('eb-homepage-preview-v1') || 'null');
       if (preview?.features) {
-        const banner = document.createElement('div');
-        banner.className = 'preview-banner';
-        banner.innerHTML = '<span>Homepage preview only — these changes are not live.</span><a class="preview-back-button" href="/manage/">← Back to Website Manager</a>';
-        document.body.prepend(banner);
+        addPreviewBanner('Homepage preview only — these changes are not live.');
         return preview;
       }
     } catch (error) {
@@ -284,10 +302,7 @@ async function loadPublishedTreatments() {
     try {
       const preview = JSON.parse(localStorage.getItem('eb-treatments-preview-v2') || 'null');
       if (preview?.items) {
-        const banner = document.createElement('div');
-        banner.className = 'preview-banner';
-        banner.textContent = 'Preview only — these changes are not live.';
-        document.body.prepend(banner);
+        addPreviewBanner('Treatments preview only — these changes are not live.');
         return preview;
       }
     } catch (error) {
@@ -328,7 +343,7 @@ function renderMerchandise(data) {
 async function loadPublishedSection(name) {
   const preview = new URLSearchParams(location.search).get('preview');
   if (preview === name) {
-    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){const banner=document.createElement('div');banner.className='preview-banner';banner.innerHTML=`<span>${escapeHtml(name)} preview only — these changes are not live.</span><a class="preview-back-button" href="/manage/">← Back to Website Manager</a>`;document.body.prepend(banner);return data;} } catch(error){console.warn(error);}
+    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){addPreviewBanner(`${name} preview only — these changes are not live.`);return data;} } catch(error){console.warn(error);}
   }
   try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return result.data;} } catch(error){console.warn(error);}
   return loadJson(`content/${name}.json`);

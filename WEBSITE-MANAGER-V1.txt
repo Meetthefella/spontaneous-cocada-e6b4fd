@@ -27,3 +27,6 @@ Public-site additions:
 
 Important boundary:
 Gallery supports existing approved image paths. Direct image upload is not included in this release.
+Preview return improvement
+- The preview Back button now returns to the exact Website Manager screen that opened it.
+- It closes the preview tab when permitted, with exact-route navigation as a browser fallback.

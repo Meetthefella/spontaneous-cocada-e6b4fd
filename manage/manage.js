@@ -400,9 +400,14 @@ function validateStep(){const step=document.querySelector(`.editor-step[data-ste
 function requestLeave(target){flushDraft();leaveEditor(target);}
 function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
+function rememberPreviewReturn(){
+  localStorage.setItem('eb-preview-return-url-v1',window.location.href);
+}
+
 function previewHomepageWebsite(){
   try{
     localStorage.setItem('eb-homepage-preview-v1',JSON.stringify(homepageWorking));
+    rememberPreviewReturn();
     window.open('/?preview=homepage#home','_blank','noopener');
     setHomepagePublishStatus('Preview opened in a new tab. The live website has not changed.');
   }catch(error){setHomepagePublishStatus('The website preview could not be opened.','error');}
@@ -621,7 +626,7 @@ function updateSiteSectionFromForm(){const def=sectionDefinitions[activeSiteSect
 function validateSiteSection(){const invalid=[...document.querySelectorAll('#sectionEditorForm [required]')].find(field=>!field.value.trim());if(invalid){invalid.focus();setSectionStatus('Please complete the highlighted field.','error');return false;}return true;}
 async function saveSiteSectionDraft(){clearTimeout(siteSectionSaveTimer);siteSectionSaveTimer=null;if(siteSectionSaving)return;siteSectionSaving=true;updateSiteSectionFromForm();setSectionStatus('Saving online…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}&draft=1`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'Draft could not be saved.');setSectionStatus(`✓ Saved online · ${relativeTime(result.savedAt)}`,'success');}catch(error){setSectionStatus('Could not save online — your changes remain on this screen.','error');}finally{siteSectionSaving=false;}}
 function scheduleSiteSectionSave(){clearTimeout(siteSectionSaveTimer);setSectionStatus('Saving online…');siteSectionSaveTimer=setTimeout(saveSiteSectionDraft,650);}
-function previewSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();localStorage.setItem(`eb-section-preview:${activeSiteSection}`,JSON.stringify(siteSectionWorking));const tab=sectionDefinitions[activeSiteSection].publicTab;window.open(`/?preview=${encodeURIComponent(activeSiteSection)}#${tab}`,'_blank','noopener');}
+function previewSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();localStorage.setItem(`eb-section-preview:${activeSiteSection}`,JSON.stringify(siteSectionWorking));rememberPreviewReturn();const tab=sectionDefinitions[activeSiteSection].publicTab;window.open(`/?preview=${encodeURIComponent(activeSiteSection)}#${tab}`,'_blank','noopener');}
 async function publishSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();if(siteSectionSaveTimer)await saveSiteSectionDraft();if(!confirm(`Publish ${sectionDefinitions[activeSiteSection].title} to the live website?`))return;const button=document.querySelector('#sectionPublishButton');button.disabled=true;button.textContent='Publishing…';setSectionStatus('Publishing…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'This section could not be published.');siteSectionOriginal=clone(siteSectionWorking);setSectionStatus('✓ Published successfully. The live website now uses these changes.','success');}catch(error){setSectionStatus(error.message,'error');}finally{button.disabled=false;button.textContent='Publish';}}
 document.querySelectorAll('[data-open-section]').forEach(button=>button.addEventListener('click',()=>openSiteSection(button.dataset.openSection)));
 document.querySelector('#sectionEditorForm').addEventListener('input',scheduleSiteSectionSave);
