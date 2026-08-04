@@ -660,3 +660,35 @@
 .homepage-publish-panel > p:not(.eyebrow):not(.publish-status) { margin:0; max-width:58ch; line-height:1.6; }
 .homepage-publish-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
 @media (max-width:620px) { .homepage-publish-actions { grid-template-columns:1fr; } .homepage-publish-actions .button { width:100%; } }
+
+
+.add-treatment-button {
+  display:grid;
+  justify-items:center;
+  gap:8px;
+  width:100%;
+  min-height:116px;
+  margin-top:16px;
+  padding:20px;
+  border:2px dashed rgba(91,68,52,.28);
+  border-radius:22px;
+  background:rgba(255,255,255,.28);
+  color:inherit;
+  font:inherit;
+  cursor:pointer;
+}
+.add-treatment-button span {
+  display:grid;
+  place-items:center;
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:rgba(91,68,52,.1);
+  font-family:Arial,sans-serif;
+  font-size:2.5rem;
+  font-weight:300;
+  line-height:1;
+}
+.add-treatment-button strong { font-family:Georgia,serif; font-size:1.15rem; font-weight:500; }
+.add-treatment-button:hover,.add-treatment-button:focus-visible { background:rgba(255,255,255,.5); border-style:solid; outline:none; }
+@media (max-width:640px){.add-treatment-button{min-height:126px;margin-top:14px;}}
