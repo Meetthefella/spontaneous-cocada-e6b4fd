@@ -132,6 +132,16 @@
           <div><p class="eyebrow">Website manager</p><h1>Homepage</h1><p>Choose a section to view its current website content.</p></div>
         </header>
         <div id="homepageSectionList" class="homepage-section-list"></div>
+        <section class="homepage-publish-panel" aria-labelledby="homepagePublishTitle">
+          <p class="eyebrow">Preview and publish</p>
+          <h2 id="homepagePublishTitle">Ready to check the whole homepage?</h2>
+          <p>Preview your saved draft in the real website layout. Publish only when everything looks right.</p>
+          <div class="homepage-publish-actions">
+            <button id="homepageWebsitePreviewButton" class="button secondary" type="button">Preview website</button>
+            <button id="homepagePublishButton" class="button primary" type="button">Publish homepage</button>
+          </div>
+          <p id="homepagePublishStatus" class="publish-status" role="status" aria-live="polite"></p>
+        </section>
       </div>
 
       <div id="homepageSummaryView" class="manager-workspace" hidden>
@@ -149,7 +159,7 @@
         </header>
         <form id="homepageEditorForm" class="step-form homepage-editor-form" novalidate>
           <div id="homepageEditorFields"></div>
-          <div class="homepage-session-note"><strong>Saved safely, not live</strong><small>Your homepage draft is saved securely online and can be continued on another signed-in device. Publishing to the live website is added in Checkpoint 4.4.</small></div>
+          <div class="homepage-session-note"><strong>Saved safely, not live</strong><small>Your homepage draft is saved securely online and can be continued on another signed-in device. Use Preview website from the Homepage screen before publishing.</small></div>
           <details class="editor-more-options">
             <summary>More options</summary>
             <button id="discardHomepageChangesButton" class="danger-button" type="button">Discard changes to this section</button>

@@ -1099,6 +1099,7 @@ let homepageDraftTimer = null;
 let homepageDraftSaving = false;
 let homepageDraftQueued = false;
 let homepageSavedAt = null;
+let homepagePublishing = false;
 let activeTreatmentId = null;
 let editorStep = 0;
 let editorDirty = false;
@@ -1113,6 +1114,7 @@ let lockContext = null;
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const TREATMENTS_API = '/.netlify/functions/treatments';
 const HOMEPAGE_DRAFT_API = '/.netlify/functions/homepage-draft';
+const HOMEPAGE_API = '/.netlify/functions/homepage';
 
 let treatments = [
   {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
@@ -1136,7 +1138,7 @@ let treatments = [
 ];
 
 const views = ['dashboardView','homepageView','homepageSummaryView','homepageEditorView','homepagePreviewView','treatmentsView','treatmentSummaryView','editorView','previewView'];
-const homepageOriginal = {
+let homepageOriginal = {
   heroTitleFirst:'Effortless',
   heroTitleSecond:'Beauty',
   heroLine:'Enhance. Simplify.',
@@ -1156,6 +1158,28 @@ let homepageWorking = JSON.parse(JSON.stringify(homepageOriginal));
 function setHomepageDraftStatus(message){
   const element=document.querySelector('#homepageDraftStatus');
   if(element)element.textContent=message;
+}
+function setHomepagePublishStatus(message='', type=''){
+  const element=document.querySelector('#homepagePublishStatus');
+  if(!element)return;
+  element.textContent=message;
+  element.classList.toggle('error',type==='error');
+  element.classList.toggle('success',type==='success');
+}
+async function loadPublishedHomepage(){
+  try{
+    const response=await fetch(HOMEPAGE_API,{cache:'no-store'});
+    if(response.status===404)return;
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(result.error||'Published homepage could not be loaded.');
+    if(result?.data?.features){
+      homepageOriginal=clone(result.data);
+      delete homepageOriginal.schemaVersion;
+      delete homepageOriginal.updatedAt;
+      homepageWorking=clone(homepageOriginal);
+      updatePublishedDisplay(result.data.updatedAt);
+    }
+  }catch(error){console.warn(error);}
 }
 async function loadHomepageDraft(){
   try{
@@ -1353,7 +1377,7 @@ function showSuccess(user,message='Manage your Effortless Beauty website from on
   successMessage.textContent=message;
   signedInAs.textContent=user?.email||'Authenticated user';
   showPanel('success');
-  Promise.allSettled([loadPublishedTreatments(),loadHomepageDraft()]).then(()=>{
+  Promise.allSettled([loadPublishedTreatments(),loadPublishedHomepage().then(loadHomepageDraft)]).then(()=>{
     if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
     else{showAppView('dashboardView');unlockManager();lockContext=null;}
   });
@@ -1454,6 +1478,37 @@ function validateStep(){const step=document.querySelector(`.editor-step[data-ste
 function requestLeave(target){flushDraft();leaveEditor(target);}
 function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
+function previewHomepageWebsite(){
+  try{
+    localStorage.setItem('eb-homepage-preview-v1',JSON.stringify(homepageWorking));
+    window.open('/?preview=homepage#home','_blank','noopener');
+    setHomepagePublishStatus('Preview opened in a new tab. The live website has not changed.');
+  }catch(error){setHomepagePublishStatus('The website preview could not be opened.','error');}
+}
+async function publishHomepage(){
+  if(homepagePublishing)return;
+  const user=await getUser().catch(()=>null);
+  if(!user){setHomepagePublishStatus('Your session has expired. Sign in again to publish.','error');lockManager();return;}
+  if(homepageDraftTimer||homepageDraftSaving)await saveHomepageDraft();
+  if(!confirm('Publish these Homepage changes to the live website?'))return;
+  homepagePublishing=true;
+  const button=document.querySelector('#homepagePublishButton');
+  button.disabled=true;button.textContent='Publishing…';
+  setHomepagePublishStatus('Publishing your homepage…');
+  try{
+    const response=await fetch(HOMEPAGE_API,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:homepageWorking})});
+    const result=await response.json().catch(()=>({}));
+    if(response.status===401){setHomepagePublishStatus('Your session has expired. Sign in again to publish.','error');lockManager();return;}
+    if(!response.ok)throw new Error(result.error||'Your homepage could not be published.');
+    homepageOriginal=clone(result.data);delete homepageOriginal.schemaVersion;delete homepageOriginal.updatedAt;
+    homepageWorking=clone(homepageOriginal);homepageDirty=false;homepageSavedAt=null;
+    updatePublishedDisplay(result.updatedAt);
+    setHomepageDraftStatus(`✓ Published · ${relativeTime(result.updatedAt)}`);
+    setHomepagePublishStatus('✓ Published successfully. The live homepage now uses these changes.','success');
+    renderHomepageSections();
+  }catch(error){setHomepagePublishStatus(error.message||'Your homepage could not be published.','error');}
+  finally{homepagePublishing=false;button.disabled=false;button.textContent='Publish homepage';}
+}
 function renderHomepageSections(){
   document.querySelector('#homepageSectionList').innerHTML=homepageSections.map(section=>`<button class="homepage-section-row" type="button" data-homepage-section="${escapeHtml(section.id)}"><span class="homepage-section-icon" aria-hidden="true">${escapeHtml(section.icon)}</span><span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.description)}</small></span><b aria-hidden="true">›</b></button>`).join('');
 }
@@ -1465,7 +1520,7 @@ function homepageSummaryMarkup(section,{preview=false}={}){
   const values=homepageSectionValues(section);
   const fields=section.featureEditor?'':values.map(([label,value])=>`<div class="homepage-content-field"><small>${escapeHtml(label)}</small><p>${escapeHtml(value)}</p></div>`).join('');
   const features=section.featureEditor?values.map(([title,text])=>`<div class="homepage-feature-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`).join(''):'';
-  const note=preview?'This is a private preview. The live website has not changed.':(homepageDirty?'Unpublished changes are saved safely online. The live website has not changed.':'Choose Edit section to update this homepage content.');
+  const note=preview?'This is a private section preview. The live website has not changed.':(homepageDirty?'Unpublished changes are saved safely online. Preview the whole website before publishing.':'This section matches the live homepage. Choose Edit section to update it.');
   return `<div class="homepage-summary-heading"><span class="homepage-section-icon" aria-hidden="true">${escapeHtml(section.icon)}</span><p class="eyebrow">${preview?'Homepage preview':'Homepage section'}</p><h1>${escapeHtml(section.title)}</h1><p>${escapeHtml(section.description)}</p></div><div class="homepage-summary-content">${fields}${features?`<div class="homepage-feature-grid">${features}</div>`:''}<p class="read-only-note">${escapeHtml(note)}</p></div>`;
 }
 function openHomepageSummary(id){
@@ -1512,6 +1567,8 @@ function renderHomepagePreview(){const section=homepageSections.find(item=>item.
 // Dashboard and Homepage flow
  document.querySelector('#openHomepageButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');history.pushState({view:'homepage'},'','#homepage');});
 document.querySelector('#homepageBackButton').addEventListener('click',()=>showAppView('dashboardView'));
+document.querySelector('#homepageWebsitePreviewButton').addEventListener('click',previewHomepageWebsite);
+document.querySelector('#homepagePublishButton').addEventListener('click',publishHomepage);
 document.querySelector('#homepageSummaryBackButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');});
 document.querySelector('#homepageSectionList').addEventListener('click',event=>{const row=event.target.closest('[data-homepage-section]');if(row)openHomepageSummary(row.dataset.homepageSection);});
 document.querySelector('#editHomepageSectionButton').addEventListener('click',startHomepageEditor);

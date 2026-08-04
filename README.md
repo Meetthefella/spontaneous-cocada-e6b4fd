@@ -133,3 +133,15 @@ Homepage editing now uses an authenticated Netlify Blobs draft:
 - The public homepage and `content/homepage.json` are unchanged; live Homepage publishing remains Checkpoint 4.4.
 
 The draft endpoint is `/.netlify/functions/homepage-draft`. Both reading and writing require an authenticated Netlify Identity user.
+
+
+## Website Manager — Homepage Checkpoint 4.4
+
+Homepage content can now be checked in the real public-site layout and published safely:
+
+- **Preview website** opens the complete homepage using the authenticated editor's saved draft without changing the live site.
+- **Publish homepage** requires a current Netlify Identity session and explicit confirmation.
+- The `homepage` Netlify Function validates the complete document before writing it to the site-wide `effortless-beauty-content` Blob store.
+- The public site reads the published Homepage Blob and falls back to `content/homepage.json` if no Homepage has been published or the endpoint is temporarily unavailable.
+- A successful publish removes the superseded online Homepage draft and updates the manager's approved baseline.
+- Treatments publishing, authentication, inactivity locking and the Golden Master fallback remain unchanged.
