@@ -506,7 +506,7 @@ function startEditor(){
 function requestEditor(){startEditor();}
 function renderEditorStep(){document.querySelectorAll('.editor-step').forEach((step,index)=>step.hidden=index!==editorStep);document.querySelector('#editorPreviousButton').hidden=editorStep===0;document.querySelector('#editorNextButton').hidden=editorStep===4;document.querySelector('#editorPreviewButton').hidden=editorStep!==4;document.querySelector('#editorPublishButton').hidden=editorStep!==4;document.querySelector('#editorProgressBar').style.width=`${((editorStep+1)/5)*100}%`;if(editorStep!==4)setPublishStatus('');}
 function validateStep(){const step=document.querySelector(`.editor-step[data-step="${editorStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
-function requestLeave(target){flushDraft();leaveEditor(target);}
+function requestLeave(target){if(editorDirty)flushDraft();leaveEditor(target);}
 function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
 function rememberPreviewReturn(){

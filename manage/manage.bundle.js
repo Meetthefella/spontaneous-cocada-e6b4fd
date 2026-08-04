@@ -1707,7 +1707,7 @@ function validateStep() {
   return true;
 }
 function requestLeave(target) {
-  flushDraft();
+  if (editorDirty) flushDraft();
   leaveEditor(target);
 }
 function leaveEditor(target) {
