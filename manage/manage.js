@@ -16,6 +16,10 @@ let inviteToken = null;
 let activeCategory = 'signature';
 let activeHomepageSection = null;
 let homepageDirty = false;
+let homepageDraftTimer = null;
+let homepageDraftSaving = false;
+let homepageDraftQueued = false;
+let homepageSavedAt = null;
 let activeTreatmentId = null;
 let editorStep = 0;
 let editorDirty = false;
@@ -29,6 +33,7 @@ let resumeAfterLogin = false;
 let lockContext = null;
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const TREATMENTS_API = '/.netlify/functions/treatments';
+const HOMEPAGE_DRAFT_API = '/.netlify/functions/homepage-draft';
 
 let treatments = [
   {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
@@ -69,6 +74,56 @@ const homepageOriginal = {
   ]
 };
 let homepageWorking = JSON.parse(JSON.stringify(homepageOriginal));
+function setHomepageDraftStatus(message){
+  const element=document.querySelector('#homepageDraftStatus');
+  if(element)element.textContent=message;
+}
+async function loadHomepageDraft(){
+  try{
+    const response=await fetch(HOMEPAGE_DRAFT_API,{cache:'no-store',credentials:'same-origin'});
+    if(response.status===404){homepageWorking=clone(homepageOriginal);homepageDirty=false;homepageSavedAt=null;return;}
+    if(response.status===401)return;
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(result.error||'Homepage draft could not be loaded.');
+    if(result?.data?.content){
+      homepageWorking=clone(result.data.content);
+      homepageSavedAt=result.data.savedAt||null;
+      homepageDirty=JSON.stringify(homepageWorking)!==JSON.stringify(homepageOriginal);
+    }
+  }catch(error){console.warn(error);}
+}
+async function saveHomepageDraft(){
+  clearTimeout(homepageDraftTimer);
+  homepageDraftTimer=null;
+  if(homepageDraftSaving){homepageDraftQueued=true;return;}
+  homepageDraftSaving=true;
+  setHomepageDraftStatus('Saving online…');
+  try{
+    const response=await fetch(HOMEPAGE_DRAFT_API,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify({schemaVersion:1,content:homepageWorking})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(response.status===401){setHomepageDraftStatus('Sign in again to save');lockManager();return;}
+    if(!response.ok)throw new Error(result.error||'Homepage draft could not be saved.');
+    homepageSavedAt=result.savedAt;
+    setHomepageDraftStatus(`✓ Saved online · ${relativeTime(result.savedAt)}`);
+  }catch(error){
+    setHomepageDraftStatus('Could not save online — changes remain on this screen');
+    console.warn(error);
+  }finally{
+    homepageDraftSaving=false;
+    if(homepageDraftQueued){homepageDraftQueued=false;scheduleHomepageDraftSave();}
+  }
+}
+function scheduleHomepageDraftSave(){
+  clearTimeout(homepageDraftTimer);
+  setHomepageDraftStatus('Saving online…');
+  homepageDraftTimer=setTimeout(saveHomepageDraft,600);
+}
+
 const homepageSections = [
   {id:'hero',title:'Hero',description:'The main heading and opening message at the top of the website.',icon:'⌂',fields:[
     {label:'First heading line',path:'heroTitleFirst',required:true,maxLength:60},
@@ -182,6 +237,7 @@ function resetInactivityTimer(){
 function lockManager(){
   if(inactivityLocked||panels.success.hidden)return;
   if(editorDirty&&currentAppView()==='editorView')flushDraft();
+  if(homepageDraftTimer)saveHomepageDraft();
   lockContext=captureLockContext();
   inactivityLocked=true;
   setAppInert(true);
@@ -218,9 +274,10 @@ function showSuccess(user,message='Manage your Effortless Beauty website from on
   successMessage.textContent=message;
   signedInAs.textContent=user?.email||'Authenticated user';
   showPanel('success');
-  loadPublishedTreatments();
-  if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
-  else{showAppView('dashboardView');unlockManager();lockContext=null;}
+  Promise.allSettled([loadPublishedTreatments(),loadHomepageDraft()]).then(()=>{
+    if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
+    else{showAppView('dashboardView');unlockManager();lockContext=null;}
+  });
 }
 function showError(error){errorMessage.textContent=error?.message||error?.msg||'The login service could not complete that request.';showPanel('error');}
 function passwordsMatch(password,confirmation){if(password!==confirmation)throw new Error('The two passwords do not match.');if(password.length<8)throw new Error('Your password must contain at least 8 characters.');}
@@ -329,7 +386,7 @@ function homepageSummaryMarkup(section,{preview=false}={}){
   const values=homepageSectionValues(section);
   const fields=section.featureEditor?'':values.map(([label,value])=>`<div class="homepage-content-field"><small>${escapeHtml(label)}</small><p>${escapeHtml(value)}</p></div>`).join('');
   const features=section.featureEditor?values.map(([title,text])=>`<div class="homepage-feature-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`).join(''):'';
-  const note=preview?'This is a private preview. The live website has not changed.':(homepageDirty?'Changes are held safely in this open session. Online saving and publishing are not active yet.':'Choose Edit section to try the new one-section-at-a-time editor.');
+  const note=preview?'This is a private preview. The live website has not changed.':(homepageDirty?'Unpublished changes are saved safely online. The live website has not changed.':'Choose Edit section to update this homepage content.');
   return `<div class="homepage-summary-heading"><span class="homepage-section-icon" aria-hidden="true">${escapeHtml(section.icon)}</span><p class="eyebrow">${preview?'Homepage preview':'Homepage section'}</p><h1>${escapeHtml(section.title)}</h1><p>${escapeHtml(section.description)}</p></div><div class="homepage-summary-content">${fields}${features?`<div class="homepage-feature-grid">${features}</div>`:''}<p class="read-only-note">${escapeHtml(note)}</p></div>`;
 }
 function openHomepageSummary(id){
@@ -353,14 +410,14 @@ function renderHomepageEditor(){
     fields=homepageWorking.features.map((feature,index)=>`<fieldset class="homepage-feature-editor"><legend>Card ${index+1}</legend><label><span>Title</span><input data-homepage-feature="${index}" data-feature-key="title" maxlength="80" required type="text" value="${escapeHtml(feature.title)}" /></label><label><span>Description</span><textarea data-homepage-feature="${index}" data-feature-key="text" maxlength="300" required rows="4">${escapeHtml(feature.text)}</textarea></label></fieldset>`).join('');
   }else fields=section.fields.map(field=>homepageFieldMarkup(field,homepageWorking[field.path])).join('');
   document.querySelector('#homepageEditorFields').innerHTML=`<p class="eyebrow">Homepage editor</p><h1>${escapeHtml(section.title)}</h1><p>${escapeHtml(section.description)}</p>${fields}`;
-  document.querySelector('#homepageDraftStatus').textContent=homepageDirty?'Session changes':'Session preview';
+  setHomepageDraftStatus(homepageSavedAt?`✓ Saved online · ${relativeTime(homepageSavedAt)}`:'✓ Autosave on');
 }
 function startHomepageEditor(){renderHomepageEditor();showAppView('homepageEditorView');history.pushState({view:'homepage-editor',section:activeHomepageSection},'',`#homepage-${activeHomepageSection}-edit`);}
 function updateHomepageWorking(target){
   if(target.dataset.homepagePath)homepageWorking[target.dataset.homepagePath]=target.value;
   if(target.dataset.homepageFeature!=null){const feature=homepageWorking.features[Number(target.dataset.homepageFeature)];if(feature)feature[target.dataset.featureKey]=target.value;}
   homepageDirty=true;
-  document.querySelector('#homepageDraftStatus').textContent='Session changes';
+  scheduleHomepageDraftSave();
 }
 function validateHomepageEditor(){const invalid=[...document.querySelectorAll('#homepageEditorForm [required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
 function resetHomepageSection(){
@@ -369,6 +426,7 @@ function resetHomepageSection(){
   else section.fields.forEach(field=>{homepageWorking[field.path]=homepageOriginal[field.path];});
   homepageDirty=JSON.stringify(homepageWorking)!==JSON.stringify(homepageOriginal);
   renderHomepageEditor();
+  scheduleHomepageDraftSave();
 }
 function renderHomepagePreview(){const section=homepageSections.find(item=>item.id===activeHomepageSection);if(section)document.querySelector('#homepagePreview').innerHTML=homepageSummaryMarkup(section,{preview:true});}
 
@@ -379,11 +437,11 @@ document.querySelector('#homepageSummaryBackButton').addEventListener('click',()
 document.querySelector('#homepageSectionList').addEventListener('click',event=>{const row=event.target.closest('[data-homepage-section]');if(row)openHomepageSummary(row.dataset.homepageSection);});
 document.querySelector('#editHomepageSectionButton').addEventListener('click',startHomepageEditor);
 document.querySelector('#homepageEditorForm').addEventListener('input',event=>{if(event.target.matches('input,textarea'))updateHomepageWorking(event.target);});
-document.querySelector('#homepageEditorLeaveButton').addEventListener('click',()=>openHomepageSummary(activeHomepageSection));
-document.querySelector('#homepageDoneButton').addEventListener('click',()=>{if(validateHomepageEditor())openHomepageSummary(activeHomepageSection);});
-document.querySelector('#homepagePreviewButton').addEventListener('click',()=>{if(!validateHomepageEditor())return;renderHomepagePreview();showAppView('homepagePreviewView');});
+document.querySelector('#homepageEditorLeaveButton').addEventListener('click',()=>{if(homepageDraftTimer)saveHomepageDraft();openHomepageSummary(activeHomepageSection);});
+document.querySelector('#homepageDoneButton').addEventListener('click',()=>{if(!validateHomepageEditor())return;if(homepageDraftTimer)saveHomepageDraft();openHomepageSummary(activeHomepageSection);});
+document.querySelector('#homepagePreviewButton').addEventListener('click',()=>{if(!validateHomepageEditor())return;if(homepageDraftTimer)saveHomepageDraft();renderHomepagePreview();showAppView('homepagePreviewView');});
 document.querySelector('#homepagePreviewBackButton').addEventListener('click',()=>{renderHomepageEditor();showAppView('homepageEditorView');});
-document.querySelector('#discardHomepageChangesButton').addEventListener('click',()=>{const section=homepageSections.find(item=>item.id===activeHomepageSection);if(!section||!confirm(`Discard changes to ${section.title}?`))return;resetHomepageSection();document.querySelector('#homepageDraftStatus').textContent='Changes discarded';});
+document.querySelector('#discardHomepageChangesButton').addEventListener('click',()=>{const section=homepageSections.find(item=>item.id===activeHomepageSection);if(!section||!confirm(`Discard changes to ${section.title}?`))return;resetHomepageSection();setHomepageDraftStatus('Saving restored content…');});
 document.querySelector('#openTreatmentsButton').addEventListener('click',()=>{activeCategory='signature';renderTreatments();showAppView('treatmentsView');history.pushState({view:'treatments'},'','#treatments');});
 document.querySelector('#treatmentsBackButton').addEventListener('click',()=>showAppView('dashboardView'));
 document.querySelector('#summaryBackButton').addEventListener('click',()=>{renderTreatments();showAppView('treatmentsView');});
@@ -408,8 +466,8 @@ document.querySelector('#editorPreviewButton').addEventListener('click',()=>{con
 document.querySelector('#editorPublishButton').addEventListener('click',publishTreatments);
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
-window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&editorDirty)flushDraft();});
+window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();if(homepageDraftTimer)saveHomepageDraft();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(editorDirty)flushDraft();if(homepageDraftTimer)saveHomepageDraft();}});
 window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden){flushDraft();leaveEditor('summary');}});
 setInterval(refreshDraftTimes,30000);
 
@@ -432,6 +490,6 @@ async function initialiseAuthentication(){const heading=document.querySelector('
 document.querySelector('#loginForm').addEventListener('submit',async event=>{event.preventDefault();showPanel('loading');try{showSuccess(await login(document.querySelector('#loginEmail').value.trim(),document.querySelector('#loginPassword').value));}catch(error){showError(error);}});
 document.querySelector('#inviteForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#invitePassword').value;passwordsMatch(password,document.querySelector('#invitePasswordConfirm').value);if(!inviteToken)throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');showPanel('loading');const user=await acceptInvite(inviteToken,password);inviteToken=null;clearIdentityCallbackUrl();showSuccess(user,'Your editor account is active.');}catch(error){showError(error);}});
 document.querySelector('#recoveryForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#recoveryPassword').value;passwordsMatch(password,document.querySelector('#recoveryPasswordConfirm').value);showPanel('loading');showSuccess(await updateUser({password}),'Your password has been updated.');}catch(error){showError(error);}});
-document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty&&currentAppView()==='editorView')flushDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
+document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty&&currentAppView()==='editorView')flushDraft();if(homepageDraftTimer)await saveHomepageDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
 document.querySelector('#retryButton').addEventListener('click',()=>{clearIdentityCallbackUrl();showLogin();});
 initialiseAuthentication();

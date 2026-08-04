@@ -118,5 +118,18 @@ The Treatments editor now publishes through the authenticated `/.netlify/functio
 - Hero, Introduction, Why Choose Us and all three Feature Cards can be updated in a private working session.
 - Required fields are validated before Done or Preview.
 - A private preview clearly states that the live website has not changed.
-- Changes remain in the current open manager session only. Netlify persistence and live publishing are intentionally reserved for Checkpoints 4.3 and 4.4.
+- Checkpoint 4.2 originally kept changes in the open session; Checkpoint 4.3 now supersedes this with authenticated online draft saving. Live publishing remains reserved for Checkpoint 4.4.
 - Treatments editing, publishing, authentication and inactivity-lock restoration remain unchanged.
+
+## Website Manager — Homepage Checkpoint 4.3
+
+Homepage editing now uses an authenticated Netlify Blobs draft:
+
+- Every Homepage edit autosaves securely online.
+- The same unpublished draft is restored after signing in on another device.
+- The inactivity lock saves pending Homepage changes before locking.
+- Discarding one section restores its approved content and updates the online draft.
+- Preview remains private.
+- The public homepage and `content/homepage.json` are unchanged; live Homepage publishing remains Checkpoint 4.4.
+
+The draft endpoint is `/.netlify/functions/homepage-draft`. Both reading and writing require an authenticated Netlify Identity user.
