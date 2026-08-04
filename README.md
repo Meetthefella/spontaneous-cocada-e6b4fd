@@ -145,3 +145,18 @@ Homepage content can now be checked in the real public-site layout and published
 - The public site reads the published Homepage Blob and falls back to `content/homepage.json` if no Homepage has been published or the endpoint is temporarily unavailable.
 - A successful publish removes the superseded online Homepage draft and updates the manager's approved baseline.
 - Treatments publishing, authentication, inactivity locking and the Golden Master fallback remain unchanged.
+
+## Website Manager v1 consolidated connection
+
+This checkpoint connects the remaining public-site areas to the private manager using the proven Homepage lifecycle:
+
+- authenticated online drafts
+- cross-device restoration
+- full-site preview with a Back to Website Manager button
+- explicit authenticated publishing
+- Netlify Blob published content
+- committed JSON Golden Master fallbacks
+
+Connected areas: Price Lists, Aftercare, Gallery, Merchandise, Booking, Contact, Policies and Settings. Homepage and Treatments remain on their existing specialised editors.
+
+Gallery entries currently accept approved image paths. Direct image upload/storage is intentionally left as a separate enhancement so this release does not imply that binary uploads are already supported.

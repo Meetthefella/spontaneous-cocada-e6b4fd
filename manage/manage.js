@@ -58,7 +58,7 @@ let treatments = [
   ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true}))
 ];
 
-const views = ['dashboardView','homepageView','homepageSummaryView','homepageEditorView','homepagePreviewView','treatmentsView','treatmentSummaryView','editorView','previewView'];
+const views = ['sectionEditorView','dashboardView','homepageView','homepageSummaryView','homepageEditorView','homepagePreviewView','treatmentsView','treatmentSummaryView','editorView','previewView'];
 let homepageOriginal = {
   heroTitleFirst:'Effortless',
   heroTitleSecond:'Beauty',
@@ -251,7 +251,7 @@ async function publishTreatments(){
 function showPanel(name){Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==name;});}
 function showAppView(id){views.forEach(viewId=>{document.querySelector(`#${viewId}`).hidden=viewId!==id;});window.scrollTo({top:0,behavior:'instant'});}
 function currentAppView(){return views.find(viewId=>!document.querySelector(`#${viewId}`).hidden)||'dashboardView';}
-function captureLockContext(){return {viewId:currentAppView(),activeTreatmentId,activeCategory,activeHomepageSection,editorStep};}
+function captureLockContext(){return {viewId:currentAppView(),activeTreatmentId,activeCategory,activeHomepageSection,activeSiteSection,editorStep};}
 function setAppInert(value){views.forEach(viewId=>{document.querySelector(`#${viewId}`).inert=value;});}
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
@@ -278,6 +278,7 @@ function restoreLockedContext(){
   if(lockContext.viewId==='homepageSummaryView'&&activeHomepageSection){const section=homepageSections.find(item=>item.id===activeHomepageSection);if(section)document.querySelector('#homepageSummary').innerHTML=homepageSummaryMarkup(section);}
   if(lockContext.viewId==='homepageEditorView'&&activeHomepageSection)renderHomepageEditor();
   if(lockContext.viewId==='homepagePreviewView'&&activeHomepageSection)renderHomepagePreview();
+  if(lockContext.viewId==='sectionEditorView'&&lockContext.activeSiteSection){activeSiteSection=lockContext.activeSiteSection;renderSiteSectionEditor();}
   if(lockContext.viewId==='treatmentsView')renderTreatments();
   if(lockContext.viewId==='treatmentSummaryView'&&activeTreatmentId){
     const draft=readDraft(activeTreatmentId);const record=draft?.record||findTreatment(activeTreatmentId);
@@ -549,4 +550,83 @@ document.querySelector('#inviteForm').addEventListener('submit',async event=>{ev
 document.querySelector('#recoveryForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#recoveryPassword').value;passwordsMatch(password,document.querySelector('#recoveryPasswordConfirm').value);showPanel('loading');showSuccess(await updateUser({password}),'Your password has been updated.');}catch(error){showError(error);}});
 document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty&&currentAppView()==='editorView')flushDraft();if(homepageDraftTimer)await saveHomepageDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
 document.querySelector('#retryButton').addEventListener('click',()=>{clearIdentityCallbackUrl();showLogin();});
+
+// Website Manager v1: shared editor for the remaining public-site sections.
+const SECTION_API='/.'+'netlify/functions/site-section';
+let activeSiteSection=null;
+let siteSectionOriginal=null;
+let siteSectionWorking=null;
+let siteSectionSaveTimer=null;
+let siteSectionSaving=false;
+const sectionDefinitions={
+  pricelists:{title:'Price Lists',description:'Update treatment prices and times.',publicTab:'prices',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'groups',label:'Price list entries',type:'priceGroups',help:'One line per treatment: Group | Treatment | Price | Time'}]},
+  aftercare:{title:'Aftercare',description:'Update the healing guide wording while keeping the approved artwork.',publicTab:'aftercare',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'stages',label:'Healing stages',type:'stages',help:'One line per stage: Day | Description'}]},
+  gallery:{title:'Gallery',description:'Manage approved gallery entries. Image paths can be connected now; direct uploads remain a later enhancement.',publicTab:'gallery',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'items',label:'Gallery entries',type:'gallery',help:'One line per image: Title | Caption | Image path | Alt text | Show yes/no'}]},
+  merchandise:{title:'Merchandise',description:'Update merchandise categories and their descriptions.',publicTab:'merchandise',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'categories',label:'Categories',type:'categories',help:'One line per category: Title | Description | Show yes/no'}]},
+  booking:{title:'Booking',description:'Update Square booking details and the client eligibility wording.',publicTab:'booking',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'studioNote',label:'Studio note',type:'textarea'},{path:'bookingUrl',label:'Square booking link',required:true},
+    {path:'eligibilityHeading',label:'Eligibility heading'},{path:'clientTypeQuestion',label:'Client question',type:'textarea'},
+    {path:'newClientMessage',label:'New-client message',type:'textarea'},{path:'returningClientMessage',label:'Returning-client message',type:'textarea'},
+    {path:'ageConfirmation',label:'Age confirmation',type:'textarea'},{path:'patchConfirmation',label:'Patch-test confirmation',type:'textarea'},
+    {path:'newClientButtonText',label:'New-client button'},{path:'returningClientButtonText',label:'Returning-client button'},
+    {path:'complianceNote',label:'Compliance note',type:'textarea'},{path:'securityNote',label:'Security note',type:'textarea'}]},
+  contact:{title:'Contact',description:'Update contact details and opening hours.',publicTab:'contact',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'contact.heading',label:'Contact card heading'},{path:'contact.email',label:'Email address',required:true},{path:'contact.phone',label:'Phone number'},{path:'contact.instagram',label:'Instagram'},
+    {path:'hours.heading',label:'Hours heading'},{path:'hours.lines',label:'Opening hours',type:'lines',help:'One line for each opening-hours message.'}]},
+  privacy:{title:'Policies',description:'Update privacy, suitability and cancellation information.',publicTab:'privacy',fields:[
+    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
+    {path:'sections',label:'Policy sections',type:'policies',help:'One line per section: Heading | Policy wording'}]},
+  site:{title:'Settings',description:'Update website-wide title, description and footer details.',publicTab:'home',fields:[
+    {path:'businessName',label:'Business name',required:true},{path:'pageTitle',label:'Browser page title',required:true},
+    {path:'metaDescription',label:'Search description',type:'textarea',required:true},{path:'footerText',label:'Footer wording',required:true}]}
+};
+function getPath(obj,path){return path.split('.').reduce((value,key)=>value?.[key],obj);}
+function setPath(obj,path,value){const parts=path.split('.');let target=obj;parts.slice(0,-1).forEach(key=>target=target[key]??={});target[parts.at(-1)]=value;}
+function serializeSectionField(field,value){
+  if(field.type==='lines')return (value||[]).join('\n');
+  if(field.type==='stages')return (value||[]).map(item=>`${item.day||''} | ${item.text||''}`).join('\n');
+  if(field.type==='priceGroups')return (value||[]).flatMap(group=>(group.items||[]).map(item=>`${group.title||''} | ${item.name||''} | ${item.price||''} | ${item.time||''}`)).join('\n');
+  if(field.type==='gallery')return (value||[]).map(item=>`${item.title||''} | ${item.caption||''} | ${item.image||''} | ${item.alt||''} | ${item.visible===false?'no':'yes'}`).join('\n');
+  if(field.type==='categories')return (value||[]).map(item=>`${item.title||''} | ${item.description||''} | ${item.visible===false?'no':'yes'}`).join('\n');
+  if(field.type==='policies')return (value||[]).map(item=>`${item.heading||''} | ${item.text||''}`).join('\n');
+  return value??'';
+}
+function splitParts(line,count){const parts=line.split('|').map(part=>part.trim());while(parts.length<count)parts.push('');return parts;}
+function parseSectionField(field,value,current){
+  const lines=value.split('\n').map(line=>line.trim()).filter(Boolean);
+  if(field.type==='lines')return lines;
+  if(field.type==='stages')return lines.map((line,index)=>{const [day,text]=splitParts(line,2);return {...(current?.[index]||{}),day,text};});
+  if(field.type==='priceGroups'){const groups=[];lines.forEach(line=>{const [groupTitle,name,price,time]=splitParts(line,4);let group=groups.find(item=>item.title===groupTitle);if(!group){group={title:groupTitle,items:[]};groups.push(group);}group.items.push({name,price,time});});return groups;}
+  if(field.type==='gallery')return lines.map(line=>{const [title,caption,image,alt,visible]=splitParts(line,5);return {title,caption,image,alt,visible:visible.toLowerCase()!=='no'};});
+  if(field.type==='categories')return lines.map(line=>{const [title,description,visible]=splitParts(line,3);return {title,description,visible:visible.toLowerCase()!=='no'};});
+  if(field.type==='policies')return lines.map(line=>{const [heading,text]=splitParts(line,2);return {heading,text};});
+  return value;
+}
+function sectionFieldMarkup(field){const value=serializeSectionField(field,getPath(siteSectionWorking,field.path));const multiline=field.type==='textarea'||['lines','stages','priceGroups','gallery','categories','policies'].includes(field.type);return `<label><span>${escapeHtml(field.label)}</span>${multiline?`<textarea data-section-path="${escapeHtml(field.path)}" rows="${field.type==='textarea'?5:8}" ${field.required?'required':''}>${escapeHtml(value)}</textarea>`:`<input data-section-path="${escapeHtml(field.path)}" type="text" value="${escapeHtml(value)}" ${field.required?'required':''} />`}${field.help?`<small>${escapeHtml(field.help)}</small>`:''}</label>`;}
+function renderSiteSectionEditor(){const def=sectionDefinitions[activeSiteSection];document.querySelector('#sectionEditorTitle').textContent=def.title;document.querySelector('#sectionEditorDescription').textContent=def.description;document.querySelector('#sectionEditorFields').innerHTML=def.fields.map(sectionFieldMarkup).join('');setSectionStatus('✓ Autosave on');}
+function setSectionStatus(message,type=''){const el=document.querySelector('#sectionEditorStatus');el.textContent=message;el.classList.toggle('error',type==='error');el.classList.toggle('success',type==='success');}
+async function fetchSection(section,draft=false){const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(section)}${draft?'&draft=1':''}`,{cache:'no-store',credentials:'same-origin'});if(response.status===404)return null;const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||'This section could not be loaded.');return result.data;}
+async function openSiteSection(section){activeSiteSection=section;setSectionStatus('Loading…');try{const published=await fetchSection(section,false).catch(()=>null)||await fetch(`/content/${section}.json`,{cache:'no-store'}).then(r=>r.json());siteSectionOriginal=clone(published);delete siteSectionOriginal.schemaVersion;delete siteSectionOriginal.updatedAt;const draft=await fetchSection(section,true).catch(()=>null);siteSectionWorking=clone(draft?.content||siteSectionOriginal);renderSiteSectionEditor();showAppView('sectionEditorView');history.pushState({view:'section-editor',section},'',`#manage-${section}`);}catch(error){setSectionStatus(error.message,'error');}}
+function updateSiteSectionFromForm(){const def=sectionDefinitions[activeSiteSection];def.fields.forEach(field=>{const input=document.querySelector(`[data-section-path="${field.path}"]`);setPath(siteSectionWorking,field.path,parseSectionField(field,input.value,getPath(siteSectionWorking,field.path)));});}
+function validateSiteSection(){const invalid=[...document.querySelectorAll('#sectionEditorForm [required]')].find(field=>!field.value.trim());if(invalid){invalid.focus();setSectionStatus('Please complete the highlighted field.','error');return false;}return true;}
+async function saveSiteSectionDraft(){clearTimeout(siteSectionSaveTimer);siteSectionSaveTimer=null;if(siteSectionSaving)return;siteSectionSaving=true;updateSiteSectionFromForm();setSectionStatus('Saving online…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}&draft=1`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'Draft could not be saved.');setSectionStatus(`✓ Saved online · ${relativeTime(result.savedAt)}`,'success');}catch(error){setSectionStatus('Could not save online — your changes remain on this screen.','error');}finally{siteSectionSaving=false;}}
+function scheduleSiteSectionSave(){clearTimeout(siteSectionSaveTimer);setSectionStatus('Saving online…');siteSectionSaveTimer=setTimeout(saveSiteSectionDraft,650);}
+function previewSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();localStorage.setItem(`eb-section-preview:${activeSiteSection}`,JSON.stringify(siteSectionWorking));const tab=sectionDefinitions[activeSiteSection].publicTab;window.open(`/?preview=${encodeURIComponent(activeSiteSection)}#${tab}`,'_blank','noopener');}
+async function publishSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();if(siteSectionSaveTimer)await saveSiteSectionDraft();if(!confirm(`Publish ${sectionDefinitions[activeSiteSection].title} to the live website?`))return;const button=document.querySelector('#sectionPublishButton');button.disabled=true;button.textContent='Publishing…';setSectionStatus('Publishing…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'This section could not be published.');siteSectionOriginal=clone(siteSectionWorking);setSectionStatus('✓ Published successfully. The live website now uses these changes.','success');}catch(error){setSectionStatus(error.message,'error');}finally{button.disabled=false;button.textContent='Publish';}}
+document.querySelectorAll('[data-open-section]').forEach(button=>button.addEventListener('click',()=>openSiteSection(button.dataset.openSection)));
+document.querySelector('#sectionEditorForm').addEventListener('input',scheduleSiteSectionSave);
+document.querySelector('#sectionBackButton').addEventListener('click',()=>{if(siteSectionSaveTimer)saveSiteSectionDraft();showAppView('dashboardView');});
+document.querySelector('#sectionPreviewButton').addEventListener('click',previewSiteSection);
+document.querySelector('#sectionPublishButton').addEventListener('click',publishSiteSection);
+
 initialiseAuthentication();

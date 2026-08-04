@@ -308,9 +308,35 @@ async function loadPublishedTreatments() {
   return loadJson('content/treatments.json');
 }
 
+
+function renderPriceLists(data) {
+  setText('#pricesEyebrow', data.eyebrow); setText('#pricesHeading', data.heading); setText('#pricesIntro', data.intro);
+  const root = document.querySelector('#priceListGroups'); if (!root) return;
+  root.innerHTML = (data.groups || []).map(group => `<section><h2>${escapeHtml(group.title)}</h2>${(group.items || []).map(item => `<p><strong>${escapeHtml(item.name)}</strong><br>${escapeHtml(item.price)} · ${escapeHtml(item.time)}</p>`).join('')}</section>`).join('');
+}
+function renderGallery(data) {
+  setText('#galleryEyebrow', data.eyebrow); setText('#galleryHeading', data.heading); setText('#galleryIntro', data.intro);
+  const root = document.querySelector('#galleryGrid'); if (!root) return;
+  const items=(data.items||[]).filter(item=>item.visible!==false);
+  root.innerHTML = items.length ? items.map(item=>`<article class="card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
+}
+function renderMerchandise(data) {
+  setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);
+  const root = document.querySelector('#merchandiseGrid'); if (!root) return;
+  root.innerHTML=(data.categories||[]).filter(item=>item.visible!==false).map(item=>`<article class="card"><h2>${escapeHtml(item.title)}</h2><p>${escapeHtml(item.description||'')}</p></article>`).join('');
+}
+async function loadPublishedSection(name) {
+  const preview = new URLSearchParams(location.search).get('preview');
+  if (preview === name) {
+    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){const banner=document.createElement('div');banner.className='preview-banner';banner.innerHTML=`<span>${escapeHtml(name)} preview only — these changes are not live.</span><a class="preview-back-button" href="/manage/">← Back to Website Manager</a>`;document.body.prepend(banner);return data;} } catch(error){console.warn(error);}
+  }
+  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return result.data;} } catch(error){console.warn(error);}
+  return loadJson(`content/${name}.json`);
+}
+
 async function loadEditableContent() {
-  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy'];
-  const results = await Promise.allSettled(files.map((name) => loadJson(`content/${name}.json`)));
+  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy', 'pricelists', 'gallery', 'merchandise'];
+  const results = await Promise.allSettled(files.map((name) => loadPublishedSection(name)));
   const content = {};
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') content[files[index]] = result.value;
@@ -330,7 +356,10 @@ async function loadEditableContent() {
   }
   if (content.homepage) renderHomepage(content.homepage);
   if (content.treatments) renderTreatments(content.treatments);
+  if (content.pricelists) renderPriceLists(content.pricelists);
   if (content.aftercare) renderAftercare(content.aftercare);
+  if (content.gallery) renderGallery(content.gallery);
+  if (content.merchandise) renderMerchandise(content.merchandise);
   if (content.booking) renderBooking(content.booking);
   if (content.contact) renderContact(content.contact);
   if (content.privacy) renderPrivacy(content.privacy);

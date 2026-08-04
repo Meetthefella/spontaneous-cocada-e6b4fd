@@ -1,0 +1,27 @@
+{
+  "eyebrow": "Shop",
+  "heading": "Merchandise",
+  "intro": "Creative pieces and gifts from Effortless Beauty.",
+  "categories": [
+    {
+      "title": "Art T-Shirts",
+      "description": "Wearable Effortless Beauty artwork.",
+      "visible": true
+    },
+    {
+      "title": "Tattoo Transfers",
+      "description": "Temporary designs for creative styling.",
+      "visible": true
+    },
+    {
+      "title": "Resin Keyrings",
+      "description": "Handmade decorative keyrings.",
+      "visible": true
+    },
+    {
+      "title": "Flowers",
+      "description": "Decorative floral pieces and gifts.",
+      "visible": true
+    }
+  ]
+}

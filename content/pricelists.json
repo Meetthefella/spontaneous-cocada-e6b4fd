@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Prices",
+  "heading": "Price lists",
+  "intro": "Clear guide prices for Effortless Beauty treatments.",
+  "groups": [
+    {
+      "title": "Signature Treatments",
+      "items": [
+        {
+          "name": "Microblading",
+          "price": "From £___",
+          "time": "Around 2 hours"
+        },
+        {
+          "name": "Nano Brows",
+          "price": "From £___",
+          "time": "Around 2 hours"
+        },
+        {
+          "name": "Blending",
+          "price": "From £___",
+          "time": "Around 2 hours"
+        }
+      ]
+    },
+    {
+      "title": "Beauty Treatments",
+      "items": [
+        {
+          "name": "Beauty treatment",
+          "price": "From £___",
+          "time": "Varies"
+        }
+      ]
+    }
+  ]
+}
