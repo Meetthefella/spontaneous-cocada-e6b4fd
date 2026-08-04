@@ -847,10 +847,46 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   padding: 10px 16px;
   background: #4b3e34;
   color: #fffaf1;
   text-align: center;
   font-weight: 700;
   letter-spacing: .03em;
+}
+
+.preview-back-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 250, 241, .72);
+  border-radius: 999px;
+  background: rgba(255, 250, 241, .12);
+  color: #fffaf1;
+  text-decoration: none;
+  letter-spacing: 0;
+}
+
+.preview-back-button:hover,
+.preview-back-button:focus-visible {
+  background: #fffaf1;
+  color: #4b3e34;
+}
+
+@media (max-width: 640px) {
+  .preview-banner {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-back-button {
+    width: 100%;
+  }
 }

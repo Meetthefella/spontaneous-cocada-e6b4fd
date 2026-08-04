@@ -256,7 +256,7 @@ async function loadPublishedHomepage() {
       if (preview?.features) {
         const banner = document.createElement('div');
         banner.className = 'preview-banner';
-        banner.textContent = 'Homepage preview only — these changes are not live.';
+        banner.innerHTML = '<span>Homepage preview only — these changes are not live.</span><a class="preview-back-button" href="/manage/">← Back to Website Manager</a>';
         document.body.prepend(banner);
         return preview;
       }
