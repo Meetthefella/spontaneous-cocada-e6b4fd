@@ -245,13 +245,6 @@ async function publishTreatments(){
     setPublishStatus(error.message||'Your treatment details could not be prepared for publishing.','error');
     return;
   }
-  setPublishStatus('Checking your secure sign-in…');
-  const user=await getUser().catch(()=>null);
-  if(!user){
-    setPublishStatus('Your session has expired. Sign in again to publish.','error');
-    lockManager();
-    return;
-  }
   publishing=true;
   const button=document.querySelector('#editorPublishButton');
   button.disabled=true;
@@ -265,6 +258,11 @@ async function publishTreatments(){
       body:JSON.stringify(document)
     });
     const result=await response.json().catch(()=>({}));
+    if(response.status===401){
+      setPublishStatus('Your session has expired. Sign in again to publish.','error');
+      lockManager();
+      return;
+    }
     if(!response.ok)throw new Error(result.error||'Your changes could not be published.');
     const verificationResponse=await fetch(verifiedFetchUrl(TREATMENTS_API),{cache:'no-store',credentials:'same-origin'});
     const verification=await verificationResponse.json().catch(()=>({}));
