@@ -30,6 +30,7 @@ let initialPriceLinked = true;
 let publishing = false;
 let inactivityTimer = null;
 let inactivityLocked = false;
+let lastActivityAt = Date.now();
 let resumeAfterLogin = false;
 let lockContext = null;
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
@@ -181,6 +182,12 @@ const treatmentDocument = () => ({
   intro: 'Explore Effortless Beauty treatments, prices and appointment times.',
   items: treatments.map(item => clone(readDraft(item.id)?.record || item))
 });
+function validateTreatmentDocument(document){
+  const invalid=document.items.find(item=>!item?.id||!['signature','beauty','coming-soon'].includes(item.category)||!item.title?.trim()||!item.shortDescription?.trim()||!item.price?.trim()||!item.duration?.trim()||typeof item.patchTest!=='boolean'||typeof item.visible!=='boolean');
+  if(!invalid)return null;
+  const label=invalid.title?.trim()||'an unnamed treatment';
+  return `Complete ${label} before publishing: name, short description, price and treatment time are required.`;
+}
 function setPublishStatus(message='', type=''){
   const element=document.querySelector('#publishStatus');
   if(!element)return;
@@ -202,7 +209,17 @@ async function loadPublishedTreatments(){
   restoreNewTreatments();
   try{
     const response=await fetch(TREATMENTS_API,{cache:'no-store'});
-    if(response.status===404)return;
+    if(response.status===404){
+      const fallbackResponse=await fetch('/content/treatments.json',{cache:'no-store'});
+      if(!fallbackResponse.ok)return;
+      const fallback=await fallbackResponse.json();
+      if(Array.isArray(fallback?.items)){
+        treatments=fallback.items.map(item=>({...item}));
+        restoreNewTreatments();
+        renderTreatments();
+      }
+      return;
+    }
     if(!response.ok)throw new Error('Published treatments could not be loaded.');
     const result=await response.json();
     if(Array.isArray(result?.data?.items)){
@@ -218,6 +235,9 @@ async function loadPublishedTreatments(){
 async function publishTreatments(){
   if(publishing)return;
   flushDraft();
+  const document=treatmentDocument();
+  const validationError=validateTreatmentDocument(document);
+  if(validationError){setPublishStatus(validationError,'error');return;}
   const user=await getUser().catch(()=>null);
   if(!user){
     setPublishStatus('Your session has expired. Sign in again to publish.','error');
@@ -234,7 +254,7 @@ async function publishTreatments(){
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       credentials:'same-origin',
-      body:JSON.stringify(treatmentDocument())
+      body:JSON.stringify(document)
     });
     const result=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(result.error||'Your changes could not be published.');
@@ -269,12 +289,25 @@ function setAppInert(value){views.forEach(viewId=>{document.querySelector(`#${vi
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
   if(inactivityLocked||panels.success.hidden)return;
-  inactivityTimer=setTimeout(lockManager,INACTIVITY_TIMEOUT_MS);
+  const remaining=INACTIVITY_TIMEOUT_MS-(Date.now()-lastActivityAt);
+  if(remaining<=0){lockManager();return;}
+  inactivityTimer=setTimeout(checkInactivity,remaining);
+}
+function recordActivity(){
+  if(inactivityLocked||panels.success.hidden)return;
+  lastActivityAt=Date.now();
+  resetInactivityTimer();
+}
+function checkInactivity(){
+  if(inactivityLocked||panels.success.hidden)return;
+  if(Date.now()-lastActivityAt>=INACTIVITY_TIMEOUT_MS){lockManager();return;}
+  resetInactivityTimer();
 }
 function lockManager(){
   if(inactivityLocked||panels.success.hidden)return;
   if(editorDirty&&currentAppView()==='editorView')flushDraft();
   if(homepageDraftTimer)saveHomepageDraft();
+  if(siteSectionSaveTimer)saveSiteSectionDraft();
   lockContext=captureLockContext();
   inactivityLocked=true;
   setAppInert(true);
@@ -304,6 +337,7 @@ function unlockManager(){
   inactivityLocked=false;
   document.querySelector('#inactivityLock').hidden=true;
   setAppInert(false);
+  lastActivityAt=Date.now();
   resetInactivityTimer();
 }
 function clearIdentityCallbackUrl(){history.replaceState(null,document.title,'/manage/');}
@@ -312,6 +346,8 @@ function showSuccess(user,message='Manage your Effortless Beauty website from on
   successMessage.textContent=message;
   signedInAs.textContent=user?.email||'Authenticated user';
   showPanel('success');
+  lastActivityAt=Date.now();
+  resetInactivityTimer();
   Promise.allSettled([loadPublishedTreatments(),loadPublishedHomepage().then(loadHomepageDraft)]).then(()=>{
     if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
     else{showAppView('dashboardView');unlockManager();lockContext=null;}
@@ -603,7 +639,9 @@ document.querySelector('#editorPublishButton').addEventListener('click',publishT
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
 window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();if(homepageDraftTimer)saveHomepageDraft();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(editorDirty)flushDraft();if(homepageDraftTimer)saveHomepageDraft();}});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(editorDirty)flushDraft();if(homepageDraftTimer)saveHomepageDraft();}else checkInactivity();});
+ window.addEventListener('focus',checkInactivity);
+ window.addEventListener('pageshow',checkInactivity);
 window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden){flushDraft();leaveEditor('summary');}});
 setInterval(refreshDraftTimes,30000);
 
@@ -617,7 +655,7 @@ document.querySelector('#continueSecurelyButton').addEventListener('click',()=>{
   setTimeout(()=>document.querySelector('#loginPassword').focus(),0);
 });
 ['pointerdown','keydown','touchstart','input','change'].forEach(eventName=>{
-  document.addEventListener(eventName,()=>{if(!inactivityLocked)resetInactivityTimer();},{passive:true});
+  document.addEventListener(eventName,recordActivity,{passive:true});
 });
 
 // Authentication
