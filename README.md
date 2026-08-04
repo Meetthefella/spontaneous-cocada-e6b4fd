@@ -110,3 +110,13 @@ The Treatments editor now publishes through the authenticated `/.netlify/functio
 - Navigation follows the same mobile-first, one-thing-at-a-time pattern as Treatments.
 - Editing, drafts, preview, publishing, Blobs, and public-site changes remain outside this checkpoint.
 - Existing authentication, inactivity locking, Treatments editing, preview, publishing, and security behaviour are preserved.
+
+
+## Checkpoint 4.2 — Homepage editor engine
+
+- Each Homepage section now opens a one-section-at-a-time editor.
+- Hero, Introduction, Why Choose Us and all three Feature Cards can be updated in a private working session.
+- Required fields are validated before Done or Preview.
+- A private preview clearly states that the live website has not changed.
+- Changes remain in the current open manager session only. Netlify persistence and live publishing are intentionally reserved for Checkpoints 4.3 and 4.4.
+- Treatments editing, publishing, authentication and inactivity-lock restoration remain unchanged.

@@ -636,3 +636,19 @@
   .homepage-section-row { grid-template-columns:44px minmax(0,1fr) auto; padding:16px; }
   .homepage-section-icon { width:42px; height:42px; border-radius:14px; }
 }
+
+
+/* Checkpoint 4.2: Homepage editor engine */
+.homepage-editor-form { max-width:760px; }
+#homepageEditorFields > h1 { margin:.12em 0 .25em; font-size:clamp(2.25rem,8vw,4rem); }
+#homepageEditorFields > p:not(.eyebrow) { max-width:52ch; margin-bottom:28px; line-height:1.6; }
+#homepageEditorFields { display:grid; gap:18px; }
+.homepage-feature-editor { display:grid; gap:15px; margin:0; padding:20px; border:1px solid rgba(91,68,52,.17); border-radius:18px; background:rgba(255,255,255,.3); }
+.homepage-feature-editor legend { padding:0 8px; font-family:Georgia,serif; font-size:1.25rem; }
+.homepage-session-note { display:grid; gap:5px; margin-top:24px; padding:17px; border-radius:15px; background:rgba(128,105,91,.1); line-height:1.5; }
+.homepage-session-note small { opacity:.78; }
+.homepage-editor-actions { grid-template-columns:1fr 1fr; }
+@media (max-width:680px){
+  .homepage-editor-actions { grid-template-columns:1fr; }
+  .homepage-editor-actions .button { width:100%; }
+}
