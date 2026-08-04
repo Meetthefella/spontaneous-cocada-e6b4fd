@@ -183,9 +183,10 @@ const treatmentDocument = () => ({
   items: treatments.map(item => clone(readDraft(item.id)?.record || item))
 });
 function validateTreatmentDocument(document){
-  const invalid=document.items.find(item=>!item?.id||!['signature','beauty','coming-soon'].includes(item.category)||!item.title?.trim()||!item.shortDescription?.trim()||!item.price?.trim()||!item.duration?.trim()||typeof item.patchTest!=='boolean'||typeof item.visible!=='boolean');
+  const missingText=value=>typeof value!=='string'||!value.trim();
+  const invalid=document.items.find(item=>!item?.id||!['signature','beauty','coming-soon'].includes(item.category)||missingText(item.title)||missingText(item.shortDescription)||missingText(item.price)||missingText(item.duration)||typeof item.patchTest!=='boolean'||typeof item.visible!=='boolean');
   if(!invalid)return null;
-  const label=invalid.title?.trim()||'an unnamed treatment';
+  const label=typeof invalid.title==='string'&&invalid.title.trim()?invalid.title.trim():'an unnamed treatment';
   return `Complete ${label} before publishing: name, short description, price and treatment time are required.`;
 }
 function setPublishStatus(message='', type=''){
@@ -234,10 +235,17 @@ async function loadPublishedTreatments(){
 }
 async function publishTreatments(){
   if(publishing)return;
-  flushDraft();
-  const document=treatmentDocument();
-  const validationError=validateTreatmentDocument(document);
-  if(validationError){setPublishStatus(validationError,'error');return;}
+  let document;
+  try{
+    flushDraft();
+    document=treatmentDocument();
+    const validationError=validateTreatmentDocument(document);
+    if(validationError){setPublishStatus(validationError,'error');return;}
+  }catch(error){
+    setPublishStatus(error.message||'Your treatment details could not be prepared for publishing.','error');
+    return;
+  }
+  setPublishStatus('Checking your secure sign-in…');
   const user=await getUser().catch(()=>null);
   if(!user){
     setPublishStatus('Your session has expired. Sign in again to publish.','error');
