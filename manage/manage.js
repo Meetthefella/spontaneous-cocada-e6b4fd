@@ -564,9 +564,6 @@ let siteSectionWorking=null;
 let siteSectionSaveTimer=null;
 let siteSectionSaving=false;
 const sectionDefinitions={
-  pricelists:{title:'Price Lists',description:'Update treatment prices and times.',publicTab:'prices',fields:[
-    {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
-    {path:'groups',label:'Price list entries',type:'priceGroups',help:'One line per treatment: Group | Treatment | Price | Time'}]},
   aftercare:{title:'Aftercare',description:'Update the healing guide wording while keeping the approved artwork.',publicTab:'aftercare',fields:[
     {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
     {path:'stages',label:'Healing stages',type:'stages',help:'One line per stage: Day | Description'}]},

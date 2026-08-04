@@ -4,7 +4,6 @@ Effortless Beauty Website Manager v1
 Base: confirmed Homepage Checkpoint 4.4 with preview back button.
 
 Newly connected manager areas:
-- Price Lists
 - Aftercare
 - Gallery
 - Merchandise

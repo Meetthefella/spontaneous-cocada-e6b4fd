@@ -1,7 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { getUser } from '@netlify/identity';
 const STORE_NAME='effortless-beauty-content';
-const ALLOWED=new Set(['site','aftercare','booking','contact','privacy','pricelists','gallery','merchandise']);
+const ALLOWED=new Set(['site','aftercare','booking','contact','privacy','gallery','merchandise']);
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const valid=(v)=>v&&typeof v==='object'&&!Array.isArray(v)&&JSON.stringify(v).length<=100000;
 export default async(request)=>{

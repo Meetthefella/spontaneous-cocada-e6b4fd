@@ -324,11 +324,6 @@ async function loadPublishedTreatments() {
 }
 
 
-function renderPriceLists(data) {
-  setText('#pricesEyebrow', data.eyebrow); setText('#pricesHeading', data.heading); setText('#pricesIntro', data.intro);
-  const root = document.querySelector('#priceListGroups'); if (!root) return;
-  root.innerHTML = (data.groups || []).map(group => `<section><h2>${escapeHtml(group.title)}</h2>${(group.items || []).map(item => `<p><strong>${escapeHtml(item.name)}</strong><br>${escapeHtml(item.price)} · ${escapeHtml(item.time)}</p>`).join('')}</section>`).join('');
-}
 function renderGallery(data) {
   setText('#galleryEyebrow', data.eyebrow); setText('#galleryHeading', data.heading); setText('#galleryIntro', data.intro);
   const root = document.querySelector('#galleryGrid'); if (!root) return;
@@ -338,19 +333,29 @@ function renderGallery(data) {
 function renderMerchandise(data) {
   setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);
   const root = document.querySelector('#merchandiseGrid'); if (!root) return;
-  root.innerHTML=(data.categories||[]).filter(item=>item.visible!==false).map(item=>`<article class="card"><h2>${escapeHtml(item.title)}</h2><p>${escapeHtml(item.description||'')}</p></article>`).join('');
+  const source = Array.isArray(data.categories) ? data.categories : Array.isArray(data.items) ? data.items : Array.isArray(data.products) ? data.products : [];
+  const items = source.filter(item => item && item.visible !== false);
+  root.innerHTML = items.length
+    ? items.map(item => `<article class="card in-view merchandise-card">${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt || item.title || 'Effortless Beauty merchandise')}" />` : ''}<h2>${escapeHtml(item.title || item.name || 'Merchandise item')}</h2><p>${escapeHtml(item.description || item.caption || '')}</p>${item.price ? `<strong>${escapeHtml(item.price)}</strong>` : ''}</article>`).join('')
+    : '<article class="card in-view"><h2>Merchandise coming soon</h2><p>New Effortless Beauty items will appear here.</p></article>';
 }
 async function loadPublishedSection(name) {
+  const fallback = await loadJson(`content/${name}.json`);
+  const completeMerchandise = (data) => {
+    if (name !== 'merchandise' || !data) return data;
+    const hasItems = ['categories', 'items', 'products'].some(key => Array.isArray(data[key]) && data[key].length);
+    return hasItems ? data : {...fallback, ...data, categories: fallback.categories || []};
+  };
   const preview = new URLSearchParams(location.search).get('preview');
   if (preview === name) {
-    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){addPreviewBanner(`${name} preview only — these changes are not live.`);return data;} } catch(error){console.warn(error);}
+    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){addPreviewBanner(`${name} preview only — these changes are not live.`);return completeMerchandise(data);} } catch(error){console.warn(error);}
   }
-  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return result.data;} } catch(error){console.warn(error);}
-  return loadJson(`content/${name}.json`);
+  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return completeMerchandise(result.data);} } catch(error){console.warn(error);}
+  return fallback;
 }
 
 async function loadEditableContent() {
-  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy', 'pricelists', 'gallery', 'merchandise'];
+  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy', 'gallery', 'merchandise'];
   const results = await Promise.allSettled(files.map((name) => loadPublishedSection(name)));
   const content = {};
   results.forEach((result, index) => {
@@ -371,7 +376,6 @@ async function loadEditableContent() {
   }
   if (content.homepage) renderHomepage(content.homepage);
   if (content.treatments) renderTreatments(content.treatments);
-  if (content.pricelists) renderPriceLists(content.pricelists);
   if (content.aftercare) renderAftercare(content.aftercare);
   if (content.gallery) renderGallery(content.gallery);
   if (content.merchandise) renderMerchandise(content.merchandise);

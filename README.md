@@ -157,6 +157,6 @@ This checkpoint connects the remaining public-site areas to the private manager 
 - Netlify Blob published content
 - committed JSON Golden Master fallbacks
 
-Connected areas: Price Lists, Aftercare, Gallery, Merchandise, Booking, Contact, Policies and Settings. Homepage and Treatments remain on their existing specialised editors.
+Connected areas: Aftercare, Gallery, Merchandise, Booking, Contact, Policies and Settings. Homepage and Treatments remain on their existing specialised editors.
 
 Gallery entries currently accept approved image paths. Direct image upload/storage is intentionally left as a separate enhancement so this release does not imply that binary uploads are already supported.

@@ -6,22 +6,30 @@
     {
       "title": "Art T-Shirts",
       "description": "Wearable Effortless Beauty artwork.",
-      "visible": true
+      "visible": true,
+      "price": "",
+      "image": ""
     },
     {
       "title": "Tattoo Transfers",
       "description": "Temporary designs for creative styling.",
-      "visible": true
+      "visible": true,
+      "price": "",
+      "image": ""
     },
     {
       "title": "Resin Keyrings",
       "description": "Handmade decorative keyrings.",
-      "visible": true
+      "visible": true,
+      "price": "",
+      "image": ""
     },
     {
       "title": "Flowers",
       "description": "Decorative floral pieces and gifts.",
-      "visible": true
+      "visible": true,
+      "price": "",
+      "image": ""
     }
   ]
 }
