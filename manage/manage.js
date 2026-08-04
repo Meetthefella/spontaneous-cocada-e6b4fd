@@ -14,6 +14,7 @@ const successMessage = document.querySelector('#successMessage');
 const errorMessage = document.querySelector('#errorMessage');
 let inviteToken = null;
 let activeCategory = 'signature';
+let activeHomepageSection = null;
 let activeTreatmentId = null;
 let editorStep = 0;
 let editorDirty = false;
@@ -27,13 +28,6 @@ let resumeAfterLogin = false;
 let lockContext = null;
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const TREATMENTS_API = '/.netlify/functions/treatments';
-const HOMEPAGE_API = '/.netlify/functions/homepage';
-const HOMEPAGE_DRAFT_KEY = 'eb-homepage-unpublished-v1';
-const HOMEPAGE_PREVIEW_KEY = 'eb-homepage-preview-v1';
-let homepage = null;
-let homepageStep = 0;
-let homepageEditing = false;
-let homepageTimer = null;
 
 let treatments = [
   {id:'microblading',category:'signature',title:'Microblading',shortDescription:'Natural-looking brow enhancement using fine, hair-like strokes.',fullDescription:'Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.',price:'£100',duration:'2 hours',detailedPricing:'Initial treatment: £100',followUpPricing:'Second session: £100\nThird session: £75\nFourth session: Free',patchTest:true,visible:true},
@@ -56,7 +50,51 @@ let treatments = [
   ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true}))
 ];
 
-const views = ['dashboardView','homepageView','homepageEditorView','treatmentsView','treatmentSummaryView','editorView','previewView'];
+const views = ['dashboardView','homepageView','homepageSummaryView','treatmentsView','treatmentSummaryView','editorView','previewView'];
+const homepageSections = [
+  {
+    id:'hero',
+    title:'Hero',
+    description:'The main heading and opening message at the top of the website.',
+    icon:'⌂',
+    fields:[
+      ['Main heading','Effortless Beauty'],
+      ['Supporting line','Enhance. Simplify. Feel beautiful.'],
+      ['Primary button','Book online'],
+      ['Secondary button','Aftercare guide']
+    ]
+  },
+  {
+    id:'introduction',
+    title:'Introduction',
+    description:'The short welcome message beneath the hero area.',
+    icon:'✦',
+    fields:[
+      ['Introduction','Soft, natural-looking brows and permanent makeup designed to make everyday beauty feel effortless.']
+    ]
+  },
+  {
+    id:'why-choose-us',
+    title:'Why Choose Us',
+    description:'The heading that introduces the reasons clients choose Effortless Beauty.',
+    icon:'♡',
+    fields:[
+      ['Small heading','Why clients choose us'],
+      ['Main heading','Polished results, calm appointments, clear aftercare.']
+    ]
+  },
+  {
+    id:'feature-cards',
+    title:'Feature Cards',
+    description:'The three reassurance cards shown on the homepage.',
+    icon:'◇',
+    features:[
+      ['Natural finish','Designed to complement your face rather than overpower it.'],
+      ['Low-maintenance beauty','Wake up with shape, definition and softness already in place.'],
+      ['Client-friendly care','Aftercare is explained clearly, including the normal healing stages.']
+    ]
+  }
+];
 const DRAFT_VERSION = 1;
 const draftKey = id => `eb-treatment-draft:${id}`;
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -139,32 +177,10 @@ async function publishTreatments(){
   }
 }
 
-
-const homepageFields = {
-  heroTitleFirst: '#homeHeroTitleFirst', heroTitleSecond: '#homeHeroTitleSecond', heroLine: '#homeHeroLine', heroLineEmphasis: '#homeHeroLineEmphasis',
-  intro: '#homeIntro', primaryButton: '#homePrimaryButton', secondaryButton: '#homeSecondaryButton', sectionKicker: '#homeSectionKicker', sectionHeading: '#homeSectionHeading'
-};
-function fallbackHomepage(){return {heroTitleFirst:'Effortless',heroTitleSecond:'Beauty',heroLine:'Enhance. Simplify.',heroLineEmphasis:'Feel beautiful.',intro:'Soft, natural-looking brows and permanent makeup designed to make everyday beauty feel effortless.',primaryButton:'Book online',secondaryButton:'Aftercare guide',sectionKicker:'Why clients choose us',sectionHeading:'Polished results, calm appointments, clear aftercare.',features:[{title:'Natural finish',text:'Designed to complement your face rather than overpower it.'},{title:'Low-maintenance beauty',text:'Wake up with shape, definition and softness already in place.'},{title:'Client-friendly care',text:'Aftercare is explained clearly, including the normal healing stages.'}]};}
-function readHomepageDraft(){try{return JSON.parse(localStorage.getItem(HOMEPAGE_DRAFT_KEY)||'null');}catch{return null;}}
-function writeHomepageDraft(record){const saved={record:clone(record),savedAt:new Date().toISOString()};localStorage.setItem(HOMEPAGE_DRAFT_KEY,JSON.stringify(saved));setHomepageStatus(`✓ Saved · ${relativeTime(saved.savedAt)}`);renderHomepageSummary();return saved;}
-function flushHomepageDraft(){if(!homepageEditing)return null;clearTimeout(homepageTimer);return writeHomepageDraft(currentHomepageRecord());}
-function setHomepageStatus(message){const el=document.querySelector('#homepageSaveStatus');if(el)el.textContent=message;}
-function setHomepagePublishStatus(message='',type=''){const el=document.querySelector('#homepagePublishStatus');if(!el)return;el.textContent=message;el.classList.toggle('error',type==='error');el.classList.toggle('success',type==='success');}
-function currentHomepageRecord(){const record={};Object.entries(homepageFields).forEach(([key,selector])=>record[key]=document.querySelector(selector).value.trim());record.features=[0,1,2].map(i=>({title:document.querySelector(`#homeFeatureTitle${i}`).value.trim(),text:document.querySelector(`#homeFeatureText${i}`).value.trim()}));return record;}
-function populateHomepage(record){Object.entries(homepageFields).forEach(([key,selector])=>document.querySelector(selector).value=record[key]||'');document.querySelector('#homepageFeatureFields').innerHTML=(record.features||fallbackHomepage().features).slice(0,3).map((feature,i)=>`<fieldset class="homepage-feature-field"><legend>Feature ${i+1}</legend><label><span>Title</span><input id="homeFeatureTitle${i}" type="text" value="${escapeAttribute(feature.title||'')}" required /></label><label><span>Text</span><textarea id="homeFeatureText${i}" rows="4" required>${escapeHtml(feature.text||'')}</textarea></label></fieldset>`).join('');}
-function escapeAttribute(value){return String(value??'').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
-function escapeHtml(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
-function renderHomepageSummary(){const draft=readHomepageDraft();const record=draft?.record||homepage||fallbackHomepage();document.querySelector('#homepageSummaryTitle').textContent=`${record.heroTitleFirst} ${record.heroTitleSecond}`.trim();document.querySelector('#homepageSummarySaved').textContent=draft?`Unpublished changes · ${relativeTime(draft.savedAt)}`:'No unpublished changes';}
-function renderHomepageStep(){document.querySelectorAll('.homepage-step').forEach((step,index)=>step.hidden=index!==homepageStep);document.querySelector('#homepagePreviousButton').hidden=homepageStep===0;document.querySelector('#homepageNextButton').hidden=homepageStep===3;document.querySelector('#homepagePreviewButton').hidden=homepageStep!==3;document.querySelector('#homepagePublishButton').hidden=homepageStep!==3;document.querySelector('#homepageProgressBar').style.width=`${((homepageStep+1)/4)*100}%`;if(homepageStep!==3)setHomepagePublishStatus('');}
-function validateHomepageStep(){const step=document.querySelector(`.homepage-step[data-home-step="${homepageStep}"]`);const invalid=[...step.querySelectorAll('[required]')].find(field=>!field.value.trim());if(invalid){invalid.reportValidity();invalid.focus();return false;}return true;}
-function openHomepageEditor(){const draft=readHomepageDraft();populateHomepage(clone(draft?.record||homepage||fallbackHomepage()));homepageStep=0;homepageEditing=true;setHomepageStatus(draft?`✓ Changes restored · ${relativeTime(draft.savedAt)}`:'✓ Autosave on');renderHomepageStep();showAppView('homepageEditorView');history.pushState({view:'homepage-editor'},'','#edit-homepage');}
-async function loadPublishedHomepage(){try{const response=await fetch(HOMEPAGE_API,{cache:'no-store'});if(response.status===404){homepage=fallbackHomepage();renderHomepageSummary();return;}if(!response.ok)throw new Error('Published homepage could not be loaded.');const result=await response.json();homepage=result.data;updatePublishedDisplay(result.data.updatedAt);renderHomepageSummary();}catch(error){console.warn(error);homepage=fallbackHomepage();renderHomepageSummary();}}
-async function publishHomepage(){flushHomepageDraft();const user=await getUser().catch(()=>null);if(!user){setHomepagePublishStatus('Your session has expired. Sign in again to publish.','error');lockManager();return;}const button=document.querySelector('#homepagePublishButton');button.disabled=true;button.textContent='Publishing…';setHomepagePublishStatus('Publishing your homepage…');try{const response=await fetch(HOMEPAGE_API,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(currentHomepageRecord())});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||'Your homepage could not be published.');homepage=result.data;localStorage.removeItem(HOMEPAGE_DRAFT_KEY);localStorage.removeItem(HOMEPAGE_PREVIEW_KEY);homepageEditing=false;updatePublishedDisplay(result.updatedAt);setHomepageStatus(`✓ Published · ${relativeTime(result.updatedAt)}`);setHomepagePublishStatus('✓ Published successfully. The live homepage now uses these changes.','success');renderHomepageSummary();}catch(error){setHomepagePublishStatus(error.message||'Your homepage could not be published.','error');}finally{button.disabled=false;button.textContent='Publish';}}
-
 function showPanel(name){Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==name;});}
 function showAppView(id){views.forEach(viewId=>{document.querySelector(`#${viewId}`).hidden=viewId!==id;});window.scrollTo({top:0,behavior:'instant'});}
 function currentAppView(){return views.find(viewId=>!document.querySelector(`#${viewId}`).hidden)||'dashboardView';}
-function captureLockContext(){return {viewId:currentAppView(),activeTreatmentId,activeCategory,editorStep,homepageStep};}
+function captureLockContext(){return {viewId:currentAppView(),activeTreatmentId,activeCategory,editorStep};}
 function setAppInert(value){views.forEach(viewId=>{document.querySelector(`#${viewId}`).inert=value;});}
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
@@ -174,7 +190,6 @@ function resetInactivityTimer(){
 function lockManager(){
   if(inactivityLocked||panels.success.hidden)return;
   if(editorDirty)flushDraft();
-  if(homepageEditing)flushHomepageDraft();
   lockContext=captureLockContext();
   inactivityLocked=true;
   setAppInert(true);
@@ -186,9 +201,8 @@ function restoreLockedContext(){
   activeTreatmentId=lockContext.activeTreatmentId;
   activeCategory=lockContext.activeCategory||'signature';
   editorStep=Math.max(0,Math.min(4,lockContext.editorStep||0));
-  homepageStep=Math.max(0,Math.min(3,lockContext.homepageStep||0));
-  if(lockContext.viewId==='homepageView')renderHomepageSummary();
-  if(lockContext.viewId==='homepageEditorView')renderHomepageStep();
+  if(lockContext.viewId==='homepageView')renderHomepageSections();
+  if(lockContext.viewId==='homepageSummaryView'&&activeHomepageSection){const section=homepageSections.find(item=>item.id===activeHomepageSection);if(section)document.querySelector('#homepageSummary').innerHTML=homepageSummaryMarkup(section);}
   if(lockContext.viewId==='treatmentsView')renderTreatments();
   if(lockContext.viewId==='treatmentSummaryView'&&activeTreatmentId){
     const draft=readDraft(activeTreatmentId);const record=draft?.record||findTreatment(activeTreatmentId);
@@ -209,7 +223,6 @@ function showSuccess(user,message='Manage your Effortless Beauty website from on
   successMessage.textContent=message;
   signedInAs.textContent=user?.email||'Authenticated user';
   showPanel('success');
-  loadPublishedHomepage();
   loadPublishedTreatments();
   if(resumeAfterLogin){restoreLockedContext();resumeAfterLogin=false;unlockManager();}
   else{showAppView('dashboardView');unlockManager();lockContext=null;}
@@ -310,19 +323,28 @@ function validateStep(){const step=document.querySelector(`.editor-step[data-ste
 function requestLeave(target){flushDraft();leaveEditor(target);}
 function leaveEditor(target){editorDirty=false;clearTimeout(draftTimer);if(target==='dashboard')showAppView('dashboardView');else if(target==='treatments'){renderTreatments();showAppView('treatmentsView');}else openSummary(activeTreatmentId);}
 
-// Homepage editor
- document.querySelector('#openHomepageButton').addEventListener('click',()=>{renderHomepageSummary();showAppView('homepageView');history.pushState({view:'homepage'},'','#homepage');});
-document.querySelector('#homepageBackButton').addEventListener('click',()=>showAppView('dashboardView'));
-document.querySelector('#editHomepageButton').addEventListener('click',openHomepageEditor);
-document.querySelector('#homepageEditorForm').addEventListener('input',()=>{homepageEditing=true;setHomepageStatus('Saving…');clearTimeout(homepageTimer);homepageTimer=setTimeout(()=>writeHomepageDraft(currentHomepageRecord()),350);});
-document.querySelector('#homepageNextButton').addEventListener('click',()=>{if(validateHomepageStep()){flushHomepageDraft();homepageStep=Math.min(3,homepageStep+1);renderHomepageStep();}});
-document.querySelector('#homepagePreviousButton').addEventListener('click',()=>{flushHomepageDraft();homepageStep=Math.max(0,homepageStep-1);renderHomepageStep();});
-document.querySelector('#homepageLeaveButton').addEventListener('click',()=>{flushHomepageDraft();homepageEditing=false;renderHomepageSummary();showAppView('homepageView');});
-document.querySelector('#homepagePreviewButton').addEventListener('click',()=>{const record=currentHomepageRecord();writeHomepageDraft(record);localStorage.setItem(HOMEPAGE_PREVIEW_KEY,JSON.stringify(record));window.open('/?preview=homepage#home','eb-homepage-preview');setHomepagePublishStatus('Preview opened in a new tab. The live website has not changed.','success');});
-document.querySelector('#homepagePublishButton').addEventListener('click',publishHomepage);
-document.querySelector('#discardHomepageChangesButton').addEventListener('click',()=>{if(!confirm('Discard all unpublished homepage changes?'))return;localStorage.removeItem(HOMEPAGE_DRAFT_KEY);localStorage.removeItem(HOMEPAGE_PREVIEW_KEY);homepageEditing=false;populateHomepage(clone(homepage||fallbackHomepage()));homepageStep=0;renderHomepageStep();setHomepageStatus('✓ Unpublished changes discarded');renderHomepageSummary();});
+function renderHomepageSections(){
+  document.querySelector('#homepageSectionList').innerHTML=homepageSections.map(section=>`<button class="homepage-section-row" type="button" data-homepage-section="${escapeHtml(section.id)}"><span class="homepage-section-icon" aria-hidden="true">${escapeHtml(section.icon)}</span><span><strong>${escapeHtml(section.title)}</strong><small>${escapeHtml(section.description)}</small></span><b aria-hidden="true">›</b></button>`).join('');
+}
+function homepageSummaryMarkup(section){
+  const fields=(section.fields||[]).map(([label,value])=>`<div class="homepage-content-field"><small>${escapeHtml(label)}</small><p>${escapeHtml(value)}</p></div>`).join('');
+  const features=(section.features||[]).map(([title,text])=>`<div class="homepage-feature-card"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`).join('');
+  return `<div class="homepage-summary-heading"><span class="homepage-section-icon" aria-hidden="true">${escapeHtml(section.icon)}</span><p class="eyebrow">Homepage section</p><h1>${escapeHtml(section.title)}</h1><p>${escapeHtml(section.description)}</p></div><div class="homepage-summary-content">${fields}${features?`<div class="homepage-feature-grid">${features}</div>`:''}<p class="read-only-note">Editing will be added in the next Homepage checkpoint. Nothing on the live website has changed.</p></div>`;
+}
+function openHomepageSummary(id){
+  const section=homepageSections.find(item=>item.id===id);
+  if(!section)return;
+  activeHomepageSection=id;
+  document.querySelector('#homepageSummary').innerHTML=homepageSummaryMarkup(section);
+  showAppView('homepageSummaryView');
+  history.pushState({view:'homepage-summary',section:id},'',`#homepage-${id}`);
+}
 
-// Dashboard and treatment browser
+// Dashboard and section browsers
+document.querySelector('#openHomepageButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');history.pushState({view:'homepage'},'','#homepage');});
+document.querySelector('#homepageBackButton').addEventListener('click',()=>showAppView('dashboardView'));
+document.querySelector('#homepageSummaryBackButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');});
+document.querySelector('#homepageSectionList').addEventListener('click',event=>{const row=event.target.closest('[data-homepage-section]');if(row)openHomepageSummary(row.dataset.homepageSection);});
 document.querySelector('#openTreatmentsButton').addEventListener('click',()=>{activeCategory='signature';renderTreatments();showAppView('treatmentsView');history.pushState({view:'treatments'},'','#treatments');});
 document.querySelector('#treatmentsBackButton').addEventListener('click',()=>showAppView('dashboardView'));
 document.querySelector('#summaryBackButton').addEventListener('click',()=>{renderTreatments();showAppView('treatmentsView');});
@@ -347,8 +369,8 @@ document.querySelector('#editorPreviewButton').addEventListener('click',()=>{con
 document.querySelector('#editorPublishButton').addEventListener('click',publishTreatments);
 document.querySelector('#previewBackButton').addEventListener('click',()=>showAppView('editorView'));
 document.querySelector('#editorLeaveButton').addEventListener('click',()=>requestLeave('summary'));
-window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();if(homepageEditing)flushHomepageDraft();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(editorDirty)flushDraft();if(homepageEditing)flushHomepageDraft();}});
+window.addEventListener('pagehide',()=>{if(editorDirty)flushDraft();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&editorDirty)flushDraft();});
 window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView').hidden){flushDraft();leaveEditor('summary');}});
 setInterval(refreshDraftTimes,30000);
 
@@ -371,6 +393,6 @@ async function initialiseAuthentication(){const heading=document.querySelector('
 document.querySelector('#loginForm').addEventListener('submit',async event=>{event.preventDefault();showPanel('loading');try{showSuccess(await login(document.querySelector('#loginEmail').value.trim(),document.querySelector('#loginPassword').value));}catch(error){showError(error);}});
 document.querySelector('#inviteForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#invitePassword').value;passwordsMatch(password,document.querySelector('#invitePasswordConfirm').value);if(!inviteToken)throw new Error('The invitation token is missing or has expired. Request a new invitation and try again.');showPanel('loading');const user=await acceptInvite(inviteToken,password);inviteToken=null;clearIdentityCallbackUrl();showSuccess(user,'Your editor account is active.');}catch(error){showError(error);}});
 document.querySelector('#recoveryForm').addEventListener('submit',async event=>{event.preventDefault();try{const password=document.querySelector('#recoveryPassword').value;passwordsMatch(password,document.querySelector('#recoveryPasswordConfirm').value);showPanel('loading');showSuccess(await updateUser({password}),'Your password has been updated.');}catch(error){showError(error);}});
-document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty)flushDraft();if(homepageEditing)flushHomepageDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
+document.querySelector('#logoutButton').addEventListener('click',async()=>{try{if(editorDirty)flushDraft();clearTimeout(inactivityTimer);resumeAfterLogin=false;lockContext=null;inactivityLocked=false;document.querySelector('#inactivityLock').hidden=true;setAppInert(false);await logout();showLogin();}catch(error){showError(error);}});
 document.querySelector('#retryButton').addEventListener('click',()=>{clearIdentityCallbackUrl();showLogin();});
 initialiseAuthentication();

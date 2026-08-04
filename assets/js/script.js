@@ -247,30 +247,6 @@ function renderPrivacy(data) {
   ).join('');
 }
 
-async function loadPublishedHomepage() {
-  const previewRequested = new URLSearchParams(location.search).get('preview') === 'homepage';
-  if (previewRequested) {
-    try {
-      const preview = JSON.parse(localStorage.getItem('eb-homepage-preview-v1') || 'null');
-      if (preview?.heroTitleFirst) {
-        const banner = document.createElement('div');
-        banner.className = 'preview-banner';
-        banner.textContent = 'Preview only — these homepage changes are not live.';
-        document.body.prepend(banner);
-        return preview;
-      }
-    } catch (error) { console.warn('Unable to load homepage preview.', error); }
-  }
-  try {
-    const response = await fetch('/.netlify/functions/homepage', { cache: 'no-store' });
-    if (response.ok) {
-      const result = await response.json();
-      if (result?.data?.heroTitleFirst) return result.data;
-    }
-  } catch (error) { console.warn('Published homepage content is temporarily unavailable.', error); }
-  return loadJson('content/homepage.json');
-}
-
 async function loadPublishedTreatments() {
   const previewRequested = new URLSearchParams(location.search).get('preview') === 'treatments';
   if (previewRequested) {
@@ -302,18 +278,13 @@ async function loadPublishedTreatments() {
 }
 
 async function loadEditableContent() {
-  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy'];
+  const files = ['site', 'homepage', 'aftercare', 'booking', 'contact', 'privacy'];
   const results = await Promise.allSettled(files.map((name) => loadJson(`content/${name}.json`)));
   const content = {};
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') content[files[index]] = result.value;
     else console.error(result.reason);
   });
-  try {
-    content.homepage = await loadPublishedHomepage();
-  } catch (error) {
-    console.error(error);
-  }
   try {
     content.treatments = await loadPublishedTreatments();
   } catch (error) {

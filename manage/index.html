@@ -114,8 +114,8 @@
         <section class="dashboard-sections" aria-labelledby="sectionsTitle">
           <div class="section-heading"><div><p class="eyebrow">Website sections</p><h2 id="sectionsTitle">Choose an area</h2></div><p>Editing tools are added one completed section at a time.</p></div>
           <div class="dashboard-grid">
-            <button id="openHomepageButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">⌂</span><span class="dashboard-card-copy"><strong>Homepage</strong><small>Headings, introduction and calls to action</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
-            <button id="openTreatmentsButton" class="dashboard-card" type="button"><span class="dashboard-icon">✦</span><span class="dashboard-card-copy"><strong>Treatments</strong><small>Signature, beauty and coming-soon treatments</small></span><span class="dashboard-card-status">Open</span></button>
+            <button id="openHomepageButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">⌂</span><span class="dashboard-card-copy"><strong>Homepage</strong><small>Hero, introduction and feature content</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button id="openTreatmentsButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">✦</span><span class="dashboard-card-copy"><strong>Treatments</strong><small>Signature, beauty and coming-soon treatments</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
             <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">♡</span><span class="dashboard-card-copy"><strong>Aftercare</strong><small>Healing guidance and aftercare information</small></span><span class="dashboard-card-status">Planned</span></button>
             <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">▧</span><span class="dashboard-card-copy"><strong>Gallery</strong><small>Client photos, captions and display order</small></span><span class="dashboard-card-status">Planned</span></button>
             <button class="dashboard-card" type="button" disabled><span class="dashboard-icon">◇</span><span class="dashboard-card-copy"><strong>Merchandise</strong><small>Products, descriptions, photos and prices</small></span><span class="dashboard-card-status">Planned</span></button>
@@ -129,53 +129,17 @@
       <div id="homepageView" class="manager-workspace" hidden>
         <header class="workspace-header">
           <button id="homepageBackButton" class="back-button" type="button">← Dashboard</button>
-          <div><p class="eyebrow">Website manager</p><h1>Homepage</h1><p>Update the main words visitors see first.</p></div>
+          <div><p class="eyebrow">Website manager</p><h1>Homepage</h1><p>Choose a section to view its current website content.</p></div>
         </header>
-        <div class="homepage-summary-card">
-          <div><span class="status-label">Live homepage</span><strong id="homepageSummaryTitle">Effortless Beauty</strong><small id="homepageSummarySaved">No unpublished changes</small></div>
-          <button id="editHomepageButton" class="button primary" type="button">Edit homepage</button>
-        </div>
+        <div id="homepageSectionList" class="homepage-section-list"></div>
       </div>
 
-      <div id="homepageEditorView" class="manager-workspace editor-workspace" hidden>
-        <header class="workspace-header compact-header editor-header">
-          <button id="homepageLeaveButton" class="back-button" type="button">← Leave editor</button>
-          <span id="homepageSaveStatus" class="draft-status" aria-live="polite">✓ Autosave on</span>
+      <div id="homepageSummaryView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header">
+          <button id="homepageSummaryBackButton" class="back-button" type="button">← Homepage</button>
+          <span class="preview-badge">View only</span>
         </header>
-        <div class="editor-progress" aria-label="Homepage editor progress"><span id="homepageProgressBar"></span></div>
-        <form id="homepageEditorForm" class="step-form" novalidate>
-          <section class="homepage-step" data-home-step="0">
-            <p class="eyebrow">Step 1 of 4</p><h1>Main heading</h1><p>These words sit beside the Effortless Beauty artwork.</p>
-            <label><span>First title word</span><input id="homeHeroTitleFirst" type="text" required /></label>
-            <label><span>Second title word</span><input id="homeHeroTitleSecond" type="text" required /></label>
-            <label><span>Short line</span><input id="homeHeroLine" type="text" required /></label>
-            <label><span>Emphasised line</span><input id="homeHeroLineEmphasis" type="text" required /></label>
-          </section>
-          <section class="homepage-step" data-home-step="1" hidden>
-            <p class="eyebrow">Step 2 of 4</p><h1>Introduction and buttons</h1><p>Keep the introduction welcoming and the buttons clear.</p>
-            <label><span>Introduction</span><textarea id="homeIntro" rows="5" required></textarea></label>
-            <label><span>Primary button</span><input id="homePrimaryButton" type="text" required /></label>
-            <label><span>Secondary button</span><input id="homeSecondaryButton" type="text" required /></label>
-          </section>
-          <section class="homepage-step" data-home-step="2" hidden>
-            <p class="eyebrow">Step 3 of 4</p><h1>Why choose us</h1><p>Introduce the three reasons shown below the main heading.</p>
-            <label><span>Small heading</span><input id="homeSectionKicker" type="text" required /></label>
-            <label><span>Main heading</span><textarea id="homeSectionHeading" rows="3" required></textarea></label>
-          </section>
-          <section class="homepage-step" data-home-step="3" hidden>
-            <p class="eyebrow">Step 4 of 4</p><h1>Feature cards</h1><p>Edit the three short messages shown on the homepage.</p>
-            <div id="homepageFeatureFields" class="homepage-feature-fields"></div>
-            <div class="final-save-status"><strong>✓ Changes saved automatically</strong><small>Your unpublished homepage changes are protected on this device.</small></div>
-            <details class="editor-more-options"><summary>More options</summary><button id="discardHomepageChangesButton" class="danger-button" type="button">Discard unpublished changes</button></details>
-            <p id="homepagePublishStatus" class="publish-status" role="status" aria-live="polite"></p>
-          </section>
-          <div class="editor-actions">
-            <button id="homepagePreviousButton" class="button secondary" type="button" hidden>Back</button>
-            <button id="homepageNextButton" class="button primary" type="button">Next</button>
-            <button id="homepagePreviewButton" class="button secondary" type="button" hidden>Preview website</button>
-            <button id="homepagePublishButton" class="button primary" type="button" hidden>Publish</button>
-          </div>
-        </form>
+        <article id="homepageSummary" class="homepage-summary"></article>
       </div>
 
       <div id="treatmentsView" class="manager-workspace" hidden>

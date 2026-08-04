@@ -102,6 +102,11 @@ The Treatments editor now publishes through the authenticated `/.netlify/functio
 - Legacy `/admin` and GitHub-writing publication artefacts have been removed.
 
 
-## Milestone 4 — Homepage editor
+## Checkpoint 4.1 — Homepage browser
 
-The authenticated Website Manager now includes a mobile-first Homepage editor with autosave, full-site preview and Netlify Blobs publishing. Published content is stored in the `homepage` key of the site-wide `effortless-beauty-content` Blob store. The static `content/homepage.json` file remains the Golden Master fallback.
+- The Homepage dashboard card is now active.
+- The manager provides four read-only Homepage sections: Hero, Introduction, Why Choose Us, and Feature Cards.
+- Each section opens a clear summary of the current approved homepage content.
+- Navigation follows the same mobile-first, one-thing-at-a-time pattern as Treatments.
+- Editing, drafts, preview, publishing, Blobs, and public-site changes remain outside this checkpoint.
+- Existing authentication, inactivity locking, Treatments editing, preview, publishing, and security behaviour are preserved.
