@@ -19,6 +19,9 @@ export default async(request)=>{
  const content=body?.content??body;if(!valid(content))return json({error:'Content is missing or too large.'},400);
  const timestamp=new Date().toISOString(); const data=draft?{schemaVersion:1,savedAt:timestamp,content}:{...content,schemaVersion:1,updatedAt:timestamp};
  await store.setJSON(key,data,{metadata:{section,savedBy:user.email||user.id,purpose:draft?'unpublished-section-draft':'published-section'}});
+ const verified=await store.get(key,{type:'json'});
+ const verifiedTime=draft?verified?.savedAt:verified?.updatedAt;
+ if(!verified||verifiedTime!==timestamp)return json({error:'Saved content could not be verified.'},503);
  if(!draft)await store.delete(`${section}-draft`).catch(()=>{});
- return json({ok:true,data,savedAt:timestamp,updatedAt:timestamp});
+ return json({ok:true,data:verified,savedAt:timestamp,updatedAt:timestamp});
 };

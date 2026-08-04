@@ -71,7 +71,9 @@ export default async (request) => {
       purpose: 'published-homepage'
     }
   });
+  const verified = await store.get(PUBLISHED_KEY, { type: 'json' });
+  if (!verified || verified.updatedAt !== updatedAt) return json({ error: 'Published homepage could not be verified.' }, 503);
   await store.delete(DRAFT_KEY).catch(() => {});
 
-  return json({ ok: true, updatedAt, data });
+  return json({ ok: true, updatedAt, data: verified });
 };

@@ -84,6 +84,8 @@ export default async (request) => {
       updatedBy: user.email || user.id
     }
   });
+  const verified = await store.get(KEY, { type: 'json' });
+  if (!verified || verified.updatedAt !== updatedAt) return json({ error: 'Published content could not be verified.' }, 503);
 
-  return json({ ok: true, updatedAt, data });
+  return json({ ok: true, updatedAt, data: verified });
 };

@@ -284,7 +284,7 @@ async function loadPublishedHomepage() {
   }
 
   try {
-    const response = await fetch('/.netlify/functions/homepage', { cache: 'no-store' });
+    const response = await fetch(`/.netlify/functions/homepage?live=${Date.now()}`, { cache: 'no-store' });
     if (response.ok) {
       const result = await response.json();
       if (result?.data?.features) return result.data;
@@ -311,7 +311,7 @@ async function loadPublishedTreatments() {
   }
 
   try {
-    const response = await fetch('/.netlify/functions/treatments', { cache: 'no-store' });
+    const response = await fetch(`/.netlify/functions/treatments?live=${Date.now()}`, { cache: 'no-store' });
     if (response.ok) {
       const result = await response.json();
       if (result?.data?.items) return result.data;
@@ -350,7 +350,7 @@ async function loadPublishedSection(name) {
   if (preview === name) {
     try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){addPreviewBanner(`${name} preview only — these changes are not live.`);return completeMerchandise(data);} } catch(error){console.warn(error);}
   }
-  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return completeMerchandise(result.data);} } catch(error){console.warn(error);}
+  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}&live=${Date.now()}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return completeMerchandise(result.data);} } catch(error){console.warn(error);}
   return fallback;
 }
 

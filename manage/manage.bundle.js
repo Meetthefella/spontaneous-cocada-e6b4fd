@@ -1250,6 +1250,8 @@ const NEW_TREATMENTS_KEY = 'eb-new-treatments-v1';
 const newTreatmentIds = new Set();
 const draftKey = id => `eb-treatment-draft:${id}`;
 const clone = value => JSON.parse(JSON.stringify(value));
+const sameContent = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+const verifiedFetchUrl = (url) => `${url}${url.includes('?') ? '&' : '?'}verify=${Date.now()}`;
 const findTreatment = id => treatments.find(item => item.id === id);
 const treatmentDocument = () => ({
   schemaVersion: 1,
@@ -1315,7 +1317,12 @@ async function publishTreatments(){
     });
     const result=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(result.error||'Your changes could not be published.');
-    treatments=result.data.items.map(item=>({...item}));
+    const verificationResponse=await fetch(verifiedFetchUrl(TREATMENTS_API),{cache:'no-store',credentials:'same-origin'});
+    const verification=await verificationResponse.json().catch(()=>({}));
+    if(!verificationResponse.ok||!Array.isArray(verification?.data?.items)||!sameContent(verification.data.items,result?.data?.items)){
+      throw new Error('The publish could not be verified. Your drafts have been kept safely.');
+    }
+    treatments=verification.data.items.map(item=>({...item}));
     treatments.forEach(item=>localStorage.removeItem(draftKey(item.id)));
     newTreatmentIds.clear();
     localStorage.removeItem(NEW_TREATMENTS_KEY);
@@ -1566,7 +1573,12 @@ async function publishHomepage(){
     const result=await response.json().catch(()=>({}));
     if(response.status===401){setHomepagePublishStatus('Your session has expired. Sign in again to publish.','error');lockManager();return;}
     if(!response.ok)throw new Error(result.error||'Your homepage could not be published.');
-    homepageOriginal=clone(result.data);delete homepageOriginal.schemaVersion;delete homepageOriginal.updatedAt;
+    const verificationResponse=await fetch(verifiedFetchUrl(HOMEPAGE_API),{cache:'no-store',credentials:'same-origin'});
+    const verification=await verificationResponse.json().catch(()=>({}));
+    if(!verificationResponse.ok||!verification?.data||verification.data.updatedAt!==result?.data?.updatedAt){
+      throw new Error('The publish could not be verified. Your homepage draft has been kept safely.');
+    }
+    homepageOriginal=clone(verification.data);delete homepageOriginal.schemaVersion;delete homepageOriginal.updatedAt;
     homepageWorking=clone(homepageOriginal);homepageDirty=false;homepageSavedAt=null;
     updatePublishedDisplay(result.updatedAt);
     setHomepageDraftStatus(`✓ Published · ${relativeTime(result.updatedAt)}`);
@@ -1764,7 +1776,31 @@ function validateSiteSection(){const invalid=[...document.querySelectorAll('#sec
 async function saveSiteSectionDraft(){clearTimeout(siteSectionSaveTimer);siteSectionSaveTimer=null;if(siteSectionSaving)return;siteSectionSaving=true;updateSiteSectionFromForm();setSectionStatus('Saving online…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}&draft=1`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'Draft could not be saved.');setSectionStatus(`✓ Saved online · ${relativeTime(result.savedAt)}`,'success');}catch(error){setSectionStatus('Could not save online — your changes remain on this screen.','error');}finally{siteSectionSaving=false;}}
 function scheduleSiteSectionSave(){clearTimeout(siteSectionSaveTimer);setSectionStatus('Saving online…');siteSectionSaveTimer=setTimeout(saveSiteSectionDraft,650);}
 function previewSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();localStorage.setItem(`eb-section-preview:${activeSiteSection}`,JSON.stringify(siteSectionWorking));rememberPreviewReturn();const tab=sectionDefinitions[activeSiteSection].publicTab;window.open(`/?preview=${encodeURIComponent(activeSiteSection)}#${tab}`,'_blank','noopener');}
-async function publishSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();if(siteSectionSaveTimer)await saveSiteSectionDraft();if(!confirm(`Publish ${sectionDefinitions[activeSiteSection].title} to the live website?`))return;const button=document.querySelector('#sectionPublishButton');button.disabled=true;button.textContent='Publishing…';setSectionStatus('Publishing…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'This section could not be published.');siteSectionOriginal=clone(siteSectionWorking);setSectionStatus('✓ Published successfully. The live website now uses these changes.','success');}catch(error){setSectionStatus(error.message,'error');}finally{button.disabled=false;button.textContent='Publish';}}
+async function publishSiteSection(){
+  if(!validateSiteSection())return;
+  updateSiteSectionFromForm();
+  if(siteSectionSaveTimer)await saveSiteSectionDraft();
+  if(!confirm(`Publish ${sectionDefinitions[activeSiteSection].title} to the live website?`))return;
+  const button=document.querySelector('#sectionPublishButton');
+  button.disabled=true;button.textContent='Publishing…';setSectionStatus('Publishing…');
+  try{
+    const endpoint=`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}`;
+    const response=await fetch(endpoint,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});
+    const result=await response.json().catch(()=>({}));
+    if(response.status===401){lockManager();return;}
+    if(!response.ok)throw new Error(result.error||'This section could not be published.');
+    const verificationResponse=await fetch(verifiedFetchUrl(endpoint),{cache:'no-store',credentials:'same-origin'});
+    const verification=await verificationResponse.json().catch(()=>({}));
+    if(!verificationResponse.ok||!verification?.data||verification.data.updatedAt!==result?.data?.updatedAt){
+      throw new Error('The publish could not be verified. Your draft has been kept safely.');
+    }
+    siteSectionOriginal=clone(verification.data);
+    delete siteSectionOriginal.schemaVersion;delete siteSectionOriginal.updatedAt;
+    siteSectionWorking=clone(siteSectionOriginal);
+    setSectionStatus('✓ Published and verified. The live website now uses these changes.','success');
+  }catch(error){setSectionStatus(error.message,'error');}
+  finally{button.disabled=false;button.textContent='Publish';}
+}
 document.querySelectorAll('[data-open-section]').forEach(button=>button.addEventListener('click',()=>openSiteSection(button.dataset.openSection)));
 document.querySelector('#sectionEditorForm').addEventListener('input',scheduleSiteSectionSave);
 document.querySelector('#sectionBackButton').addEventListener('click',()=>{if(siteSectionSaveTimer)saveSiteSectionDraft();showAppView('dashboardView');});
@@ -1772,3 +1808,4 @@ document.querySelector('#sectionPreviewButton').addEventListener('click',preview
 document.querySelector('#sectionPublishButton').addEventListener('click',publishSiteSection);
 
 initialiseAuthentication();
+
