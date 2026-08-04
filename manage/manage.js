@@ -235,11 +235,11 @@ async function loadPublishedTreatments(){
 }
 async function publishTreatments(){
   if(publishing)return;
-  let document;
+  let treatmentData;
   try{
     flushDraft();
-    document=treatmentDocument();
-    const validationError=validateTreatmentDocument(document);
+    treatmentData=treatmentDocument();
+    const validationError=validateTreatmentDocument(treatmentData);
     if(validationError){setPublishStatus(validationError,'error');return;}
   }catch(error){
     setPublishStatus(error.message||'Your treatment details could not be prepared for publishing.','error');
@@ -255,7 +255,7 @@ async function publishTreatments(){
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       credentials:'same-origin',
-      body:JSON.stringify(document)
+      body:JSON.stringify(treatmentData)
     });
     const result=await response.json().catch(()=>({}));
     if(response.status===401){

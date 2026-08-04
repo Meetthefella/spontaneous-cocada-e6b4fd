@@ -1330,11 +1330,11 @@ async function loadPublishedTreatments() {
 }
 async function publishTreatments() {
   if (publishing) return;
-  let document2;
+  let treatmentData;
   try {
     flushDraft();
-    document2 = treatmentDocument();
-    const validationError = validateTreatmentDocument(document2);
+    treatmentData = treatmentDocument();
+    const validationError = validateTreatmentDocument(treatmentData);
     if (validationError) {
       setPublishStatus(validationError, "error");
       return;
@@ -1344,7 +1344,7 @@ async function publishTreatments() {
     return;
   }
   publishing = true;
-  const button = document2.querySelector("#editorPublishButton");
+  const button = document.querySelector("#editorPublishButton");
   button.disabled = true;
   button.textContent = "Publishing\u2026";
   setPublishStatus("Publishing your changes\u2026");
@@ -1353,7 +1353,7 @@ async function publishTreatments() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify(document2)
+      body: JSON.stringify(treatmentData)
     });
     const result = await response.json().catch(() => ({}));
     if (response.status === 401) {
