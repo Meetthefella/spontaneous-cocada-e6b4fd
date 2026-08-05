@@ -10,7 +10,7 @@ export default async(request)=>{
  const store=getStore({name:STORE_NAME,consistency:'strong'}); const key=draft?`${section}-draft`:section;
  if(request.method==='GET'){
    if(draft&&!await getUser())return json({error:'Authorised login required.'},401);
-   const data=await store.get(key,{type:'json'}); if(data===null)return json({found:false},404); return json({found:true,data});
+   const data=await store.get(key,{type:'json'}); if(data===null)return json({found:false}); return json({found:true,data});
  }
  if(request.method!=='PUT'&&request.method!=='DELETE')return json({error:'Method not allowed.'},405);
  const user=await getUser(); if(!user)return json({error:'Authorised login required.'},401);

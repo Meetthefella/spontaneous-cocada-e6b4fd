@@ -41,7 +41,7 @@ export default async (request) => {
 
   if (request.method === 'GET') {
     const data = await store.get(PUBLISHED_KEY, { type: 'json' });
-    if (data === null) return json({ found: false }, 404);
+    if (data === null) return json({ found: false });
     return json({ found: true, data });
   }
 
