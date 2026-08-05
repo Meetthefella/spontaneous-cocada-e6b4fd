@@ -491,6 +491,9 @@
 .choice-row input { width:23px; height:23px; }
 .editor-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
 .editor-actions .button { flex:1 1 130px; min-height:50px; margin:0; }
+.add-section-item-button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:64px; margin-top:22px; border:2px dashed rgba(91,68,52,.25); border-radius:16px; background:rgba(255,255,255,.28); color:#4b3e34; font:inherit; cursor:pointer; }
+.add-section-item-button span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(128,105,91,.14); font-size:1.7rem; font-weight:400; line-height:1; }
+.add-section-item-button:hover,.add-section-item-button:focus-visible { border-color:#80695b; background:rgba(255,255,255,.62); outline:none; }
 .preview-badge { padding:6px 10px; border-radius:999px; background:rgba(128,105,91,.12); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
 .preview-note { margin-top:25px; padding:13px; border-radius:12px; background:rgba(128,105,91,.1); font-weight:600; }
 .leave-dialog { width:min(480px,calc(100% - 28px)); padding:0; border:1px solid rgba(91,68,52,.22); border-radius:24px; background:#f2e8da; color:#4b3e34; box-shadow:0 22px 70px rgba(55,43,35,.28); }

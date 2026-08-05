@@ -687,9 +687,9 @@ const sectionDefinitions={
   gallery:{title:'Gallery',description:'Manage approved gallery entries. Image paths can be connected now; direct uploads remain a later enhancement.',publicTab:'gallery',fields:[
     {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
     {path:'items',label:'Gallery entries',type:'gallery',help:'One line per image: Title | Caption | Image path | Alt text | Show yes/no'}]},
-  merchandise:{title:'Merchandise',description:'Update merchandise categories and their descriptions.',publicTab:'merchandise',fields:[
+  merchandise:{title:'Merchandise',description:'Update merchandise details, image paths and the display order.',publicTab:'merchandise',fields:[
     {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
-    {path:'categories',label:'Categories',type:'categories',help:'One line per category: Title | Description | Show yes/no'}]},
+    {path:'categories',label:'Merchandise items',type:'categories',help:'One line per item, in display order: Title | Description | Price or availability | Image path or URL | Image alt text | Show yes/no'}]},
   booking:{title:'Booking',description:'Update Square booking details and the client eligibility wording.',publicTab:'booking',fields:[
     {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
     {path:'studioNote',label:'Studio note',type:'textarea'},{path:'bookingUrl',label:'Square booking link',required:true},
@@ -716,7 +716,7 @@ function serializeSectionField(field,value){
   if(field.type==='stages')return (value||[]).map(item=>`${item.day||''} | ${item.text||''}`).join('\n');
   if(field.type==='priceGroups')return (value||[]).flatMap(group=>(group.items||[]).map(item=>`${group.title||''} | ${item.name||''} | ${item.price||''} | ${item.time||''}`)).join('\n');
   if(field.type==='gallery')return (value||[]).map(item=>`${item.title||''} | ${item.caption||''} | ${item.image||''} | ${item.alt||''} | ${item.visible===false?'no':'yes'}`).join('\n');
-  if(field.type==='categories')return (value||[]).map(item=>`${item.title||''} | ${item.description||''} | ${item.visible===false?'no':'yes'}`).join('\n');
+  if(field.type==='categories')return (value||[]).map(item=>`${item.title||''} | ${item.description||''} | ${item.price||''} | ${item.image||''} | ${item.alt||item.imageAlt||''} | ${item.visible===false?'no':'yes'}`).join('\n');
   if(field.type==='policies')return (value||[]).map(item=>`${item.heading||''} | ${item.text||''}`).join('\n');
   return value??'';
 }
@@ -727,12 +727,18 @@ function parseSectionField(field,value,current){
   if(field.type==='stages')return lines.map((line,index)=>{const [day,text]=splitParts(line,2);return {...(current?.[index]||{}),day,text};});
   if(field.type==='priceGroups'){const groups=[];lines.forEach(line=>{const [groupTitle,name,price,time]=splitParts(line,4);let group=groups.find(item=>item.title===groupTitle);if(!group){group={title:groupTitle,items:[]};groups.push(group);}group.items.push({name,price,time});});return groups;}
   if(field.type==='gallery')return lines.map(line=>{const [title,caption,image,alt,visible]=splitParts(line,5);return {title,caption,image,alt,visible:visible.toLowerCase()!=='no'};});
-  if(field.type==='categories')return lines.map(line=>{const [title,description,visible]=splitParts(line,3);return {title,description,visible:visible.toLowerCase()!=='no'};});
+  if(field.type==='categories')return lines.map((line,index)=>{
+    const previous=current?.[index]||{};
+    const parts=line.split('|').map(part=>part.trim());
+    if(parts.length<=3){const [title,description,visible]=splitParts(line,3);return {...previous,title,description,visible:visible.toLowerCase()!=='no',order:index};}
+    const [title,description,price,image,alt,visible]=splitParts(line,6);
+    return {...previous,title,description,price,image,alt,visible:visible.toLowerCase()!=='no',order:index};
+  });
   if(field.type==='policies')return lines.map(line=>{const [heading,text]=splitParts(line,2);return {heading,text};});
   return value;
 }
 function sectionFieldMarkup(field){const value=serializeSectionField(field,getPath(siteSectionWorking,field.path));const multiline=field.type==='textarea'||['lines','stages','priceGroups','gallery','categories','policies'].includes(field.type);return `<label><span>${escapeHtml(field.label)}</span>${multiline?`<textarea data-section-path="${escapeHtml(field.path)}" rows="${field.type==='textarea'?5:8}" ${field.required?'required':''}>${escapeHtml(value)}</textarea>`:`<input data-section-path="${escapeHtml(field.path)}" type="text" value="${escapeHtml(value)}" ${field.required?'required':''} />`}${field.help?`<small>${escapeHtml(field.help)}</small>`:''}</label>`;}
-function renderSiteSectionEditor(){const def=sectionDefinitions[activeSiteSection];document.querySelector('#sectionEditorTitle').textContent=def.title;document.querySelector('#sectionEditorDescription').textContent=def.description;document.querySelector('#sectionEditorFields').innerHTML=def.fields.map(sectionFieldMarkup).join('');setSectionStatus('✓ Autosave on');}
+function renderSiteSectionEditor(){const def=sectionDefinitions[activeSiteSection];document.querySelector('#sectionEditorTitle').textContent=def.title;document.querySelector('#sectionEditorDescription').textContent=def.description;const addMerchandise=activeSiteSection==='merchandise'?'<button id="addMerchandiseItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add merchandise item</strong></button>':'';document.querySelector('#sectionEditorFields').innerHTML=def.fields.map(sectionFieldMarkup).join('')+addMerchandise;setSectionStatus('✓ Autosave on');}
 function setSectionStatus(message,type=''){const el=document.querySelector('#sectionEditorStatus');el.textContent=message;el.classList.toggle('error',type==='error');el.classList.toggle('success',type==='success');}
 async function fetchSection(section,draft=false){const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(section)}${draft?'&draft=1':''}`,{cache:'no-store',credentials:'same-origin'});if(response.status===404)return null;const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||'This section could not be loaded.');return result.data;}
 async function openSiteSection(section){activeSiteSection=section;setSectionStatus('Loading…');try{const published=await fetchSection(section,false).catch(()=>null)||await fetch(`/content/${section}.json`,{cache:'no-store'}).then(r=>r.json());siteSectionOriginal=clone(published);delete siteSectionOriginal.schemaVersion;delete siteSectionOriginal.updatedAt;const draft=await fetchSection(section,true).catch(()=>null);siteSectionWorking=clone(draft?.content||siteSectionOriginal);renderSiteSectionEditor();showAppView('sectionEditorView');history.pushState({view:'section-editor',section},'',`#manage-${section}`);}catch(error){setSectionStatus(error.message,'error');}}
@@ -740,6 +746,16 @@ function updateSiteSectionFromForm(){const def=sectionDefinitions[activeSiteSect
 function validateSiteSection(){const invalid=[...document.querySelectorAll('#sectionEditorForm [required]')].find(field=>!field.value.trim());if(invalid){invalid.focus();setSectionStatus('Please complete the highlighted field.','error');return false;}return true;}
 async function saveSiteSectionDraft(){clearTimeout(siteSectionSaveTimer);siteSectionSaveTimer=null;if(siteSectionSaving)return;siteSectionSaving=true;updateSiteSectionFromForm();setSectionStatus('Saving online…');try{const response=await fetch(`${SECTION_API}?section=${encodeURIComponent(activeSiteSection)}&draft=1`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({content:siteSectionWorking})});const result=await response.json().catch(()=>({}));if(response.status===401){lockManager();return;}if(!response.ok)throw new Error(result.error||'Draft could not be saved.');setSectionStatus(`✓ Saved online · ${relativeTime(result.savedAt)}`,'success');}catch(error){setSectionStatus('Could not save online — your changes remain on this screen.','error');}finally{siteSectionSaving=false;}}
 function scheduleSiteSectionSave(){clearTimeout(siteSectionSaveTimer);setSectionStatus('Saving online…');siteSectionSaveTimer=setTimeout(saveSiteSectionDraft,650);}
+function addMerchandiseItem(){
+  if(activeSiteSection!=='merchandise')return;
+  updateSiteSectionFromForm();
+  const items=Array.isArray(siteSectionWorking.categories)?siteSectionWorking.categories:[];
+  items.push({title:'New merchandise item',description:'Add a short description for this item.',price:'',image:'',alt:'',visible:false,order:items.length});
+  siteSectionWorking.categories=items;
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+  document.querySelector('[data-section-path="categories"]')?.focus();
+}
 function previewSiteSection(){if(!validateSiteSection())return;updateSiteSectionFromForm();localStorage.setItem(`eb-section-preview:${activeSiteSection}`,JSON.stringify(siteSectionWorking));rememberPreviewReturn();const tab=sectionDefinitions[activeSiteSection].publicTab;window.open(`/?preview=${encodeURIComponent(activeSiteSection)}#${tab}`,'_blank','noopener');}
 async function publishSiteSection(){
   if(!validateSiteSection())return;
@@ -768,6 +784,7 @@ async function publishSiteSection(){
 }
 document.querySelectorAll('[data-open-section]').forEach(button=>button.addEventListener('click',()=>openSiteSection(button.dataset.openSection)));
 document.querySelector('#sectionEditorForm').addEventListener('input',scheduleSiteSectionSave);
+document.querySelector('#sectionEditorForm').addEventListener('click',event=>{if(event.target.closest('#addMerchandiseItemButton'))addMerchandiseItem();});
 document.querySelector('#sectionBackButton').addEventListener('click',()=>{if(siteSectionSaveTimer)saveSiteSectionDraft();showAppView('dashboardView');});
 document.querySelector('#sectionPreviewButton').addEventListener('click',previewSiteSection);
 document.querySelector('#sectionPublishButton').addEventListener('click',publishSiteSection);

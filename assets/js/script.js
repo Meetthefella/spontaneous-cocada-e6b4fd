@@ -334,11 +334,76 @@ function renderMerchandise(data) {
   setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);
   const root = document.querySelector('#merchandiseGrid'); if (!root) return;
   const source = Array.isArray(data.categories) ? data.categories : Array.isArray(data.items) ? data.items : Array.isArray(data.products) ? data.products : [];
-  const items = source.filter(item => item && item.visible !== false);
+  const items = source
+    .filter(item => item && typeof item === 'object')
+    .map((item, index) => ({ ...item, _displayOrder: Number.isFinite(Number(item.order)) ? Number(item.order) : index }))
+    .filter(item => item.visible !== false)
+    .sort((left, right) => left._displayOrder - right._displayOrder);
   root.innerHTML = items.length
-    ? items.map(item => `<article class="card in-view merchandise-card">${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt || item.title || 'Effortless Beauty merchandise')}" />` : ''}<h2>${escapeHtml(item.title || item.name || 'Merchandise item')}</h2><p>${escapeHtml(item.description || item.caption || '')}</p>${item.price ? `<strong>${escapeHtml(item.price)}</strong>` : ''}</article>`).join('')
+    ? items.map((item, index) => {
+      const title = item.title || item.name || 'Merchandise item';
+      const alt = item.alt || item.imageAlt || `${title} merchandise`;
+      const image = typeof item.image === 'string' ? item.image.trim() : '';
+      const imageMarkup = image
+        ? `<button class="merchandise-image-button" type="button" data-merchandise-image="${escapeHtml(image)}" data-merchandise-alt="${escapeHtml(alt)}" aria-label="View a larger image of ${escapeHtml(title)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(alt)}" loading="lazy" /></button>`
+        : `<div class="merchandise-image-placeholder" role="img" aria-label="${escapeHtml(title)} image coming soon"><span aria-hidden="true">✦</span><small>Image coming soon</small></div>`;
+      return `<article class="card in-view merchandise-card" data-merchandise-card="${index}">${imageMarkup}<h2>${escapeHtml(title)}</h2><p>${escapeHtml(item.description || item.caption || '')}</p>${item.price ? `<strong>${escapeHtml(item.price)}</strong>` : ''}</article>`;
+    }).join('')
     : '<article class="card in-view"><h2>Merchandise coming soon</h2><p>New Effortless Beauty items will appear here.</p></article>';
+  root.querySelectorAll('.merchandise-image-button img').forEach((image) => image.addEventListener('error', () => {
+    const button = image.closest('.merchandise-image-button');
+    if (!button) return;
+    const fallback = document.createElement('div');
+    fallback.className = 'merchandise-image-placeholder';
+    fallback.setAttribute('role', 'img');
+    fallback.setAttribute('aria-label', `${image.alt || 'Merchandise'} image unavailable`);
+    fallback.innerHTML = '<span aria-hidden="true">✦</span><small>Image unavailable</small>';
+    button.replaceWith(fallback);
+  }, { once: true }));
 }
+
+const merchandiseViewer = document.querySelector('#merchandiseImageViewer');
+const merchandiseViewerImage = document.querySelector('#merchandiseViewerImage');
+const merchandiseViewerClose = document.querySelector('#merchandiseViewerClose');
+let merchandiseViewerTrigger = null;
+let merchandiseViewerScrollY = 0;
+
+function closeMerchandiseViewer({ fromHistory = false } = {}) {
+  if (!merchandiseViewer?.open) return;
+  if (!fromHistory && history.state?.merchandiseLightbox) {
+    history.back();
+    return;
+  }
+  merchandiseViewer.close();
+}
+
+function openMerchandiseViewer(trigger) {
+  if (!merchandiseViewer || !merchandiseViewerImage) return;
+  merchandiseViewerTrigger = trigger;
+  merchandiseViewerScrollY = window.scrollY;
+  merchandiseViewerImage.src = trigger.dataset.merchandiseImage || '';
+  merchandiseViewerImage.alt = trigger.dataset.merchandiseAlt || 'Effortless Beauty merchandise';
+  document.body.classList.add('image-viewer-open');
+  history.pushState({ ...(history.state || {}), merchandiseLightbox: true }, '', location.href);
+  merchandiseViewer.showModal();
+  merchandiseViewerClose?.focus({ preventScroll: true });
+}
+
+document.addEventListener('click', (event) => {
+  const trigger = event.target.closest('.merchandise-image-button');
+  if (trigger) openMerchandiseViewer(trigger);
+});
+merchandiseViewerClose?.addEventListener('click', () => closeMerchandiseViewer());
+merchandiseViewer?.addEventListener('click', (event) => { if (event.target === merchandiseViewer) closeMerchandiseViewer(); });
+merchandiseViewer?.addEventListener('cancel', (event) => { event.preventDefault(); closeMerchandiseViewer(); });
+merchandiseViewer?.addEventListener('close', () => {
+  document.body.classList.remove('image-viewer-open');
+  merchandiseViewerImage?.removeAttribute('src');
+  merchandiseViewerTrigger?.focus({ preventScroll: true });
+  window.scrollTo({ top: merchandiseViewerScrollY, behavior: 'instant' });
+  merchandiseViewerTrigger = null;
+});
+window.addEventListener('popstate', () => { if (merchandiseViewer?.open) closeMerchandiseViewer({ fromHistory: true }); });
 async function loadPublishedSection(name) {
   const fallback = await loadJson(`content/${name}.json`);
   const completeMerchandise = (data) => {

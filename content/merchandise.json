@@ -8,28 +8,32 @@
       "description": "Wearable Effortless Beauty artwork.",
       "visible": true,
       "price": "",
-      "image": ""
+      "image": "assets/images/merchandise/art-t-shirts.png",
+      "alt": "Folded cream art T-shirt with a rose-gold eyebrow-inspired illustration"
     },
     {
       "title": "Tattoo Transfers",
       "description": "Temporary designs for creative styling.",
       "visible": true,
       "price": "",
-      "image": ""
+      "image": "assets/images/merchandise/tattoo-transfers.png",
+      "alt": "Sheet of rose-gold floral, moon and eyebrow-inspired tattoo transfers"
     },
     {
       "title": "Resin Keyrings",
       "description": "Handmade decorative keyrings.",
       "visible": true,
       "price": "",
-      "image": ""
+      "image": "assets/images/merchandise/resin-keyrings.png",
+      "alt": "Translucent resin keyring with preserved blush-pink flowers"
     },
     {
       "title": "Flowers",
       "description": "Decorative floral pieces and gifts.",
       "visible": true,
       "price": "",
-      "image": ""
+      "image": "assets/images/merchandise/flowers.png",
+      "alt": "Blush-pink and ivory dried flower bouquet with a rose-gold ribbon"
     }
   ]
 }

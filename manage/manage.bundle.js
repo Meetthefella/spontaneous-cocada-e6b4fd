@@ -2158,11 +2158,11 @@ var sectionDefinitions = {
     { path: "intro", label: "Introduction", type: "textarea", required: true },
     { path: "items", label: "Gallery entries", type: "gallery", help: "One line per image: Title | Caption | Image path | Alt text | Show yes/no" }
   ] },
-  merchandise: { title: "Merchandise", description: "Update merchandise categories and their descriptions.", publicTab: "merchandise", fields: [
+  merchandise: { title: "Merchandise", description: "Update merchandise details, image paths and the display order.", publicTab: "merchandise", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
     { path: "heading", label: "Main heading", required: true },
     { path: "intro", label: "Introduction", type: "textarea", required: true },
-    { path: "categories", label: "Categories", type: "categories", help: "One line per category: Title | Description | Show yes/no" }
+    { path: "categories", label: "Merchandise items", type: "categories", help: "One line per item, in display order: Title | Description | Price or availability | Image path or URL | Image alt text | Show yes/no" }
   ] },
   booking: { title: "Booking", description: "Update Square booking details and the client eligibility wording.", publicTab: "booking", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
@@ -2219,7 +2219,7 @@ function serializeSectionField(field, value) {
   if (field.type === "stages") return (value || []).map((item) => `${item.day || ""} | ${item.text || ""}`).join("\n");
   if (field.type === "priceGroups") return (value || []).flatMap((group) => (group.items || []).map((item) => `${group.title || ""} | ${item.name || ""} | ${item.price || ""} | ${item.time || ""}`)).join("\n");
   if (field.type === "gallery") return (value || []).map((item) => `${item.title || ""} | ${item.caption || ""} | ${item.image || ""} | ${item.alt || ""} | ${item.visible === false ? "no" : "yes"}`).join("\n");
-  if (field.type === "categories") return (value || []).map((item) => `${item.title || ""} | ${item.description || ""} | ${item.visible === false ? "no" : "yes"}`).join("\n");
+  if (field.type === "categories") return (value || []).map((item) => `${item.title || ""} | ${item.description || ""} | ${item.price || ""} | ${item.image || ""} | ${item.alt || item.imageAlt || ""} | ${item.visible === false ? "no" : "yes"}`).join("\n");
   if (field.type === "policies") return (value || []).map((item) => `${item.heading || ""} | ${item.text || ""}`).join("\n");
   return value ?? "";
 }
@@ -2252,9 +2252,15 @@ function parseSectionField(field, value, current) {
     const [title, caption, image, alt, visible] = splitParts(line, 5);
     return { title, caption, image, alt, visible: visible.toLowerCase() !== "no" };
   });
-  if (field.type === "categories") return lines.map((line) => {
-    const [title, description, visible] = splitParts(line, 3);
-    return { title, description, visible: visible.toLowerCase() !== "no" };
+  if (field.type === "categories") return lines.map((line, index) => {
+    const previous = current?.[index] || {};
+    const parts = line.split("|").map((part) => part.trim());
+    if (parts.length <= 3) {
+      const [title2, description2, visible2] = splitParts(line, 3);
+      return { ...previous, title: title2, description: description2, visible: visible2.toLowerCase() !== "no", order: index };
+    }
+    const [title, description, price, image, alt, visible] = splitParts(line, 6);
+    return { ...previous, title, description, price, image, alt, visible: visible.toLowerCase() !== "no", order: index };
   });
   if (field.type === "policies") return lines.map((line) => {
     const [heading, text] = splitParts(line, 2);
@@ -2271,7 +2277,8 @@ function renderSiteSectionEditor() {
   const def = sectionDefinitions[activeSiteSection];
   document.querySelector("#sectionEditorTitle").textContent = def.title;
   document.querySelector("#sectionEditorDescription").textContent = def.description;
-  document.querySelector("#sectionEditorFields").innerHTML = def.fields.map(sectionFieldMarkup).join("");
+  const addMerchandise = activeSiteSection === "merchandise" ? '<button id="addMerchandiseItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add merchandise item</strong></button>' : "";
+  document.querySelector("#sectionEditorFields").innerHTML = def.fields.map(sectionFieldMarkup).join("") + addMerchandise;
   setSectionStatus("\u2713 Autosave on");
 }
 function setSectionStatus(message, type = "") {
@@ -2347,6 +2354,16 @@ function scheduleSiteSectionSave() {
   setSectionStatus("Saving online\u2026");
   siteSectionSaveTimer = setTimeout(saveSiteSectionDraft, 650);
 }
+function addMerchandiseItem() {
+  if (activeSiteSection !== "merchandise") return;
+  updateSiteSectionFromForm();
+  const items = Array.isArray(siteSectionWorking.categories) ? siteSectionWorking.categories : [];
+  items.push({ title: "New merchandise item", description: "Add a short description for this item.", price: "", image: "", alt: "", visible: false, order: items.length });
+  siteSectionWorking.categories = items;
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+  document.querySelector('[data-section-path="categories"]')?.focus();
+}
 function previewSiteSection() {
   if (!validateSiteSection()) return;
   updateSiteSectionFromForm();
@@ -2392,6 +2409,9 @@ async function publishSiteSection() {
 }
 document.querySelectorAll("[data-open-section]").forEach((button) => button.addEventListener("click", () => openSiteSection(button.dataset.openSection)));
 document.querySelector("#sectionEditorForm").addEventListener("input", scheduleSiteSectionSave);
+document.querySelector("#sectionEditorForm").addEventListener("click", (event) => {
+  if (event.target.closest("#addMerchandiseItemButton")) addMerchandiseItem();
+});
 document.querySelector("#sectionBackButton").addEventListener("click", () => {
   if (siteSectionSaveTimer) saveSiteSectionDraft();
   showAppView("dashboardView");
