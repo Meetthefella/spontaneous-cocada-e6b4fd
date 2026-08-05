@@ -85,7 +85,7 @@ function renderTreatments(data) {
     const description = item.shortDescription || item.description || '';
     const icon = item.icon || '✦';
     const duration = item.duration ? `<small aria-label="Treatment time"> · ${escapeHtml(item.duration)}</small>` : '';
-    return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}<a class="treatment-book-button" href="#booking" data-tab-link="booking">Book Now</a></article>`;
+    return `<article data-treatment-id="${escapeHtml(item.id)}"><span class="treatment-icon">${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><div class="treatment-card-footer"><div class="treatment-card-price"><strong>${escapeHtml(item.price || '')}</strong>${duration}</div><a class="treatment-book-button" href="#booking" data-tab-link="booking">Book Now</a></div></article>`;
     }).join('');
     grid.querySelectorAll('.treatment-book-button').forEach((button) => button.addEventListener('click', (event) => {
       event.preventDefault();
