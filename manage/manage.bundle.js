@@ -1116,6 +1116,7 @@ var INACTIVITY_TIMEOUT_MS = 15 * 60 * 1e3;
 var TREATMENTS_API = "/.netlify/functions/treatments";
 var HOMEPAGE_DRAFT_API = "/.netlify/functions/homepage-draft";
 var HOMEPAGE_API = "/.netlify/functions/homepage";
+var normalizeHomepagePrimaryCta = (content) => ({ ...content, primaryButton: content?.primaryButton === "Book online" || !content?.primaryButton ? "View Treatments" : content.primaryButton, primaryButtonTarget: "treatments" });
 var treatments = [
   { id: "microblading", category: "signature", title: "Microblading", shortDescription: "Natural-looking brow enhancement using fine, hair-like strokes.", fullDescription: "Microblading is designed to create fuller, naturally defined brows using carefully placed hair-like strokes.", price: "\xA3100", duration: "2 hours", detailedPricing: "Initial treatment: \xA3100", followUpPricing: "Second session: \xA3100\nThird session: \xA375\nFourth session: Free", patchTest: true, visible: true },
   { id: "nano-brows", category: "signature", title: "Nano Brows", shortDescription: "Fine machine-created strokes for softly defined brows.", fullDescription: "Nano brows use a precision machine technique to create delicate, realistic-looking strokes.", price: "\xA3100", duration: "To be confirmed", detailedPricing: "", followUpPricing: "", patchTest: true, visible: true },
@@ -1143,7 +1144,8 @@ var homepageOriginal = {
   heroLine: "Enhance. Simplify.",
   heroLineEmphasis: "Feel beautiful.",
   intro: "Soft, natural-looking brows and permanent makeup designed to make everyday beauty feel effortless.",
-  primaryButton: "Book online",
+  primaryButton: "View Treatments",
+  primaryButtonTarget: "treatments",
   secondaryButton: "Aftercare guide",
   sectionKicker: "Why clients choose us",
   sectionHeading: "Polished results, calm appointments, clear aftercare.",
@@ -1172,7 +1174,7 @@ async function loadPublishedHomepage() {
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Published homepage could not be loaded.");
     if (result?.data?.features) {
-      homepageOriginal = clone(result.data);
+      homepageOriginal = normalizeHomepagePrimaryCta(clone(result.data));
       delete homepageOriginal.schemaVersion;
       delete homepageOriginal.updatedAt;
       homepageWorking = clone(homepageOriginal);
@@ -1195,7 +1197,7 @@ async function loadHomepageDraft() {
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Homepage draft could not be loaded.");
     if (result?.data?.content) {
-      homepageWorking = clone(result.data.content);
+      homepageWorking = normalizeHomepagePrimaryCta(clone(result.data.content));
       homepageSavedAt = result.data.savedAt || null;
       homepageDirty = JSON.stringify(homepageWorking) !== JSON.stringify(homepageOriginal);
     }
@@ -2209,6 +2211,7 @@ var merchandiseImageOptions = [
   { value: "assets/images/merchandise/art-t-shirts.png", label: "Art T-shirt" },
   { value: "assets/images/merchandise/tattoo-transfers.png", label: "Tattoo transfers" },
   { value: "assets/images/merchandise/resin-keyrings.png", label: "Resin keyring" },
+  { value: "assets/images/merchandise/resin-keyring-letter-a.png", label: "Floral letter A keyring" },
   { value: "assets/images/merchandise/flowers.png", label: "Flowers" }
 ];
 function getPath(obj, path) {

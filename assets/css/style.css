@@ -138,6 +138,8 @@ textarea { min-height: 132px; resize: vertical; }
 .treatment-grid article { padding: 28px; min-height: 230px; }
 .treatment-grid span { color: var(--gold-dark); font-size: 2.2rem; }
 .treatment-grid strong { color: var(--gold-dark); }
+.treatment-book-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; margin-top: 18px; padding: 0 16px; border-radius: 999px; background: var(--gold-dark); color: #fffaf1; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+.treatment-book-button:hover, .treatment-book-button:focus-visible { background: var(--ink); color: #fffaf1; outline: 3px solid rgba(185,133,85,.35); outline-offset: 3px; }
 .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .contact-form { grid-column: 1 / -1; }
 .policy-card { text-align: left; max-width: 860px; margin: 0 auto; }

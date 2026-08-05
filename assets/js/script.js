@@ -61,7 +61,9 @@ function renderHomepage(data) {
   setText('#heroLine', data.heroLine);
   setText('#heroLineEmphasis', data.heroLineEmphasis);
   setText('#heroIntro', data.intro);
-  setText('#primaryButton', data.primaryButton);
+  const primaryButton = document.querySelector('#primaryButton');
+  setText('#primaryButton', data.primaryButton === 'Book online' || !data.primaryButton ? 'View Treatments' : data.primaryButton);
+  if (primaryButton) { primaryButton.href = '#treatments'; primaryButton.dataset.tabLink = 'treatments'; }
   setText('#secondaryButton', data.secondaryButton);
   setText('#homeSectionKicker', data.sectionKicker);
   setText('#homeSectionHeading', data.sectionHeading);
@@ -77,13 +79,20 @@ function renderTreatments(data) {
   setText('#treatmentsIntro', data.intro);
   contentState.treatments = (data.items || []).filter((item) => item.visible !== false && item.active !== false);
   const grid = document.querySelector('#treatmentGrid');
-  if (grid) grid.innerHTML = contentState.treatments.map((item) => {
+  if (grid) {
+    grid.innerHTML = contentState.treatments.map((item) => {
     const title = item.title || item.name || '';
     const description = item.shortDescription || item.description || '';
     const icon = item.icon || '✦';
     const duration = item.duration ? `<small aria-label="Treatment time"> · ${escapeHtml(item.duration)}</small>` : '';
-    return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}</article>`;
-  }).join('');
+    return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}<a class="treatment-book-button" href="#booking" data-tab-link="booking">Book Now</a></article>`;
+    }).join('');
+    grid.querySelectorAll('.treatment-book-button').forEach((button) => button.addEventListener('click', (event) => {
+      event.preventDefault();
+      history.pushState(null, '', '#booking');
+      showTab('booking');
+    }));
+  }
 }
 
 function stageDecorations(className) {
