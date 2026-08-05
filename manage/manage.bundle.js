@@ -2158,7 +2158,7 @@ var sectionDefinitions = {
     { path: "intro", label: "Introduction", type: "textarea", required: true },
     { path: "items", label: "Gallery entries", type: "gallery", help: "One line per image: Title | Caption | Image path | Alt text | Show yes/no" }
   ] },
-  merchandise: { title: "Merchandise", description: "Update merchandise details, image paths and the display order.", publicTab: "merchandise", fields: [
+  merchandise: { title: "Merchandise", description: "Update merchandise details, choose images and set the display order.", publicTab: "merchandise", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
     { path: "heading", label: "Main heading", required: true },
     { path: "intro", label: "Introduction", type: "textarea", required: true },
@@ -2205,6 +2205,12 @@ var sectionDefinitions = {
     { path: "footerText", label: "Footer wording", required: true }
   ] }
 };
+var merchandiseImageOptions = [
+  { value: "assets/images/merchandise/art-t-shirts.png", label: "Art T-shirt" },
+  { value: "assets/images/merchandise/tattoo-transfers.png", label: "Tattoo transfers" },
+  { value: "assets/images/merchandise/resin-keyrings.png", label: "Resin keyring" },
+  { value: "assets/images/merchandise/flowers.png", label: "Flowers" }
+];
 function getPath(obj, path) {
   return path.split(".").reduce((value, key) => value?.[key], obj);
 }
@@ -2273,12 +2279,23 @@ function sectionFieldMarkup(field) {
   const multiline = field.type === "textarea" || ["lines", "stages", "priceGroups", "gallery", "categories", "policies"].includes(field.type);
   return `<label><span>${escapeHtml(field.label)}</span>${multiline ? `<textarea data-section-path="${escapeHtml(field.path)}" rows="${field.type === "textarea" ? 5 : 8}" ${field.required ? "required" : ""}>${escapeHtml(value)}</textarea>` : `<input data-section-path="${escapeHtml(field.path)}" type="text" value="${escapeHtml(value)}" ${field.required ? "required" : ""} />`}${field.help ? `<small>${escapeHtml(field.help)}</small>` : ""}</label>`;
 }
+function merchandiseItemMarkup(item, index) {
+  const image = item.image || "";
+  const known = merchandiseImageOptions.some((option) => option.value === image);
+  const imageOptions = ['<option value="">No image yet \u2014 show placeholder</option>', ...merchandiseImageOptions.map((option) => `<option value="${escapeHtml(option.value)}" ${option.value === image ? "selected" : ""}>${escapeHtml(option.label)}</option>`), `<option value="__custom__" ${image && !known ? "selected" : ""}>Use a web image link</option>`].join("");
+  const preview = image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(item.alt || item.title || "Merchandise preview")}" />` : '<span aria-hidden="true">\u2726</span><small>Image coming soon</small>';
+  return `<fieldset class="merchandise-item-editor" data-merchandise-index="${index}"><legend>Item ${index + 1}</legend><div class="merchandise-item-preview">${preview}</div><label><span>Item name</span><input data-merchandise-key="title" type="text" value="${escapeHtml(item.title || "")}" /></label><label><span>Description</span><textarea data-merchandise-key="description" rows="3">${escapeHtml(item.description || "")}</textarea></label><label><span>Price or availability</span><input data-merchandise-key="price" type="text" value="${escapeHtml(item.price || "")}" placeholder="Available soon" /></label><label><span>Choose an image</span><select data-merchandise-key="image-choice">${imageOptions}</select><small>Choose one of the supplied images. You do not need to type a file path.</small></label><label class="merchandise-custom-image-field" ${image && !known ? "" : "hidden"}><span>Web image link</span><input data-merchandise-key="image-url" type="url" value="${escapeHtml(image && !known ? image : "")}" placeholder="https://\u2026" /></label><label><span>Image description</span><input data-merchandise-key="alt" type="text" value="${escapeHtml(item.alt || item.imageAlt || "")}" placeholder="Describe the image for screen readers" /></label><label class="choice-row"><input data-merchandise-key="visible" type="checkbox" ${item.visible !== false ? "checked" : ""} /><span>Show this item on the website</span></label><div class="merchandise-item-actions"><button type="button" data-merchandise-action="up" ${index === 0 ? "disabled" : ""}>Move up</button><button type="button" data-merchandise-action="down">Move down</button><button type="button" data-merchandise-action="remove">Remove</button></div></fieldset>`;
+}
+function merchandiseEditorMarkup() {
+  const items = Array.isArray(siteSectionWorking.categories) ? siteSectionWorking.categories : [];
+  return `<div class="merchandise-item-editor-list">${items.map(merchandiseItemMarkup).join("")}</div><button id="addMerchandiseItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add merchandise item</strong></button>`;
+}
 function renderSiteSectionEditor() {
   const def = sectionDefinitions[activeSiteSection];
   document.querySelector("#sectionEditorTitle").textContent = def.title;
   document.querySelector("#sectionEditorDescription").textContent = def.description;
-  const addMerchandise = activeSiteSection === "merchandise" ? '<button id="addMerchandiseItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add merchandise item</strong></button>' : "";
-  document.querySelector("#sectionEditorFields").innerHTML = def.fields.map(sectionFieldMarkup).join("") + addMerchandise;
+  const fields = activeSiteSection === "merchandise" ? def.fields.filter((field) => field.path !== "categories").map(sectionFieldMarkup).join("") + merchandiseEditorMarkup() : def.fields.map(sectionFieldMarkup).join("");
+  document.querySelector("#sectionEditorFields").innerHTML = fields;
   setSectionStatus("\u2713 Autosave on");
 }
 function setSectionStatus(message, type = "") {
@@ -2311,12 +2328,23 @@ async function openSiteSection(section) {
     setSectionStatus(error.message, "error");
   }
 }
+function updateMerchandiseFromForm() {
+  const items = Array.isArray(siteSectionWorking.categories) ? siteSectionWorking.categories : [];
+  siteSectionWorking.categories = [...document.querySelectorAll("[data-merchandise-index]")].map((editor, order) => {
+    const current = items[Number(editor.dataset.merchandiseIndex)] || {};
+    const value = (key) => editor.querySelector(`[data-merchandise-key="${key}"]`)?.value?.trim() || "";
+    const choice = value("image-choice");
+    const image = choice === "__custom__" ? value("image-url") : choice;
+    return { ...current, title: value("title"), description: value("description"), price: value("price"), image, alt: value("alt"), visible: Boolean(editor.querySelector('[data-merchandise-key="visible"]')?.checked), order };
+  });
+}
 function updateSiteSectionFromForm() {
   const def = sectionDefinitions[activeSiteSection];
-  def.fields.forEach((field) => {
+  def.fields.filter((field) => activeSiteSection !== "merchandise" || field.path !== "categories").forEach((field) => {
     const input = document.querySelector(`[data-section-path="${field.path}"]`);
     setPath(siteSectionWorking, field.path, parseSectionField(field, input.value, getPath(siteSectionWorking, field.path)));
   });
+  if (activeSiteSection === "merchandise") updateMerchandiseFromForm();
 }
 function validateSiteSection() {
   const invalid = [...document.querySelectorAll("#sectionEditorForm [required]")].find((field) => !field.value.trim());
@@ -2362,7 +2390,27 @@ function addMerchandiseItem() {
   siteSectionWorking.categories = items;
   renderSiteSectionEditor();
   scheduleSiteSectionSave();
-  document.querySelector('[data-section-path="categories"]')?.focus();
+  document.querySelector(`[data-merchandise-index="${items.length - 1}"] [data-merchandise-key="title"]`)?.focus();
+}
+function changeMerchandiseOrder(editor, delta) {
+  updateSiteSectionFromForm();
+  const index = Number(editor.dataset.merchandiseIndex);
+  const next = index + delta;
+  const items = siteSectionWorking.categories;
+  if (next < 0 || next >= items.length) return;
+  [items[index], items[next]] = [items[next], items[index]];
+  items.forEach((item, order) => item.order = order);
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+}
+function removeMerchandiseItem(editor) {
+  updateSiteSectionFromForm();
+  const index = Number(editor.dataset.merchandiseIndex);
+  if (!confirm("Remove this merchandise item?")) return;
+  siteSectionWorking.categories.splice(index, 1);
+  siteSectionWorking.categories.forEach((item, order) => item.order = order);
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
 }
 function previewSiteSection() {
   if (!validateSiteSection()) return;
@@ -2409,8 +2457,24 @@ async function publishSiteSection() {
 }
 document.querySelectorAll("[data-open-section]").forEach((button) => button.addEventListener("click", () => openSiteSection(button.dataset.openSection)));
 document.querySelector("#sectionEditorForm").addEventListener("input", scheduleSiteSectionSave);
+document.querySelector("#sectionEditorForm").addEventListener("change", (event) => {
+  if (event.target.matches('[data-merchandise-key="image-choice"]')) {
+    updateSiteSectionFromForm();
+    renderSiteSectionEditor();
+    scheduleSiteSectionSave();
+  }
+});
 document.querySelector("#sectionEditorForm").addEventListener("click", (event) => {
-  if (event.target.closest("#addMerchandiseItemButton")) addMerchandiseItem();
+  if (event.target.closest("#addMerchandiseItemButton")) {
+    addMerchandiseItem();
+    return;
+  }
+  const action = event.target.closest("[data-merchandise-action]");
+  if (!action) return;
+  const editor = action.closest("[data-merchandise-index]");
+  if (action.dataset.merchandiseAction === "up") changeMerchandiseOrder(editor, -1);
+  if (action.dataset.merchandiseAction === "down") changeMerchandiseOrder(editor, 1);
+  if (action.dataset.merchandiseAction === "remove") removeMerchandiseItem(editor);
 });
 document.querySelector("#sectionBackButton").addEventListener("click", () => {
   if (siteSectionSaveTimer) saveSiteSectionDraft();

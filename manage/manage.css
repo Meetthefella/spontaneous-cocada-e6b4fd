@@ -494,6 +494,17 @@
 .add-section-item-button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:64px; margin-top:22px; border:2px dashed rgba(91,68,52,.25); border-radius:16px; background:rgba(255,255,255,.28); color:#4b3e34; font:inherit; cursor:pointer; }
 .add-section-item-button span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(128,105,91,.14); font-size:1.7rem; font-weight:400; line-height:1; }
 .add-section-item-button:hover,.add-section-item-button:focus-visible { border-color:#80695b; background:rgba(255,255,255,.62); outline:none; }
+.merchandise-item-editor-list { display:grid; gap:18px; margin-top:22px; }
+.merchandise-item-editor { margin:0; padding:18px; border:1px solid rgba(91,68,52,.2); border-radius:18px; background:rgba(255,255,255,.3); }
+.merchandise-item-editor legend { padding:0 8px; font-family:Georgia,serif; font-size:1.2rem; }
+.merchandise-item-preview { display:grid; place-items:center; width:100%; aspect-ratio:4 / 3; overflow:hidden; border-radius:14px; background:linear-gradient(135deg,#f3ebe1,#e4d4c3); color:#80695b; }
+.merchandise-item-preview img { width:100%; height:100%; object-fit:cover; }
+.merchandise-item-preview small { margin-top:-3rem; color:#4b3e34; font-weight:600; }
+.merchandise-item-editor select { width:100%; box-sizing:border-box; padding:14px; border:1px solid rgba(91,68,52,.28); border-radius:13px; background:rgba(255,255,255,.68); color:inherit; font:inherit; }
+.merchandise-item-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.merchandise-item-actions button { min-height:40px; padding:0 12px; border:1px solid rgba(91,68,52,.28); border-radius:10px; background:rgba(255,255,255,.55); color:#4b3e34; font:inherit; font-weight:600; cursor:pointer; }
+.merchandise-item-actions button:last-child { color:#7a3934; }
+.merchandise-item-actions button:disabled { opacity:.45; cursor:not-allowed; }
 .preview-badge { padding:6px 10px; border-radius:999px; background:rgba(128,105,91,.12); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
 .preview-note { margin-top:25px; padding:13px; border-radius:12px; background:rgba(128,105,91,.1); font-weight:600; }
 .leave-dialog { width:min(480px,calc(100% - 28px)); padding:0; border:1px solid rgba(91,68,52,.22); border-radius:24px; background:#f2e8da; color:#4b3e34; box-shadow:0 22px 70px rgba(55,43,35,.28); }
