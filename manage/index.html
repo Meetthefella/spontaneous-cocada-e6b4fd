@@ -94,14 +94,181 @@
       </form>
     </section>
 
-    <section id="successPanel" class="manage-card manage-success" aria-labelledby="successTitle" hidden>
-      <div class="manage-success-mark" aria-hidden="true">✓</div>
-      <p class="eyebrow">Website manager</p>
-      <h1 id="successTitle">Authentication successful</h1>
-      <p id="successMessage">You are securely signed in.</p>
-      <p id="signedInAs" class="manage-help"></p>
-      <button id="logoutButton" class="button secondary" type="button">Sign out</button>
+    <section id="successPanel" class="manager-app" aria-labelledby="successTitle" hidden>
+      <div id="dashboardView">
+        <div class="dashboard-heading">
+          <div>
+            <p class="eyebrow">Website manager</p>
+            <h1 id="successTitle">Welcome back</h1>
+            <p id="successMessage">Manage your Effortless Beauty website from one place.</p>
+          </div>
+          <button id="logoutButton" class="button secondary dashboard-logout" type="button">Sign out</button>
+        </div>
+
+        <section class="dashboard-status" aria-label="Website status">
+          <div class="status-item"><span class="status-label">Website status</span><strong class="status-live"><span aria-hidden="true"></span>Live</strong></div>
+          <div class="status-item"><span class="status-label">Last published</span><strong id="lastPublishedValue">Not published yet</strong></div>
+          <div class="status-item status-account"><span class="status-label">Signed in as</span><strong id="signedInAs"></strong></div>
+        </section>
+
+        <section class="dashboard-sections" aria-labelledby="sectionsTitle">
+          <div class="section-heading"><div><p class="eyebrow">Website sections</p><h2 id="sectionsTitle">Choose an area</h2></div><p>Editing tools are added one completed section at a time.</p></div>
+          <div class="dashboard-grid">
+            <button id="openHomepageButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">⌂</span><span class="dashboard-card-copy"><strong>Homepage</strong><small>Hero, introduction and feature content</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button id="openTreatmentsButton" class="dashboard-card dashboard-card-current" type="button"><span class="dashboard-icon">✦</span><span class="dashboard-card-copy"><strong>Treatments</strong><small>Signature, beauty and coming-soon treatments</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="aftercare"><span class="dashboard-icon">♡</span><span class="dashboard-card-copy"><strong>Aftercare</strong><small>Healing guidance and aftercare information</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="gallery"><span class="dashboard-icon">▧</span><span class="dashboard-card-copy"><strong>Gallery</strong><small>Client photos, captions and display order</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="merchandise"><span class="dashboard-icon">◇</span><span class="dashboard-card-copy"><strong>Merchandise</strong><small>Categories, descriptions and visibility</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="booking"><span class="dashboard-icon">▣</span><span class="dashboard-card-copy"><strong>Booking</strong><small>Square link, client checks and booking wording</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="contact"><span class="dashboard-icon">✉</span><span class="dashboard-card-copy"><strong>Contact</strong><small>Contact details and opening hours</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="privacy"><span class="dashboard-icon">§</span><span class="dashboard-card-copy"><strong>Policies</strong><small>Privacy, patch-test and cancellation wording</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+            <button class="dashboard-card dashboard-card-current" type="button" data-open-section="site"><span class="dashboard-icon">⚙</span><span class="dashboard-card-copy"><strong>Settings</strong><small>Website title, description and footer</small></span><span class="dashboard-card-status dashboard-card-status-current">Open</span></button>
+          </div>
+        </section>
+      </div>
+
+      <div id="homepageView" class="manager-workspace" hidden>
+        <header class="workspace-header">
+          <button id="homepageBackButton" class="back-button" type="button">← Dashboard</button>
+          <div><p class="eyebrow">Website manager</p><h1>Homepage</h1><p>Choose a section to view its current website content.</p></div>
+        </header>
+        <div id="homepageSectionList" class="homepage-section-list"></div>
+        <section class="homepage-publish-panel" aria-labelledby="homepagePublishTitle">
+          <p class="eyebrow">Preview and publish</p>
+          <h2 id="homepagePublishTitle">Ready to check the whole homepage?</h2>
+          <p>Preview your saved draft in the real website layout. Publish only when everything looks right.</p>
+          <div class="homepage-publish-actions">
+            <button id="homepageWebsitePreviewButton" class="button secondary" type="button">Preview website</button>
+            <button id="homepagePublishButton" class="button primary" type="button">Publish homepage</button>
+          </div>
+          <p id="homepagePublishStatus" class="publish-status" role="status" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <div id="homepageSummaryView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header">
+          <button id="homepageSummaryBackButton" class="back-button" type="button">← Homepage</button>
+          <button id="editHomepageSectionButton" class="button primary" type="button">Edit section</button>
+        </header>
+        <article id="homepageSummary" class="homepage-summary"></article>
+      </div>
+
+      <div id="homepageEditorView" class="manager-workspace editor-workspace" hidden>
+        <header class="workspace-header compact-header editor-header">
+          <button id="homepageEditorLeaveButton" class="back-button" type="button">← Leave editor</button>
+          <span id="homepageDraftStatus" class="draft-status" aria-live="polite">✓ Autosave on</span>
+        </header>
+        <form id="homepageEditorForm" class="step-form homepage-editor-form" novalidate>
+          <div id="homepageEditorFields"></div>
+          <div class="homepage-session-note"><strong>Saved safely, not live</strong><small>Your homepage draft is saved securely online and can be continued on another signed-in device. Use Preview website from the Homepage screen before publishing.</small></div>
+          <details class="editor-more-options">
+            <summary>More options</summary>
+            <button id="discardHomepageChangesButton" class="danger-button" type="button">Discard changes to this section</button>
+          </details>
+          <div class="editor-actions homepage-editor-actions">
+            <button id="homepagePreviewButton" class="button secondary" type="button">Preview</button>
+            <button id="homepageDoneButton" class="button primary" type="button">Done</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="homepagePreviewView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header"><button id="homepagePreviewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Preview</span></header>
+        <article id="homepagePreview" class="homepage-summary preview-card"></article>
+      </div>
+
+
+      <div id="sectionEditorView" class="manager-workspace editor-workspace" hidden>
+        <header class="workspace-header"><button id="sectionBackButton" class="back-button" type="button">← Dashboard</button><div><p class="eyebrow">Website manager</p><h1 id="sectionEditorTitle">Website section</h1><p id="sectionEditorDescription">Update this area, preview it, then publish when ready.</p></div></header>
+        <form id="sectionEditorForm" class="step-form homepage-editor-form" novalidate><div id="sectionEditorFields"></div><div class="homepage-session-note"><strong>Saved safely, not live</strong><small>Your draft is stored securely online. Preview before publishing.</small></div><div class="editor-actions homepage-editor-actions"><button id="sectionPreviewButton" class="button secondary" type="button">Preview website</button><button id="sectionPublishButton" class="button primary" type="button">Publish</button></div><p id="sectionEditorStatus" class="publish-status" role="status" aria-live="polite"></p></form>
+      </div>
+
+      <div id="treatmentsView" class="manager-workspace" hidden>
+        <header class="workspace-header">
+          <button id="treatmentsBackButton" class="back-button" type="button">← Dashboard</button>
+          <div><p class="eyebrow">Website manager</p><h1>Treatments</h1><p>Choose a treatment to view or update.</p></div>
+        </header>
+        <div class="treatment-tabs" role="tablist" aria-label="Treatment categories">
+          <button type="button" role="tab" data-category="signature" aria-selected="true">Signature</button>
+          <button type="button" role="tab" data-category="beauty" aria-selected="false">Beauty</button>
+          <button type="button" role="tab" data-category="coming-soon" aria-selected="false">Coming Soon</button>
+        </div>
+        <div id="treatmentList" class="treatment-list"></div>
+        <button id="addTreatmentButton" class="add-treatment-button" type="button" aria-label="Add a treatment to this section"><span aria-hidden="true">+</span><strong>Add treatment</strong></button>
+      </div>
+
+      <div id="treatmentSummaryView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header">
+          <button id="summaryBackButton" class="back-button" type="button">← Treatments</button>
+          <button id="editTreatmentButton" class="button primary" type="button">Edit treatment</button>
+        </header>
+        <article id="treatmentSummary" class="treatment-summary"></article>
+      </div>
+
+      <div id="editorView" class="manager-workspace editor-workspace" hidden>
+        <header class="workspace-header compact-header editor-header">
+          <button id="editorLeaveButton" class="back-button" type="button">← Leave editor</button>
+          <span id="draftStatus" class="draft-status" aria-live="polite">✓ Saved</span>
+        </header>
+        <div class="editor-progress" aria-label="Editor progress"><span id="editorProgressBar"></span></div>
+        <form id="treatmentEditorForm" class="step-form" novalidate>
+          <section class="editor-step" data-step="0">
+            <p class="eyebrow">Step 1 of 5</p><h1>Basic information</h1><p>Start with the information customers see first.</p>
+            <label><span>Treatment name</span><input id="editTitle" name="title" type="text" required /></label>
+            <label><span>Short description</span><textarea id="editShortDescription" name="shortDescription" rows="4" required></textarea><small>One or two clear sentences.</small></label>
+            <label class="image-field"><span>Main photo</span><input id="editImage" name="image" type="file" accept="image/*" /><small>Photo upload will be connected to online storage in a later checkpoint. Your selection is previewed for this session.</small></label>
+            <img id="editorImagePreview" class="editor-image-preview" alt="" hidden />
+          </section>
+          <section class="editor-step" data-step="1" hidden>
+            <p class="eyebrow">Step 2 of 5</p><h1>Price and time</h1><p>Keep these short and easy to understand.</p>
+            <label><span>Price</span><input id="editPrice" name="price" type="text" inputmode="decimal" placeholder="£100" /></label>
+            <label><span>Treatment time</span><input id="editDuration" name="duration" type="text" placeholder="2 hours" /></label>
+          </section>
+          <section class="editor-step" data-step="2" hidden>
+            <p class="eyebrow">Step 3 of 5</p><h1>Full description</h1><p>Explain what the treatment involves in your own words.</p>
+            <label><span>Full description</span><textarea id="editFullDescription" name="fullDescription" rows="9"></textarea></label>
+          </section>
+          <section class="editor-step" data-step="3" hidden>
+            <p class="eyebrow">Step 4 of 5</p><h1>Extra pricing</h1><p>Optional details for sessions, follow-ups or price ranges.</p>
+            <label><span>Initial treatment and detailed pricing</span><textarea id="editDetailedPricing" name="detailedPricing" rows="5" placeholder="Initial treatment: £100"></textarea><small id="initialPriceHint">Uses the main price until you change this field.</small></label>
+            <label><span>Follow-up pricing</span><textarea id="editFollowUpPricing" name="followUpPricing" rows="5" placeholder="Second session: £100"></textarea></label>
+          </section>
+          <section class="editor-step" data-step="4" hidden>
+            <p class="eyebrow">Step 5 of 5</p><h1>Final checks</h1><p>Choose how this treatment should appear.</p>
+            <fieldset class="choice-group"><legend>Patch test</legend><label class="choice-row"><input id="editPatchTest" name="patchTest" type="checkbox" /><span>Patch test required</span></label></fieldset>
+            <fieldset class="choice-group"><legend>Website visibility</legend><label class="choice-row"><input id="editVisible" name="visible" type="checkbox" /><span>Show this treatment on the website</span></label></fieldset>
+            <div class="final-save-status" aria-live="polite"><strong>✓ Changes saved automatically</strong><small>Your unpublished changes are protected on this device.</small></div>
+            <details class="editor-more-options">
+              <summary>More options</summary>
+              <button id="discardChangesButton" class="danger-button" type="button">Discard unpublished changes</button>
+            </details>
+            <p id="publishStatus" class="publish-status" role="status" aria-live="polite"></p>
+          </section>
+          <div class="editor-actions">
+            <button id="editorPreviousButton" class="button secondary" type="button" hidden>Back</button>
+            <button id="editorNextButton" class="button primary" type="button">Next</button>
+            <button id="editorPreviewButton" class="button secondary" type="button" hidden>Preview</button>
+            <button id="editorPublishButton" class="button primary" type="button" hidden>Publish</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="previewView" class="manager-workspace" hidden>
+        <header class="workspace-header compact-header"><button id="previewBackButton" class="back-button" type="button">← Back to editor</button><span class="preview-badge">Preview</span></header>
+        <article id="treatmentPreview" class="treatment-summary preview-card"></article>
+      </div>
+
+      <div id="inactivityLock" class="inactivity-lock" role="dialog" aria-modal="true" aria-labelledby="inactivityLockTitle" hidden>
+        <div class="inactivity-lock-card">
+          <div class="manage-success-mark" aria-hidden="true">✓</div>
+          <p class="eyebrow">Website manager locked</p>
+          <h1 id="inactivityLockTitle">Your changes are safe</h1>
+          <p>For your security, sign in again to continue exactly where you left off.</p>
+          <button id="continueSecurelyButton" class="button primary" type="button">Continue securely</button>
+        </div>
+      </div>
     </section>
+
 
     <section id="errorPanel" class="manage-card" role="alert" hidden>
       <p class="eyebrow">Unable to continue</p>

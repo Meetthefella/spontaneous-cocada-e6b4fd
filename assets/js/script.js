@@ -28,6 +28,27 @@ function escapeHtml(value = '') {
     .replaceAll("'", '&#039;');
 }
 
+
+function addPreviewBanner(message) {
+  const banner = document.createElement('div');
+  banner.className = 'preview-banner';
+  const label = document.createElement('span');
+  label.textContent = message;
+  const button = document.createElement('button');
+  button.className = 'preview-back-button';
+  button.type = 'button';
+  button.textContent = '← Back to Website Manager';
+  button.addEventListener('click', () => {
+    const returnUrl = localStorage.getItem('eb-preview-return-url-v1') || '/manage/';
+    window.close();
+    setTimeout(() => {
+      if (!window.closed) window.location.href = returnUrl;
+    }, 120);
+  });
+  banner.append(label, button);
+  document.body.prepend(banner);
+}
+
 async function loadJson(path) {
   const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Unable to load ${path}`);
@@ -54,11 +75,15 @@ function renderTreatments(data) {
   setText('#treatmentsEyebrow', data.eyebrow);
   setText('#treatmentsHeading', data.heading);
   setText('#treatmentsIntro', data.intro);
-  contentState.treatments = (data.items || []).filter((item) => item.active !== false);
+  contentState.treatments = (data.items || []).filter((item) => item.visible !== false && item.active !== false);
   const grid = document.querySelector('#treatmentGrid');
-  if (grid) grid.innerHTML = contentState.treatments.map((item) =>
-    `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(item.icon)}</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description)}</p><strong>${escapeHtml(item.price)}</strong></article>`
-  ).join('');
+  if (grid) grid.innerHTML = contentState.treatments.map((item) => {
+    const title = item.title || item.name || '';
+    const description = item.shortDescription || item.description || '';
+    const icon = item.icon || '✦';
+    const duration = item.duration ? `<small aria-label="Treatment time"> · ${escapeHtml(item.duration)}</small>` : '';
+    return `<article data-treatment-id="${escapeHtml(item.id)}"><span>${escapeHtml(icon)}</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p><strong>${escapeHtml(item.price || '')}</strong>${duration}</article>`;
+  }).join('');
 }
 
 function stageDecorations(className) {
@@ -243,16 +268,41 @@ function renderPrivacy(data) {
   ).join('');
 }
 
+
+async function loadPublishedHomepage() {
+  const previewRequested = new URLSearchParams(location.search).get('preview') === 'homepage';
+  if (previewRequested) {
+    try {
+      const preview = JSON.parse(localStorage.getItem('eb-homepage-preview-v1') || 'null');
+      if (preview?.features) {
+        addPreviewBanner('Homepage preview only — these changes are not live.');
+        return preview;
+      }
+    } catch (error) {
+      console.warn('Unable to load homepage preview.', error);
+    }
+  }
+
+  try {
+    const response = await fetch(`/.netlify/functions/homepage?live=${Date.now()}`, { cache: 'no-store' });
+    if (response.ok) {
+      const result = await response.json();
+      if (result?.data?.features) return result.data;
+    }
+  } catch (error) {
+    console.warn('Published homepage content is temporarily unavailable.', error);
+  }
+
+  return loadJson('content/homepage.json');
+}
+
 async function loadPublishedTreatments() {
   const previewRequested = new URLSearchParams(location.search).get('preview') === 'treatments';
   if (previewRequested) {
     try {
       const preview = JSON.parse(localStorage.getItem('eb-treatments-preview-v2') || 'null');
       if (preview?.items) {
-        const banner = document.createElement('div');
-        banner.className = 'preview-banner';
-        banner.textContent = 'Preview only — these changes are not live.';
-        document.body.prepend(banner);
+        addPreviewBanner('Treatments preview only — these changes are not live.');
         return preview;
       }
     } catch (error) {
@@ -261,7 +311,7 @@ async function loadPublishedTreatments() {
   }
 
   try {
-    const response = await fetch('/.netlify/functions/treatments', { cache: 'no-store' });
+    const response = await fetch(`/.netlify/functions/treatments?live=${Date.now()}`, { cache: 'no-store' });
     if (response.ok) {
       const result = await response.json();
       if (result?.data?.items) return result.data;
@@ -273,16 +323,112 @@ async function loadPublishedTreatments() {
   return loadJson('content/treatments.json');
 }
 
+
+function renderGallery(data) {
+  setText('#galleryEyebrow', data.eyebrow); setText('#galleryHeading', data.heading); setText('#galleryIntro', data.intro);
+  const root = document.querySelector('#galleryGrid'); if (!root) return;
+  const items=(data.items||[]).filter(item=>item.visible!==false);
+  root.innerHTML = items.length ? items.map(item=>`<article class="card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
+}
+function renderMerchandise(data) {
+  setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);
+  const root = document.querySelector('#merchandiseGrid'); if (!root) return;
+  const source = Array.isArray(data.categories) ? data.categories : Array.isArray(data.items) ? data.items : Array.isArray(data.products) ? data.products : [];
+  const items = source
+    .filter(item => item && typeof item === 'object')
+    .map((item, index) => ({ ...item, _displayOrder: Number.isFinite(Number(item.order)) ? Number(item.order) : index }))
+    .filter(item => item.visible !== false)
+    .sort((left, right) => left._displayOrder - right._displayOrder);
+  root.innerHTML = items.length
+    ? items.map((item, index) => {
+      const title = item.title || item.name || 'Merchandise item';
+      const alt = item.alt || item.imageAlt || `${title} merchandise`;
+      const image = typeof item.image === 'string' ? item.image.trim() : '';
+      const imageMarkup = image
+        ? `<button class="merchandise-image-button" type="button" data-merchandise-image="${escapeHtml(image)}" data-merchandise-alt="${escapeHtml(alt)}" aria-label="View a larger image of ${escapeHtml(title)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(alt)}" loading="lazy" /></button>`
+        : `<div class="merchandise-image-placeholder" role="img" aria-label="${escapeHtml(title)} image coming soon"><span aria-hidden="true">✦</span><small>Image coming soon</small></div>`;
+      return `<article class="card in-view merchandise-card" data-merchandise-card="${index}">${imageMarkup}<h2>${escapeHtml(title)}</h2><p>${escapeHtml(item.description || item.caption || '')}</p>${item.price ? `<strong>${escapeHtml(item.price)}</strong>` : ''}</article>`;
+    }).join('')
+    : '<article class="card in-view"><h2>Merchandise coming soon</h2><p>New Effortless Beauty items will appear here.</p></article>';
+  root.querySelectorAll('.merchandise-image-button img').forEach((image) => image.addEventListener('error', () => {
+    const button = image.closest('.merchandise-image-button');
+    if (!button) return;
+    const fallback = document.createElement('div');
+    fallback.className = 'merchandise-image-placeholder';
+    fallback.setAttribute('role', 'img');
+    fallback.setAttribute('aria-label', `${image.alt || 'Merchandise'} image unavailable`);
+    fallback.innerHTML = '<span aria-hidden="true">✦</span><small>Image unavailable</small>';
+    button.replaceWith(fallback);
+  }, { once: true }));
+}
+
+const merchandiseViewer = document.querySelector('#merchandiseImageViewer');
+const merchandiseViewerImage = document.querySelector('#merchandiseViewerImage');
+const merchandiseViewerClose = document.querySelector('#merchandiseViewerClose');
+let merchandiseViewerTrigger = null;
+let merchandiseViewerScrollY = 0;
+
+function closeMerchandiseViewer({ fromHistory = false } = {}) {
+  if (!merchandiseViewer?.open) return;
+  if (!fromHistory && history.state?.merchandiseLightbox) {
+    history.back();
+    return;
+  }
+  merchandiseViewer.close();
+}
+
+function openMerchandiseViewer(trigger) {
+  if (!merchandiseViewer || !merchandiseViewerImage) return;
+  merchandiseViewerTrigger = trigger;
+  merchandiseViewerScrollY = window.scrollY;
+  merchandiseViewerImage.src = trigger.dataset.merchandiseImage || '';
+  merchandiseViewerImage.alt = trigger.dataset.merchandiseAlt || 'Effortless Beauty merchandise';
+  document.body.classList.add('image-viewer-open');
+  history.pushState({ ...(history.state || {}), merchandiseLightbox: true }, '', location.href);
+  merchandiseViewer.showModal();
+  merchandiseViewerClose?.focus({ preventScroll: true });
+}
+
+document.addEventListener('click', (event) => {
+  const trigger = event.target.closest('.merchandise-image-button');
+  if (trigger) openMerchandiseViewer(trigger);
+});
+merchandiseViewerClose?.addEventListener('click', () => closeMerchandiseViewer());
+merchandiseViewer?.addEventListener('click', (event) => { if (event.target === merchandiseViewer) closeMerchandiseViewer(); });
+merchandiseViewer?.addEventListener('cancel', (event) => { event.preventDefault(); closeMerchandiseViewer(); });
+merchandiseViewer?.addEventListener('close', () => {
+  document.body.classList.remove('image-viewer-open');
+  merchandiseViewerImage?.removeAttribute('src');
+  merchandiseViewerTrigger?.focus({ preventScroll: true });
+  window.scrollTo({ top: merchandiseViewerScrollY, behavior: 'instant' });
+  merchandiseViewerTrigger = null;
+});
+window.addEventListener('popstate', () => { if (merchandiseViewer?.open) closeMerchandiseViewer({ fromHistory: true }); });
+async function loadPublishedSection(name) {
+  const fallback = await loadJson(`content/${name}.json`);
+  const completeMerchandise = (data) => {
+    if (name !== 'merchandise' || !data) return data;
+    const hasItems = ['categories', 'items', 'products'].some(key => Array.isArray(data[key]) && data[key].length);
+    return hasItems ? data : {...fallback, ...data, categories: fallback.categories || []};
+  };
+  const preview = new URLSearchParams(location.search).get('preview');
+  if (preview === name) {
+    try { const data=JSON.parse(localStorage.getItem(`eb-section-preview:${name}`)||'null'); if(data){addPreviewBanner(`${name} preview only — these changes are not live.`);return completeMerchandise(data);} } catch(error){console.warn(error);}
+  }
+  try { const response=await fetch(`/.netlify/functions/site-section?section=${encodeURIComponent(name)}&live=${Date.now()}`,{cache:'no-store'}); if(response.ok){const result=await response.json();if(result?.data)return completeMerchandise(result.data);} } catch(error){console.warn(error);}
+  return fallback;
+}
+
 async function loadEditableContent() {
-  const files = ['site', 'homepage', 'aftercare', 'booking', 'contact', 'privacy'];
-  const results = await Promise.allSettled(files.map((name) => loadJson(`content/${name}.json`)));
+  const files = ['site', 'aftercare', 'booking', 'contact', 'privacy', 'gallery', 'merchandise'];
+  const results = await Promise.allSettled(files.map((name) => loadPublishedSection(name)));
   const content = {};
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') content[files[index]] = result.value;
     else console.error(result.reason);
   });
   try {
-    content.treatments = await loadPublishedTreatments();
+    [content.homepage, content.treatments] = await Promise.all([loadPublishedHomepage(), loadPublishedTreatments()]);
   } catch (error) {
     console.error(error);
   }
@@ -296,6 +442,8 @@ async function loadEditableContent() {
   if (content.homepage) renderHomepage(content.homepage);
   if (content.treatments) renderTreatments(content.treatments);
   if (content.aftercare) renderAftercare(content.aftercare);
+  if (content.gallery) renderGallery(content.gallery);
+  if (content.merchandise) renderMerchandise(content.merchandise);
   if (content.booking) renderBooking(content.booking);
   if (content.contact) renderContact(content.contact);
   if (content.privacy) renderPrivacy(content.privacy);

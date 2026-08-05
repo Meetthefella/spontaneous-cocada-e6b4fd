@@ -1,0 +1,31 @@
+Effortless Beauty Website Manager v1
+====================================
+
+Base: confirmed Homepage Checkpoint 4.4 with preview back button.
+
+Newly connected manager areas:
+- Aftercare
+- Gallery
+- Merchandise
+- Booking
+- Contact
+- Policies
+- Settings
+
+Each area supports:
+- safe authenticated online draft
+- restoration on another signed-in device
+- full public-page preview
+- explicit authenticated publish
+- committed JSON fallback if Blob content is unavailable
+
+Public-site additions:
+- Prices page
+- Gallery page
+- Merchandise page
+
+Important boundary:
+Gallery supports existing approved image paths. Direct image upload is not included in this release.
+Preview return improvement
+- The preview Back button now returns to the exact Website Manager screen that opened it.
+- It closes the preview tab when permitted, with exact-route navigation as a browser fallback.
