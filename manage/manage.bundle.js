@@ -2459,6 +2459,14 @@ document.querySelectorAll("[data-open-section]").forEach((button) => button.addE
 document.querySelector("#sectionEditorForm").addEventListener("input", scheduleSiteSectionSave);
 document.querySelector("#sectionEditorForm").addEventListener("change", (event) => {
   if (event.target.matches('[data-merchandise-key="image-choice"]')) {
+    const editor = event.target.closest("[data-merchandise-index]");
+    const customField = editor?.querySelector(".merchandise-custom-image-field");
+    if (event.target.value === "__custom__") {
+      if (customField) customField.hidden = false;
+      customField?.querySelector("input")?.focus();
+      return;
+    }
+    if (customField) customField.hidden = true;
     updateSiteSectionFromForm();
     renderSiteSectionEditor();
     scheduleSiteSectionSave();
