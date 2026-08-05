@@ -62,3 +62,101 @@ Registration must remain **Invite only** in Netlify. No editing dashboard or con
 Netlify invitation and password-recovery links may land on the site root with a URL fragment. The homepage forwards those tokens to `/manage/`, and the manager keeps the token intact until Netlify Identity completes the password flow.
 
 The current patch-test rule shown on the public site is a minimum of **48 hours** before Microblading for new clients.
+
+## Treatments Checkpoint 3.3 — Draft persistence
+
+The Treatments editor now protects a separate local draft for every treatment.
+
+- Changes autosave on the current device while typing.
+- Drafts survive refresh, browser close, phone lock and reopening the manager.
+- Reopening a treatment with a draft offers **Continue editing**, **Discard draft**, or **Not now**.
+- Treatment lists show the saved-draft age.
+- Preview uses the current draft and never alters the public website.
+- Leaving the editor offers to keep or discard the saved work.
+- The Aftercare link field has been removed until the Aftercare milestone defines whether treatment-specific linking is needed.
+- Publishing and Netlify Blobs remain deliberately out of scope for this checkpoint.
+
+### Checkpoint 3.3 leave-editor persistence fix
+
+The treatment summary and treatment list now read the latest locally saved unpublished record. Leaving the editor therefore shows the saved changes immediately instead of temporarily displaying the original baseline values.
+
+## Checkpoint 3.4 — Treatments publishing
+
+The Treatments editor now publishes through the authenticated `/.netlify/functions/treatments` endpoint into the site-wide `effortless-beauty-content` Netlify Blob store.
+
+- `GET` is public and supplies the live Treatments content.
+- `PUT` requires a valid Netlify Identity session and validates the entire Treatments document before writing.
+- The public site falls back to `content/treatments.json` until the first successful publish or whenever the Blob endpoint is unavailable.
+- Local unpublished changes remain protected until publishing succeeds.
+- Legacy Decap CMS `/admin` files and the old GitHub-writing function have been removed.
+
+## Checkpoint 3.5 — Treatments polish and security
+
+- Public treatment cards separate price and treatment time with a centred dot (`Price · Duration`).
+- The Website Manager locks after 15 minutes without interaction.
+- Current treatment changes are autosaved before the lock appears.
+- **Continue securely** returns the user to the branded sign-in form.
+- Successful re-authentication restores the same manager view, treatment, and editor step.
+- Publish checks the Identity session before sending content to the protected Netlify Function.
+- Netlify Identity remains responsible for full session expiry.
+- Legacy `/admin` and GitHub-writing publication artefacts have been removed.
+
+
+## Checkpoint 4.1 — Homepage browser
+
+- The Homepage dashboard card is now active.
+- The manager provides four read-only Homepage sections: Hero, Introduction, Why Choose Us, and Feature Cards.
+- Each section opens a clear summary of the current approved homepage content.
+- Navigation follows the same mobile-first, one-thing-at-a-time pattern as Treatments.
+- Editing, drafts, preview, publishing, Blobs, and public-site changes remain outside this checkpoint.
+- Existing authentication, inactivity locking, Treatments editing, preview, publishing, and security behaviour are preserved.
+
+
+## Checkpoint 4.2 — Homepage editor engine
+
+- Each Homepage section now opens a one-section-at-a-time editor.
+- Hero, Introduction, Why Choose Us and all three Feature Cards can be updated in a private working session.
+- Required fields are validated before Done or Preview.
+- A private preview clearly states that the live website has not changed.
+- Checkpoint 4.2 originally kept changes in the open session; Checkpoint 4.3 now supersedes this with authenticated online draft saving. Live publishing remains reserved for Checkpoint 4.4.
+- Treatments editing, publishing, authentication and inactivity-lock restoration remain unchanged.
+
+## Website Manager — Homepage Checkpoint 4.3
+
+Homepage editing now uses an authenticated Netlify Blobs draft:
+
+- Every Homepage edit autosaves securely online.
+- The same unpublished draft is restored after signing in on another device.
+- The inactivity lock saves pending Homepage changes before locking.
+- Discarding one section restores its approved content and updates the online draft.
+- Preview remains private.
+- The public homepage and `content/homepage.json` are unchanged; live Homepage publishing remains Checkpoint 4.4.
+
+The draft endpoint is `/.netlify/functions/homepage-draft`. Both reading and writing require an authenticated Netlify Identity user.
+
+
+## Website Manager — Homepage Checkpoint 4.4
+
+Homepage content can now be checked in the real public-site layout and published safely:
+
+- **Preview website** opens the complete homepage using the authenticated editor's saved draft without changing the live site.
+- **Publish homepage** requires a current Netlify Identity session and explicit confirmation.
+- The `homepage` Netlify Function validates the complete document before writing it to the site-wide `effortless-beauty-content` Blob store.
+- The public site reads the published Homepage Blob and falls back to `content/homepage.json` if no Homepage has been published or the endpoint is temporarily unavailable.
+- A successful publish removes the superseded online Homepage draft and updates the manager's approved baseline.
+- Treatments publishing, authentication, inactivity locking and the Golden Master fallback remain unchanged.
+
+## Website Manager v1 consolidated connection
+
+This checkpoint connects the remaining public-site areas to the private manager using the proven Homepage lifecycle:
+
+- authenticated online drafts
+- cross-device restoration
+- full-site preview with a Back to Website Manager button
+- explicit authenticated publishing
+- Netlify Blob published content
+- committed JSON Golden Master fallbacks
+
+Connected areas: Aftercare, Gallery, Merchandise, Booking, Contact, Policies and Settings. Homepage and Treatments remain on their existing specialised editors.
+
+Gallery entries currently accept approved image paths. Direct image upload/storage is intentionally left as a separate enhancement so this release does not imply that binary uploads are already supported.

@@ -20,6 +20,8 @@
       <a href="#home" data-tab-link="home" class="active">Home</a>
       <a href="#treatments" data-tab-link="treatments">Treatments</a>
       <a href="#aftercare" data-tab-link="aftercare">Aftercare</a>
+      <a href="#gallery" data-tab-link="gallery">Gallery</a>
+      <a href="#merchandise" data-tab-link="merchandise">Shop</a>
       <a href="#booking" data-tab-link="booking">Book Online</a>
       <a href="#contact" data-tab-link="contact">Contact</a>
       <a href="#privacy" data-tab-link="privacy">Privacy</a>
@@ -70,6 +72,24 @@
       </header>
       <section id="aftercareTimeline" class="timeline" aria-label="Brow healing timeline"></section>
     </section>
+
+
+    <section id="gallery" class="tab-panel">
+      <header class="page-hero compact"><p id="galleryEyebrow" class="eyebrow">Gallery</p><h1 id="galleryHeading">Recent work</h1><p id="galleryIntro" class="intro"></p></header>
+      <div id="galleryGrid" class="treatment-grid"></div>
+    </section>
+
+    <section id="merchandise" class="tab-panel">
+      <header class="page-hero compact"><p id="merchandiseEyebrow" class="eyebrow">Shop</p><h1 id="merchandiseHeading">Merchandise</h1><p id="merchandiseIntro" class="intro"></p></header>
+      <div id="merchandiseGrid" class="treatment-grid"></div>
+    </section>
+
+    <dialog id="merchandiseImageViewer" class="merchandise-image-viewer" aria-labelledby="merchandiseViewerTitle">
+      <div class="merchandise-image-viewer-content">
+        <div class="merchandise-image-viewer-header"><h2 id="merchandiseViewerTitle">Merchandise image</h2><button id="merchandiseViewerClose" class="merchandise-viewer-close" type="button" aria-label="Close enlarged image">Close</button></div>
+        <img id="merchandiseViewerImage" alt="" />
+      </div>
+    </dialog>
 
     <section id="booking" class="tab-panel">
       <header class="page-hero compact">
