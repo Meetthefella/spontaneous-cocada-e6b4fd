@@ -19,6 +19,14 @@ export default async request=>{
     return new Response(image.data,{headers:{'Content-Type':image.metadata?.contentType||'application/octet-stream','Cache-Control':'public, max-age=31536000, immutable','X-Content-Type-Options':'nosniff'}});
   }
 
+  if(request.method==='DELETE'){
+    if(!await getUser())return json({error:'Authorised login required.'},401);
+    const id=url.searchParams.get('id');
+    if(!isImageId(id))return json({error:'Image not found.'},404);
+    await store.delete(id).catch(()=>{});
+    return json({ok:true});
+  }
+
   if(request.method!=='POST')return json({error:'Method not allowed.'},405);
   if(!await getUser())return json({error:'Authorised login required.'},401);
   const form=await request.formData().catch(()=>null);

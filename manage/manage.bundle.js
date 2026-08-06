@@ -2154,6 +2154,7 @@ var siteSectionOriginal = null;
 var siteSectionWorking = null;
 var siteSectionSaveTimer = null;
 var siteSectionSaving = false;
+var galleryUploadInProgress = false;
 var sectionDefinitions = {
   aftercare: { title: "Aftercare", description: "Update the healing guide wording while keeping the approved artwork.", publicTab: "aftercare", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
@@ -2300,7 +2301,7 @@ function merchandiseEditorMarkup() {
 function galleryItemMarkup(item, index) {
   const image = item.image || "";
   const preview = image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(item.alt || item.title || "Gallery photo")}" />` : '<span aria-hidden="true">\u2726</span><small>Add a photo</small>';
-  return `<fieldset class="gallery-item-editor" data-gallery-index="${index}"><legend>Photo ${index + 1}</legend><div class="gallery-item-preview">${preview}</div><label><span>Photo</span><input data-gallery-key="image" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPEG, PNG or WebP, up to 5 MB. Your photo is uploaded securely.</small></label><label><span>Title</span><input data-gallery-key="title" type="text" value="${escapeHtml(item.title || "")}" placeholder="Recent work" /></label><label><span>Caption</span><textarea data-gallery-key="caption" rows="3">${escapeHtml(item.caption || "")}</textarea></label><label><span>Image description</span><input data-gallery-key="alt" type="text" value="${escapeHtml(item.alt || "")}" placeholder="Describe the photo for screen readers" /></label><label class="choice-row"><input data-gallery-key="visible" type="checkbox" ${item.visible !== false ? "checked" : ""} /><span>Show this photo on the website</span></label><div class="gallery-item-actions"><button type="button" data-gallery-action="up" ${index === 0 ? "disabled" : ""}>Move up</button><button type="button" data-gallery-action="down" ${index === itemsLength(siteSectionWorking.items) - 1 ? "disabled" : ""}>Move down</button><button type="button" data-gallery-action="remove">Remove</button></div></fieldset>`;
+  return `<fieldset class="gallery-item-editor" data-gallery-index="${index}"><legend>Photo ${index + 1}</legend><div class="gallery-item-preview">${preview}</div><label><span>Photo</span><input data-gallery-key="image" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" /><small>Phone photos are optimised automatically before upload.</small></label><label><span>Title</span><input data-gallery-key="title" type="text" value="${escapeHtml(item.title || "")}" placeholder="Recent work" /></label><label><span>Caption</span><textarea data-gallery-key="caption" rows="3">${escapeHtml(item.caption || "")}</textarea></label><label><span>Image description</span><input data-gallery-key="alt" type="text" value="${escapeHtml(item.alt || "")}" placeholder="Describe the photo for screen readers" /></label><label class="choice-row"><input data-gallery-key="visible" type="checkbox" ${item.visible !== false ? "checked" : ""} /><span>Show this photo on the website</span></label><div class="gallery-item-actions"><button type="button" data-gallery-action="up" ${index === 0 ? "disabled" : ""}>Move up</button><button type="button" data-gallery-action="down" ${index === itemsLength(siteSectionWorking.items) - 1 ? "disabled" : ""}>Move down</button><button type="button" data-gallery-action="remove">Remove</button></div></fieldset>`;
 }
 function itemsLength(items) {
   return Array.isArray(items) ? items.length : 0;
@@ -2376,6 +2377,10 @@ function updateSiteSectionFromForm() {
   if (activeSiteSection === "gallery") updateGalleryFromForm();
 }
 function validateSiteSection() {
+  if (activeSiteSection === "gallery" && galleryUploadInProgress) {
+    setSectionStatus("Please wait for the photo upload to finish.", "error");
+    return false;
+  }
   const invalid = [...document.querySelectorAll("#sectionEditorForm [required]")].find((field) => !field.value.trim());
   if (invalid) {
     invalid.focus();
@@ -2387,7 +2392,10 @@ function validateSiteSection() {
 async function saveSiteSectionDraft() {
   clearTimeout(siteSectionSaveTimer);
   siteSectionSaveTimer = null;
-  if (siteSectionSaving) return;
+  if (siteSectionSaving) {
+    siteSectionSaveTimer = setTimeout(saveSiteSectionDraft, 350);
+    return;
+  }
   siteSectionSaving = true;
   updateSiteSectionFromForm();
   setSectionStatus("Saving online\u2026");
@@ -2462,31 +2470,71 @@ function changeGalleryOrder(editor, delta) {
   renderSiteSectionEditor();
   scheduleSiteSectionSave();
 }
-function removeGalleryItem(editor) {
+function galleryImageId(image) {
+  try {
+    const url = new URL(image, location.origin);
+    const id = url.pathname === "/.netlify/functions/gallery-image" ? url.searchParams.get("id") : null;
+    return /^[a-f0-9-]{36}$/i.test(id || "") ? id : null;
+  } catch {
+    return null;
+  }
+}
+function isPublishedGalleryImage(image) {
+  return (siteSectionOriginal?.items || []).some((item) => item.image === image);
+}
+async function deleteDraftGalleryImage(image) {
+  const id = galleryImageId(image);
+  if (!id || isPublishedGalleryImage(image)) return;
+  await fetch(`${GALLERY_IMAGE_API}?id=${encodeURIComponent(id)}`, { method: "DELETE", credentials: "same-origin" }).catch(() => {
+  });
+}
+function setGalleryUploadState(value) {
+  galleryUploadInProgress = value;
+  document.querySelector("#sectionPublishButton").disabled = value;
+  document.querySelectorAll('#sectionEditorForm [data-gallery-action],#addGalleryItemButton,[data-gallery-key="image"]').forEach((control) => control.disabled = value);
+}
+async function prepareGalleryUpload(file) {
+  if (!file.type.startsWith("image/") || file.size > 25 * 1024 * 1024) throw new Error("Choose an image smaller than 25 MB.");
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.86));
+    if (!blob) throw new Error("Photo preparation failed.");
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "") || "gallery-photo"}.jpg`, { type: "image/jpeg" });
+  } catch (error) {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size <= 5 * 1024 * 1024) return file;
+    throw new Error("This photo could not be prepared. Try saving it as a JPEG and upload again.");
+  }
+}
+async function removeGalleryItem(editor) {
   updateSiteSectionFromForm();
   const index = Number(editor.dataset.galleryIndex);
   if (!confirm("Remove this photo from the gallery?")) return;
-  siteSectionWorking.items.splice(index, 1);
+  const [removed] = siteSectionWorking.items.splice(index, 1);
   siteSectionWorking.items.forEach((item, order) => item.order = order);
   renderSiteSectionEditor();
   scheduleSiteSectionSave();
+  await deleteDraftGalleryImage(removed?.image);
 }
 async function uploadGalleryImage(input) {
   const file = input.files?.[0];
   if (!file) return;
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-    setSectionStatus("Choose a JPEG, PNG or WebP photo smaller than 5 MB.", "error");
-    input.value = "";
-    return;
-  }
   updateSiteSectionFromForm();
   const editor = input.closest("[data-gallery-index]");
   const index = Number(editor?.dataset.galleryIndex);
-  input.disabled = true;
-  setSectionStatus("Uploading photo\u2026");
+  setGalleryUploadState(true);
+  setSectionStatus("Preparing photo\u2026");
   try {
+    const upload = await prepareGalleryUpload(file);
+    if (upload.size > 5 * 1024 * 1024) throw new Error("This photo is still too large after optimisation.");
     const body = new FormData();
-    body.append("image", file);
+    body.append("image", upload);
+    setSectionStatus("Uploading photo\u2026");
     const response = await fetch(GALLERY_IMAGE_API, { method: "POST", credentials: "same-origin", body });
     const result = await response.json().catch(() => ({}));
     if (response.status === 401) {
@@ -2494,12 +2542,16 @@ async function uploadGalleryImage(input) {
       return;
     }
     if (!response.ok) throw new Error(result.error || "Photo upload failed.");
+    const previousImage = siteSectionWorking.items[index]?.image;
     siteSectionWorking.items[index] = { ...siteSectionWorking.items[index], image: result.url };
     renderSiteSectionEditor();
+    setGalleryUploadState(true);
     scheduleSiteSectionSave();
+    await deleteDraftGalleryImage(previousImage);
   } catch (error) {
     setSectionStatus(error.message || "Photo upload failed.", "error");
-    input.disabled = false;
+  } finally {
+    setGalleryUploadState(false);
   }
 }
 function previewSiteSection() {
