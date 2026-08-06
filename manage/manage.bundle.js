@@ -1130,6 +1130,19 @@ var treatments = [
   { id: "ear-piercing", category: "beauty", title: "Ear Piercing", shortDescription: "A straightforward ear-piercing appointment.", fullDescription: "Ear piercing provided in a calm and welcoming setting.", price: "\xA310", duration: "To be confirmed", detailedPricing: "", followUpPricing: "", patchTest: false, visible: true },
   { id: "shellac-nails", category: "beauty", title: "Shellac Nails", shortDescription: "Long-lasting, glossy colour for natural nails.", fullDescription: "Shellac provides a durable and polished finish for natural nails.", price: "\xA325", duration: "To be confirmed", detailedPricing: "", followUpPricing: "", patchTest: false, visible: true },
   ...[
+    ["waxing-lip-chin", "Lip / Chin", "\xA310"],
+    ["waxing-eyebrows", "Eyebrows", "\xA310"],
+    ["waxing-chest", "Chest", "\xA318"],
+    ["waxing-back", "Back", "\xA318"],
+    ["waxing-arms", "Arms", "\xA315"],
+    ["waxing-half-leg", "Half Leg", "\xA310\u2013\xA315"],
+    ["waxing-full-leg", "Full Leg", "\xA315\u2013\xA325"],
+    ["waxing-toes", "Toes", "\xA36"],
+    ["waxing-knuckles", "Knuckles", "\xA36"],
+    ["hot-waxing-ears", "Hot Waxing \u2014 Ears", "\xA35"],
+    ["hot-waxing-nose", "Hot Waxing \u2014 Nose", "\xA36"]
+  ].map(([id, title, price]) => ({ id, category: "waxing", title, shortDescription: `Professional ${title.toLowerCase()} waxing for a smooth, polished finish.`, fullDescription: `Professional ${title.toLowerCase()} waxing tailored to your comfort.`, price, duration: "To be confirmed", detailedPricing: "", followUpPricing: "", patchTest: false, visible: true })),
+  ...[
     ["skin-peeling", "Skin Peeling", "A skin-renewal treatment designed to improve texture and radiance."],
     ["vitamin-injections", "Vitamin Injections", "Targeted vitamin treatments, subject to consultation and suitability."],
     ["threading", "Threading", "Precise hair removal using a traditional threading technique."],
@@ -1137,6 +1150,15 @@ var treatments = [
     ["spray-tanning", "Spray Tanning", "A professionally applied tan for an even, natural-looking glow."]
   ].map(([id, title, shortDescription]) => ({ id, category: "coming-soon", title, shortDescription, fullDescription: shortDescription, price: "Coming soon", duration: "Coming soon", detailedPricing: "", followUpPricing: "", patchTest: false, visible: true, showBookingButton: false }))
 ];
+var waxingTreatmentDefaults = treatments.filter((item) => item.category === "waxing").map((item) => JSON.parse(JSON.stringify(item)));
+function ensureWaxingTreatments() {
+  const legacy = treatments.find((item) => item.id === "waxing" && item.category === "beauty");
+  if (legacy) legacy.category = "waxing";
+  const ids = new Set(treatments.map((item) => item.id));
+  waxingTreatmentDefaults.forEach((item) => {
+    if (!ids.has(item.id)) treatments.push(JSON.parse(JSON.stringify(item)));
+  });
+}
 var views = ["sectionEditorView", "dashboardView", "homepageView", "homepageSummaryView", "homepageEditorView", "homepagePreviewView", "treatmentsView", "treatmentSummaryView", "editorView", "previewView"];
 var homepageOriginal = {
   heroTitleFirst: "Effortless",
@@ -1281,7 +1303,7 @@ var treatmentDocument = () => ({
 });
 function validateTreatmentDocument(document2) {
   const missingText = (value) => typeof value !== "string" || !value.trim();
-  const invalid = document2.items.find((item) => !item?.id || !["signature", "beauty", "coming-soon"].includes(item.category) || missingText(item.title) || missingText(item.shortDescription) || missingText(item.price) || missingText(item.duration) || typeof item.patchTest !== "boolean" || typeof item.visible !== "boolean");
+  const invalid = document2.items.find((item) => !item?.id || !["signature", "beauty", "waxing", "coming-soon"].includes(item.category) || missingText(item.title) || missingText(item.shortDescription) || missingText(item.price) || missingText(item.duration) || typeof item.patchTest !== "boolean" || typeof item.visible !== "boolean");
   if (!invalid) return null;
   const label = typeof invalid.title === "string" && invalid.title.trim() ? invalid.title.trim() : "an unnamed treatment";
   return `Complete ${label} before publishing: name, short description, price and treatment time are required.`;
@@ -1313,6 +1335,7 @@ async function loadPublishedTreatments() {
       const fallback = await fallbackResponse.json();
       if (Array.isArray(fallback?.items)) {
         treatments = fallback.items.map((item) => ({ ...item }));
+        ensureWaxingTreatments();
         restoreNewTreatments();
         renderTreatments();
       }
@@ -1322,6 +1345,7 @@ async function loadPublishedTreatments() {
     const result = await response.json();
     if (Array.isArray(result?.data?.items)) {
       treatments = result.data.items.map((item) => ({ ...item }));
+      ensureWaxingTreatments();
       restoreNewTreatments();
       updatePublishedDisplay(result.data.updatedAt);
       renderTreatments();
@@ -1545,12 +1569,15 @@ function treatmentIdFromTitle(title) {
   }
   return id;
 }
+function categoryLabel(category) {
+  return { signature: "Signature", beauty: "Beauty", waxing: "Waxing", "coming-soon": "Coming Soon" }[category] || "Treatment";
+}
 function addTreatment() {
-  const categoryLabel = activeCategory === "signature" ? "Signature" : activeCategory === "beauty" ? "Beauty" : "Coming Soon";
+  const categoryLabelText = categoryLabel(activeCategory);
   const record = {
     id: treatmentIdFromTitle(`new-${activeCategory}-treatment`),
     category: activeCategory,
-    title: `New ${categoryLabel} treatment`,
+    title: `New ${categoryLabelText} treatment`,
     shortDescription: "Add a short description for this treatment.",
     fullDescription: "",
     price: activeCategory === "coming-soon" ? "Coming soon" : "",
@@ -1638,7 +1665,7 @@ function renderTreatments() {
   }).join("");
   const addButton = document.querySelector("#addTreatmentButton");
   if (addButton) {
-    const label = activeCategory === "signature" ? "Signature treatment" : activeCategory === "beauty" ? "Beauty treatment" : "Coming Soon treatment";
+    const label = `${categoryLabel(activeCategory)} treatment`;
     addButton.querySelector("strong").textContent = `Add ${label}`;
   }
 }

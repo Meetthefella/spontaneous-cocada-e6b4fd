@@ -52,6 +52,9 @@ let treatments = [
   {id:'ear-piercing',category:'beauty',title:'Ear Piercing',shortDescription:'A straightforward ear-piercing appointment.',fullDescription:'Ear piercing provided in a calm and welcoming setting.',price:'£10',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
   {id:'shellac-nails',category:'beauty',title:'Shellac Nails',shortDescription:'Long-lasting, glossy colour for natural nails.',fullDescription:'Shellac provides a durable and polished finish for natural nails.',price:'£25',duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true},
   ...[
+    ['waxing-lip-chin','Lip / Chin','£10'],['waxing-eyebrows','Eyebrows','£10'],['waxing-chest','Chest','£18'],['waxing-back','Back','£18'],['waxing-arms','Arms','£15'],['waxing-half-leg','Half Leg','£10–£15'],['waxing-full-leg','Full Leg','£15–£25'],['waxing-toes','Toes','£6'],['waxing-knuckles','Knuckles','£6'],['hot-waxing-ears','Hot Waxing — Ears','£5'],['hot-waxing-nose','Hot Waxing — Nose','£6']
+  ].map(([id,title,price])=>({id,category:'waxing',title,shortDescription:`Professional ${title.toLowerCase()} waxing for a smooth, polished finish.`,fullDescription:`Professional ${title.toLowerCase()} waxing tailored to your comfort.`,price,duration:'To be confirmed',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true})),
+  ...[
     ['skin-peeling','Skin Peeling','A skin-renewal treatment designed to improve texture and radiance.'],
     ['vitamin-injections','Vitamin Injections','Targeted vitamin treatments, subject to consultation and suitability.'],
     ['threading','Threading','Precise hair removal using a traditional threading technique.'],
@@ -59,6 +62,8 @@ let treatments = [
     ['spray-tanning','Spray Tanning','A professionally applied tan for an even, natural-looking glow.']
   ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true,showBookingButton:false}))
 ];
+const waxingTreatmentDefaults=treatments.filter(item=>item.category==='waxing').map(item=>JSON.parse(JSON.stringify(item)));
+function ensureWaxingTreatments(){const legacy=treatments.find(item=>item.id==='waxing'&&item.category==='beauty');if(legacy)legacy.category='waxing';const ids=new Set(treatments.map(item=>item.id));waxingTreatmentDefaults.forEach(item=>{if(!ids.has(item.id))treatments.push(JSON.parse(JSON.stringify(item)));});}
 
 const views = ['sectionEditorView','dashboardView','homepageView','homepageSummaryView','homepageEditorView','homepagePreviewView','treatmentsView','treatmentSummaryView','editorView','previewView'];
 let homepageOriginal = {
@@ -186,7 +191,7 @@ const treatmentDocument = () => ({
 });
 function validateTreatmentDocument(document){
   const missingText=value=>typeof value!=='string'||!value.trim();
-  const invalid=document.items.find(item=>!item?.id||!['signature','beauty','coming-soon'].includes(item.category)||missingText(item.title)||missingText(item.shortDescription)||missingText(item.price)||missingText(item.duration)||typeof item.patchTest!=='boolean'||typeof item.visible!=='boolean');
+  const invalid=document.items.find(item=>!item?.id||!['signature','beauty','waxing','coming-soon'].includes(item.category)||missingText(item.title)||missingText(item.shortDescription)||missingText(item.price)||missingText(item.duration)||typeof item.patchTest!=='boolean'||typeof item.visible!=='boolean');
   if(!invalid)return null;
   const label=typeof invalid.title==='string'&&invalid.title.trim()?invalid.title.trim():'an unnamed treatment';
   return `Complete ${label} before publishing: name, short description, price and treatment time are required.`;
@@ -218,6 +223,7 @@ async function loadPublishedTreatments(){
       const fallback=await fallbackResponse.json();
       if(Array.isArray(fallback?.items)){
         treatments=fallback.items.map(item=>({...item}));
+        ensureWaxingTreatments();
         restoreNewTreatments();
         renderTreatments();
       }
@@ -227,6 +233,7 @@ async function loadPublishedTreatments(){
     const result=await response.json();
     if(Array.isArray(result?.data?.items)){
       treatments=result.data.items.map(item=>({...item}));
+      ensureWaxingTreatments();
       restoreNewTreatments();
       updatePublishedDisplay(result.data.updatedAt);
       renderTreatments();
@@ -389,12 +396,13 @@ function treatmentIdFromTitle(title){
   while(treatments.some(item=>item.id===id)){id=`${stem}-${suffix++}`;}
   return id;
 }
+function categoryLabel(category){return ({signature:'Signature',beauty:'Beauty',waxing:'Waxing','coming-soon':'Coming Soon'})[category]||'Treatment';}
 function addTreatment(){
-  const categoryLabel=activeCategory==='signature'?'Signature':activeCategory==='beauty'?'Beauty':'Coming Soon';
+  const categoryLabelText=categoryLabel(activeCategory);
   const record={
     id:treatmentIdFromTitle(`new-${activeCategory}-treatment`),
     category:activeCategory,
-    title:`New ${categoryLabel} treatment`,
+    title:`New ${categoryLabelText} treatment`,
     shortDescription:'Add a short description for this treatment.',
     fullDescription:'',
     price:activeCategory==='coming-soon'?'Coming soon':'',
@@ -472,7 +480,7 @@ function renderTreatments(){
   }).join('');
   const addButton=document.querySelector('#addTreatmentButton');
   if(addButton){
-    const label=activeCategory==='signature'?'Signature treatment':activeCategory==='beauty'?'Beauty treatment':'Coming Soon treatment';
+    const label=`${categoryLabel(activeCategory)} treatment`;
     addButton.querySelector('strong').textContent=`Add ${label}`;
   }
 }

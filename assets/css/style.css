@@ -135,6 +135,10 @@ textarea { min-height: 132px; resize: vertical; }
 .feature-row h3, .treatment-grid h2 { text-transform: uppercase; letter-spacing: .16em; font-size: .88rem; }
 .feature-row p, .treatment-grid p, .policy-card p { color: var(--muted); line-height: 1.65; }
 .treatment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.treatment-category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 22px; padding: 6px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,253,249,.62); }
+.treatment-category-tabs button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 13px; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; }
+.treatment-category-tabs button[aria-selected="true"] { background: #fffaf1; box-shadow: 0 2px 9px rgba(75,62,52,.11); color: var(--gold-dark); }
+.treatment-category-tabs button:focus-visible { outline: 3px solid rgba(185,133,85,.45); outline-offset: 2px; }
 .treatment-grid article { display: flex; flex-direction: column; padding: 28px; min-height: 230px; }
 .treatment-grid .treatment-icon { color: var(--gold-dark); font-size: 2.2rem; }
 .treatment-grid strong { color: var(--gold-dark); }
@@ -150,6 +154,7 @@ textarea { min-height: 132px; resize: vertical; }
 .policy-card { text-align: left; max-width: 860px; margin: 0 auto; }
 .policy-card h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; color: var(--gold-dark); }
 @media (max-width: 950px) { .feature-row, .treatment-grid, .contact-grid { grid-template-columns: 1fr; } .contact-form { grid-column: auto; } }
+@media (max-width: 700px) { .treatment-category-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .treatment-category-tabs button { padding: 0 10px; } }
 
 /* Homepage rebuild using final transparent PNG layers */
 body {

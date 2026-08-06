@@ -30,7 +30,7 @@ function validateDocument(value) {
     if (!isText(item.id, 80, true)) return 'Each treatment requires an internal ID.';
     if (ids.has(item.id)) return 'Treatment IDs must be unique.';
     ids.add(item.id);
-    if (!['signature', 'beauty', 'coming-soon'].includes(item.category)) return 'One or more treatment categories are invalid.';
+    if (!['signature', 'beauty', 'waxing', 'coming-soon'].includes(item.category)) return 'One or more treatment categories are invalid.';
     if (!isText(item.title, 80, true)) return 'Each treatment requires a title.';
     if (!isText(item.shortDescription, 500, true)) return 'Each treatment requires a short description.';
     if (!isText(item.fullDescription, 4000)) return 'One or more full descriptions are too long.';

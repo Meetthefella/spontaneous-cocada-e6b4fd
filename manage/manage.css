@@ -443,7 +443,7 @@
 .workspace-header p { margin:0; }
 .compact-header { align-items:center; }
 .back-button { min-height:46px; padding:10px 2px; border:0; background:none; color:inherit; font:inherit; font-weight:600; cursor:pointer; }
-.treatment-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px; padding:6px; background:rgba(255,255,255,.35); border:1px solid rgba(91,68,52,.16); border-radius:18px; }
+.treatment-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; padding:6px; background:rgba(255,255,255,.35); border:1px solid rgba(91,68,52,.16); border-radius:18px; }
 .treatment-tabs button { min-height:50px; padding:8px 10px; border:0; border-radius:13px; background:transparent; color:inherit; font:inherit; font-weight:600; cursor:pointer; }
 .treatment-tabs button[aria-selected="true"] { background:rgba(255,255,255,.72); box-shadow:0 2px 9px rgba(75,62,52,.09); }
 .treatment-list { display:grid; gap:10px; }
@@ -527,7 +527,7 @@
 @media (max-width:680px){
   .workspace-header { align-items:flex-start; flex-direction:column; }
   .compact-header { align-items:center; flex-direction:row; }
-  .treatment-tabs { position:sticky; top:0; z-index:2; }
+  .treatment-tabs { grid-template-columns:repeat(2,1fr); position:sticky; top:0; z-index:2; }
   .treatment-tabs button { font-size:.82rem; }
   .summary-hero,.summary-details,.step-form { padding:21px 18px; }
   .summary-facts { grid-template-columns:1fr; }

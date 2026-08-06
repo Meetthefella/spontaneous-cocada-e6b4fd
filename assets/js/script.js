@@ -9,6 +9,9 @@ const contentState = {
   booking: {},
   treatments: []
 };
+const treatmentCategories=[['signature','Signature'],['beauty','Beauty'],['waxing','Waxing'],['coming-soon','Coming Soon']];
+const waxingTreatmentFallbacks=[['waxing-lip-chin','Lip / Chin','£10'],['waxing-eyebrows','Eyebrows','£10'],['waxing-chest','Chest','£18'],['waxing-back','Back','£18'],['waxing-arms','Arms','£15'],['waxing-half-leg','Half Leg','£10–£15'],['waxing-full-leg','Full Leg','£15–£25'],['waxing-toes','Toes','£6'],['waxing-knuckles','Knuckles','£6'],['hot-waxing-ears','Hot Waxing — Ears','£5'],['hot-waxing-nose','Hot Waxing — Nose','£6']].map(([id,title,price])=>({id,category:'waxing',title,shortDescription:`Professional ${title.toLowerCase()} waxing for a smooth, polished finish.`,price,duration:'To be confirmed',visible:true}));
+let activePublicTreatmentCategory='signature';
 
 function setText(selector, value) {
   const element = document.querySelector(selector);
@@ -77,10 +80,19 @@ function renderTreatments(data) {
   setText('#treatmentsEyebrow', data.eyebrow);
   setText('#treatmentsHeading', data.heading);
   setText('#treatmentsIntro', data.intro);
-  contentState.treatments = (data.items || []).filter((item) => item.visible !== false && item.active !== false);
+  const existingItems=(data.items || []).filter((item) => item.visible !== false && item.active !== false).map(item=>item.id==='waxing'&&item.category==='beauty'?{...item,category:'waxing'}:item);
+  const existingIds=new Set(existingItems.map(item=>item.id));
+  contentState.treatments=[...existingItems,...waxingTreatmentFallbacks.filter(item=>!existingIds.has(item.id))];
+  const categories=treatmentCategories.filter(([category])=>contentState.treatments.some(item=>(item.category||'signature')===category));
+  if(!categories.some(([category])=>category===activePublicTreatmentCategory))activePublicTreatmentCategory=categories[0]?.[0]||'signature';
+  const categoryTabs=document.querySelector('#treatmentCategoryTabs');
+  if(categoryTabs){
+    categoryTabs.innerHTML=categories.map(([category,label])=>`<button type="button" role="tab" aria-selected="${String(category===activePublicTreatmentCategory)}" data-treatment-category="${category}">${label}</button>`).join('');
+    categoryTabs.querySelectorAll('[data-treatment-category]').forEach(button=>button.addEventListener('click',()=>{activePublicTreatmentCategory=button.dataset.treatmentCategory;renderTreatments(data);}));
+  }
   const grid = document.querySelector('#treatmentGrid');
   if (grid) {
-    grid.innerHTML = contentState.treatments.map((item) => {
+    grid.innerHTML = contentState.treatments.filter(item=>(item.category||'signature')===activePublicTreatmentCategory).map((item) => {
     const title = item.title || item.name || '';
     const description = item.shortDescription || item.description || '';
     const icon = item.icon || '✦';
