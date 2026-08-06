@@ -24,11 +24,8 @@
   "clientTypeQuestion": "Are you a new or returning Effortless Beauty client?",
   "newClientLabel": "I am a new client",
   "returningClientLabel": "I am a returning client",
-  "newClientMessage": "All new clients must book and complete a free Patch Test at least 48 hours before Microblading.",
-  "returningClientMessage": "",
   "ageConfirmation": "I confirm that I am 18 years of age or older.",
   "patchConfirmation": "I understand that new clients must complete a Patch Test at least 48 hours before Microblading.",
-  "newClientButtonText": "Continue to booking",
   "returningClientButtonText": "Continue to Microblading booking",
   "complianceNote": "Microblading appointments cannot proceed for anyone under 18 or for a new client whose required patch test has not been completed at least 48 hours beforehand. Photo ID may be requested."
 }

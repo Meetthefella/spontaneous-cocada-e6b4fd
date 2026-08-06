@@ -209,7 +209,6 @@ function renderBooking(data) {
   }
 
   const bookingButton = document.querySelector('#squareBookingButton');
-  const routeMessage = document.querySelector('#bookingRouteMessage');
   const ageConfirmation = document.querySelector('#bookingAgeConfirmation');
   const patchConfirmation = document.querySelector('#bookingPatchConfirmation');
   const clientTypeInputs = [...document.querySelectorAll('input[name="bookingClientType"]')];
@@ -218,20 +217,9 @@ function renderBooking(data) {
     const selectedType = clientTypeInputs.find((input) => input.checked)?.value || '';
     const confirmed = Boolean(selectedType && ageConfirmation?.checked && patchConfirmation?.checked);
 
-    if (routeMessage) {
-      const routeMessageText = selectedType === 'new'
-        ? (data.newClientMessage || '')
-        : selectedType === 'returning'
-          ? ''
-          : 'Choose the option that applies to you.';
-      routeMessage.textContent = routeMessageText;
-      routeMessage.hidden = !routeMessageText;
-      routeMessage.dataset.route = selectedType;
-    }
-
     if (!bookingButton) return;
     bookingButton.textContent = selectedType === 'new'
-      ? (data.newClientButtonText || 'Continue to booking')
+      ? 'Continue to booking'
       : selectedType === 'returning'
         ? (data.returningClientButtonText || 'Continue to Microblading booking')
         : (data.buttonText || 'Choose an option to continue');
@@ -340,7 +328,7 @@ function renderGallery(data) {
   setText('#galleryEyebrow', data.eyebrow); setText('#galleryHeading', data.heading); setText('#galleryIntro', data.intro);
   const root = document.querySelector('#galleryGrid'); if (!root) return;
   const items=(data.items||[]).filter(item=>item.visible!==false);
-  root.innerHTML = items.length ? items.map(item=>`<article class="card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
+  root.innerHTML = items.length ? items.map(item=>`<article class="card gallery-card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" loading="lazy" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card gallery-card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
 }
 function renderMerchandise(data) {
   setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);

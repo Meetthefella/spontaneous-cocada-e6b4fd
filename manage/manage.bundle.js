@@ -2148,6 +2148,7 @@ document.querySelector("#retryButton").addEventListener("click", () => {
   showLogin();
 });
 var SECTION_API = "/.netlify/functions/site-section";
+var GALLERY_IMAGE_API = "/.netlify/functions/gallery-image";
 var activeSiteSection = null;
 var siteSectionOriginal = null;
 var siteSectionWorking = null;
@@ -2160,11 +2161,11 @@ var sectionDefinitions = {
     { path: "intro", label: "Introduction", type: "textarea", required: true },
     { path: "stages", label: "Healing stages", type: "stages", help: "One line per stage: Day | Description" }
   ] },
-  gallery: { title: "Gallery", description: "Manage approved gallery entries. Image paths can be connected now; direct uploads remain a later enhancement.", publicTab: "gallery", fields: [
+  gallery: { title: "Gallery", description: "Add approved photos from your phone or computer, then arrange how they appear on the website.", publicTab: "gallery", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
     { path: "heading", label: "Main heading", required: true },
     { path: "intro", label: "Introduction", type: "textarea", required: true },
-    { path: "items", label: "Gallery entries", type: "gallery", help: "One line per image: Title | Caption | Image path | Alt text | Show yes/no" }
+    { path: "items", label: "Gallery entries", type: "gallery" }
   ] },
   merchandise: { title: "Merchandise", description: "Update merchandise details, choose images and set the display order.", publicTab: "merchandise", fields: [
     { path: "eyebrow", label: "Small heading", required: true },
@@ -2180,10 +2181,8 @@ var sectionDefinitions = {
     { path: "bookingUrl", label: "Square booking link", required: true },
     { path: "eligibilityHeading", label: "Eligibility heading" },
     { path: "clientTypeQuestion", label: "Client question", type: "textarea" },
-    { path: "newClientMessage", label: "New-client message", type: "textarea" },
     { path: "ageConfirmation", label: "Age confirmation", type: "textarea" },
     { path: "patchConfirmation", label: "Patch-test confirmation", type: "textarea" },
-    { path: "newClientButtonText", label: "New-client button" },
     { path: "returningClientButtonText", label: "Returning-client button" },
     { path: "complianceNote", label: "Compliance note", type: "textarea" },
     { path: "securityNote", label: "Security note", type: "textarea" }
@@ -2298,11 +2297,24 @@ function merchandiseEditorMarkup() {
   const items = Array.isArray(siteSectionWorking.categories) ? siteSectionWorking.categories : [];
   return `<div class="merchandise-item-editor-list">${items.map(merchandiseItemMarkup).join("")}</div><button id="addMerchandiseItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add merchandise item</strong></button>`;
 }
+function galleryItemMarkup(item, index) {
+  const image = item.image || "";
+  const preview = image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(item.alt || item.title || "Gallery photo")}" />` : '<span aria-hidden="true">\u2726</span><small>Add a photo</small>';
+  return `<fieldset class="gallery-item-editor" data-gallery-index="${index}"><legend>Photo ${index + 1}</legend><div class="gallery-item-preview">${preview}</div><label><span>Photo</span><input data-gallery-key="image" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPEG, PNG or WebP, up to 5 MB. Your photo is uploaded securely.</small></label><label><span>Title</span><input data-gallery-key="title" type="text" value="${escapeHtml(item.title || "")}" placeholder="Recent work" /></label><label><span>Caption</span><textarea data-gallery-key="caption" rows="3">${escapeHtml(item.caption || "")}</textarea></label><label><span>Image description</span><input data-gallery-key="alt" type="text" value="${escapeHtml(item.alt || "")}" placeholder="Describe the photo for screen readers" /></label><label class="choice-row"><input data-gallery-key="visible" type="checkbox" ${item.visible !== false ? "checked" : ""} /><span>Show this photo on the website</span></label><div class="gallery-item-actions"><button type="button" data-gallery-action="up" ${index === 0 ? "disabled" : ""}>Move up</button><button type="button" data-gallery-action="down" ${index === itemsLength(siteSectionWorking.items) - 1 ? "disabled" : ""}>Move down</button><button type="button" data-gallery-action="remove">Remove</button></div></fieldset>`;
+}
+function itemsLength(items) {
+  return Array.isArray(items) ? items.length : 0;
+}
+function galleryEditorMarkup() {
+  const items = Array.isArray(siteSectionWorking.items) ? siteSectionWorking.items : [];
+  return `<div class="gallery-item-editor-list">${items.map(galleryItemMarkup).join("")}</div><button id="addGalleryItemButton" class="add-section-item-button" type="button"><span aria-hidden="true">+</span><strong>Add photo</strong></button>`;
+}
 function renderSiteSectionEditor() {
   const def = sectionDefinitions[activeSiteSection];
   document.querySelector("#sectionEditorTitle").textContent = def.title;
   document.querySelector("#sectionEditorDescription").textContent = def.description;
-  const fields = activeSiteSection === "merchandise" ? def.fields.filter((field) => field.path !== "categories").map(sectionFieldMarkup).join("") + merchandiseEditorMarkup() : def.fields.map(sectionFieldMarkup).join("");
+  const specialPath = activeSiteSection === "merchandise" ? "categories" : activeSiteSection === "gallery" ? "items" : "";
+  const fields = def.fields.filter((field) => field.path !== specialPath).map(sectionFieldMarkup).join("") + (activeSiteSection === "merchandise" ? merchandiseEditorMarkup() : activeSiteSection === "gallery" ? galleryEditorMarkup() : "");
   document.querySelector("#sectionEditorFields").innerHTML = fields;
   setSectionStatus("\u2713 Autosave on");
 }
@@ -2346,13 +2358,22 @@ function updateMerchandiseFromForm() {
     return { ...current, title: value("title"), description: value("description"), price: value("price"), image, alt: value("alt"), visible: Boolean(editor.querySelector('[data-merchandise-key="visible"]')?.checked), order };
   });
 }
+function updateGalleryFromForm() {
+  const items = Array.isArray(siteSectionWorking.items) ? siteSectionWorking.items : [];
+  siteSectionWorking.items = [...document.querySelectorAll("[data-gallery-index]")].map((editor, order) => {
+    const current = items[Number(editor.dataset.galleryIndex)] || {};
+    const value = (key) => editor.querySelector(`[data-gallery-key="${key}"]`)?.value?.trim() || "";
+    return { ...current, title: value("title"), caption: value("caption"), alt: value("alt"), visible: Boolean(editor.querySelector('[data-gallery-key="visible"]')?.checked), order };
+  });
+}
 function updateSiteSectionFromForm() {
   const def = sectionDefinitions[activeSiteSection];
-  def.fields.filter((field) => activeSiteSection !== "merchandise" || field.path !== "categories").forEach((field) => {
+  def.fields.filter((field) => !(activeSiteSection === "merchandise" && field.path === "categories" || activeSiteSection === "gallery" && field.path === "items")).forEach((field) => {
     const input = document.querySelector(`[data-section-path="${field.path}"]`);
     setPath(siteSectionWorking, field.path, parseSectionField(field, input.value, getPath(siteSectionWorking, field.path)));
   });
   if (activeSiteSection === "merchandise") updateMerchandiseFromForm();
+  if (activeSiteSection === "gallery") updateGalleryFromForm();
 }
 function validateSiteSection() {
   const invalid = [...document.querySelectorAll("#sectionEditorForm [required]")].find((field) => !field.value.trim());
@@ -2420,6 +2441,67 @@ function removeMerchandiseItem(editor) {
   renderSiteSectionEditor();
   scheduleSiteSectionSave();
 }
+function addGalleryItem() {
+  if (activeSiteSection !== "gallery") return;
+  updateSiteSectionFromForm();
+  const items = Array.isArray(siteSectionWorking.items) ? siteSectionWorking.items : [];
+  items.push({ title: "", caption: "", image: "", alt: "", visible: false, order: items.length });
+  siteSectionWorking.items = items;
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+  document.querySelector(`[data-gallery-index="${items.length - 1}"] [data-gallery-key="image"]`)?.focus();
+}
+function changeGalleryOrder(editor, delta) {
+  updateSiteSectionFromForm();
+  const index = Number(editor.dataset.galleryIndex);
+  const next = index + delta;
+  const items = siteSectionWorking.items;
+  if (next < 0 || next >= items.length) return;
+  [items[index], items[next]] = [items[next], items[index]];
+  items.forEach((item, order) => item.order = order);
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+}
+function removeGalleryItem(editor) {
+  updateSiteSectionFromForm();
+  const index = Number(editor.dataset.galleryIndex);
+  if (!confirm("Remove this photo from the gallery?")) return;
+  siteSectionWorking.items.splice(index, 1);
+  siteSectionWorking.items.forEach((item, order) => item.order = order);
+  renderSiteSectionEditor();
+  scheduleSiteSectionSave();
+}
+async function uploadGalleryImage(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    setSectionStatus("Choose a JPEG, PNG or WebP photo smaller than 5 MB.", "error");
+    input.value = "";
+    return;
+  }
+  updateSiteSectionFromForm();
+  const editor = input.closest("[data-gallery-index]");
+  const index = Number(editor?.dataset.galleryIndex);
+  input.disabled = true;
+  setSectionStatus("Uploading photo\u2026");
+  try {
+    const body = new FormData();
+    body.append("image", file);
+    const response = await fetch(GALLERY_IMAGE_API, { method: "POST", credentials: "same-origin", body });
+    const result = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      lockManager();
+      return;
+    }
+    if (!response.ok) throw new Error(result.error || "Photo upload failed.");
+    siteSectionWorking.items[index] = { ...siteSectionWorking.items[index], image: result.url };
+    renderSiteSectionEditor();
+    scheduleSiteSectionSave();
+  } catch (error) {
+    setSectionStatus(error.message || "Photo upload failed.", "error");
+    input.disabled = false;
+  }
+}
 function previewSiteSection() {
   if (!validateSiteSection()) return;
   updateSiteSectionFromForm();
@@ -2466,6 +2548,10 @@ async function publishSiteSection() {
 document.querySelectorAll("[data-open-section]").forEach((button) => button.addEventListener("click", () => openSiteSection(button.dataset.openSection)));
 document.querySelector("#sectionEditorForm").addEventListener("input", scheduleSiteSectionSave);
 document.querySelector("#sectionEditorForm").addEventListener("change", (event) => {
+  if (event.target.matches('[data-gallery-key="image"]')) {
+    uploadGalleryImage(event.target);
+    return;
+  }
   if (event.target.matches('[data-merchandise-key="image-choice"]')) {
     const editor = event.target.closest("[data-merchandise-index]");
     const customField = editor?.querySelector(".merchandise-custom-image-field");
@@ -2485,12 +2571,24 @@ document.querySelector("#sectionEditorForm").addEventListener("click", (event) =
     addMerchandiseItem();
     return;
   }
-  const action = event.target.closest("[data-merchandise-action]");
-  if (!action) return;
-  const editor = action.closest("[data-merchandise-index]");
-  if (action.dataset.merchandiseAction === "up") changeMerchandiseOrder(editor, -1);
-  if (action.dataset.merchandiseAction === "down") changeMerchandiseOrder(editor, 1);
-  if (action.dataset.merchandiseAction === "remove") removeMerchandiseItem(editor);
+  if (event.target.closest("#addGalleryItemButton")) {
+    addGalleryItem();
+    return;
+  }
+  const merchandiseAction = event.target.closest("[data-merchandise-action]");
+  if (merchandiseAction) {
+    const editor2 = merchandiseAction.closest("[data-merchandise-index]");
+    if (merchandiseAction.dataset.merchandiseAction === "up") changeMerchandiseOrder(editor2, -1);
+    if (merchandiseAction.dataset.merchandiseAction === "down") changeMerchandiseOrder(editor2, 1);
+    if (merchandiseAction.dataset.merchandiseAction === "remove") removeMerchandiseItem(editor2);
+    return;
+  }
+  const galleryAction = event.target.closest("[data-gallery-action]");
+  if (!galleryAction) return;
+  const editor = galleryAction.closest("[data-gallery-index]");
+  if (galleryAction.dataset.galleryAction === "up") changeGalleryOrder(editor, -1);
+  if (galleryAction.dataset.galleryAction === "down") changeGalleryOrder(editor, 1);
+  if (galleryAction.dataset.galleryAction === "remove") removeGalleryItem(editor);
 });
 document.querySelector("#sectionBackButton").addEventListener("click", () => {
   if (siteSectionSaveTimer) saveSiteSectionDraft();
