@@ -1112,6 +1112,7 @@ var inactivityLocked = false;
 var lastActivityAt = Date.now();
 var resumeAfterLogin = false;
 var lockContext = null;
+var sessionLockPromise = null;
 var INACTIVITY_TIMEOUT_MS = 15 * 60 * 1e3;
 var TREATMENTS_API = "/.netlify/functions/treatments";
 var HOMEPAGE_DRAFT_API = "/.netlify/functions/homepage-draft";
@@ -1465,6 +1466,7 @@ function lockManager() {
   setAppInert(true);
   document.querySelector("#inactivityLock").hidden = false;
   clearTimeout(inactivityTimer);
+  sessionLockPromise = logout().catch((error) => console.warn("Could not clear the expired manager session.", error));
 }
 function restoreLockedContext() {
   if (!lockContext) {
@@ -2047,11 +2049,18 @@ window.addEventListener("popstate", () => {
   }
 });
 setInterval(refreshDraftTimes, 3e4);
-document.querySelector("#continueSecurelyButton").addEventListener("click", () => {
+document.querySelector("#continueSecurelyButton").addEventListener("click", async () => {
   resumeAfterLogin = true;
   const email = signedInAs.textContent.trim();
   if (email && email.includes("@")) document.querySelector("#loginEmail").value = email;
   document.querySelector("#loginPassword").value = "";
+  const button = document.querySelector("#continueSecurelyButton");
+  button.disabled = true;
+  button.textContent = "Preparing secure sign in\u2026";
+  await sessionLockPromise;
+  sessionLockPromise = null;
+  button.disabled = false;
+  button.textContent = "Continue securely";
   showPanel("login");
   setTimeout(() => document.querySelector("#loginPassword").focus(), 0);
 });

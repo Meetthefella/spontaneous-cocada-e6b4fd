@@ -33,6 +33,7 @@ let inactivityLocked = false;
 let lastActivityAt = Date.now();
 let resumeAfterLogin = false;
 let lockContext = null;
+let sessionLockPromise = null;
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const TREATMENTS_API = '/.netlify/functions/treatments';
 const HOMEPAGE_DRAFT_API = '/.netlify/functions/homepage-draft';
@@ -328,6 +329,9 @@ function lockManager(){
   setAppInert(true);
   document.querySelector('#inactivityLock').hidden=false;
   clearTimeout(inactivityTimer);
+  // A visual lock alone leaves Netlify Identity's previous session active. Clear it
+  // before presenting the sign-in form so one successful sign-in is sufficient.
+  sessionLockPromise=logout().catch(error=>console.warn('Could not clear the expired manager session.',error));
 }
 function restoreLockedContext(){
   if(!lockContext){showAppView('dashboardView');return;}
@@ -668,11 +672,18 @@ window.addEventListener('popstate',()=>{if(!document.querySelector('#editorView'
 setInterval(refreshDraftTimes,30000);
 
 // Calm inactivity lock. Work is saved before the manager is hidden.
-document.querySelector('#continueSecurelyButton').addEventListener('click',()=>{
+document.querySelector('#continueSecurelyButton').addEventListener('click',async()=>{
   resumeAfterLogin=true;
   const email=signedInAs.textContent.trim();
   if(email&&email.includes('@'))document.querySelector('#loginEmail').value=email;
   document.querySelector('#loginPassword').value='';
+  const button=document.querySelector('#continueSecurelyButton');
+  button.disabled=true;
+  button.textContent='Preparing secure sign in…';
+  await sessionLockPromise;
+  sessionLockPromise=null;
+  button.disabled=false;
+  button.textContent='Continue securely';
   showPanel('login');
   setTimeout(()=>document.querySelector('#loginPassword').focus(),0);
 });

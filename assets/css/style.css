@@ -135,10 +135,10 @@ textarea { min-height: 132px; resize: vertical; }
 .feature-row h3, .treatment-grid h2 { text-transform: uppercase; letter-spacing: .16em; font-size: .88rem; }
 .feature-row p, .treatment-grid p, .policy-card p { color: var(--muted); line-height: 1.65; }
 .treatment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-.treatment-category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 22px; padding: 6px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,253,249,.62); }
-.treatment-category-tabs button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 13px; background: transparent; color: var(--ink); font: inherit; font-size: .82rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; }
-.treatment-category-tabs button[aria-selected="true"] { background: #fffaf1; box-shadow: 0 2px 9px rgba(75,62,52,.11); color: var(--gold-dark); }
-.treatment-category-tabs button:focus-visible { outline: 3px solid rgba(185,133,85,.45); outline-offset: 2px; }
+.treatment-category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 26px; padding: 7px; border: 1px solid var(--gold-dark); border-radius: 18px; background: var(--gold-dark); box-shadow: 0 9px 24px rgba(75,62,52,.16); }
+.treatment-category-tabs button { min-height: 52px; padding: 0 21px; border: 1px solid rgba(255,250,241,.62); border-radius: 13px; background: transparent; color: #fffaf1; font: inherit; font-size: clamp(1rem, 2vw, 1.1rem); font-weight: 800; letter-spacing: .055em; cursor: pointer; }
+.treatment-category-tabs button[aria-selected="true"] { border-color: #fffaf1; background: #fffaf1; box-shadow: 0 2px 9px rgba(42,29,20,.18); color: var(--gold-dark); }
+.treatment-category-tabs button:focus-visible { outline: 3px solid #fffaf1; outline-offset: 2px; }
 .treatment-grid article { display: flex; flex-direction: column; padding: 28px; min-height: 230px; }
 .treatment-grid .treatment-icon { color: var(--gold-dark); font-size: 2.2rem; }
 .treatment-grid strong { color: var(--gold-dark); }
@@ -154,7 +154,7 @@ textarea { min-height: 132px; resize: vertical; }
 .policy-card { text-align: left; max-width: 860px; margin: 0 auto; }
 .policy-card h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; color: var(--gold-dark); }
 @media (max-width: 950px) { .feature-row, .treatment-grid, .contact-grid { grid-template-columns: 1fr; } .contact-form { grid-column: auto; } }
-@media (max-width: 700px) { .treatment-category-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .treatment-category-tabs button { padding: 0 10px; } }
+@media (max-width: 700px) { .treatment-category-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .treatment-category-tabs button { min-height: 56px; padding: 0 10px; } }
 
 /* Homepage rebuild using final transparent PNG layers */
 body {
@@ -849,6 +849,7 @@ body {
 
 /* Merchandise thumbnails and full-size image viewer */
 .merchandise-card { display: flex; flex-direction: column; min-height: 0; }
+.merchandise-donation-note { max-width: 720px; margin: 0 auto 28px; padding: 14px 18px; border: 1px solid rgba(160,107,63,.24); border-radius: 14px; background: rgba(255,250,241,.62); color: var(--gold-dark); text-align: center; font-weight: 600; line-height: 1.5; }
 .merchandise-image-button,
 .merchandise-image-placeholder { display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; margin: -6px 0 18px; overflow: hidden; border: 0; border-radius: 18px; background: #e8ddd0; }
 .merchandise-image-button { padding: 0; cursor: zoom-in; }
