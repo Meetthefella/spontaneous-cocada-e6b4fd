@@ -1869,7 +1869,7 @@ document.querySelector("#openHomepageButton").addEventListener("click", () => {
 });
 document.querySelector("#homepageBackButton").addEventListener("click", () => showAppView("dashboardView"));
 document.querySelector("#homepageWebsitePreviewButton").addEventListener("click", previewHomepageWebsite);
-document.querySelector("#homepagePublishButton").addEventListener("click", publishHomepage);
+document.querySelector("#homepagePublishButton")?.addEventListener("click", publishHomepage);
 document.querySelector("#homepageSummaryBackButton").addEventListener("click", () => {
   renderHomepageSections();
   showAppView("homepageView");
@@ -2181,7 +2181,6 @@ var sectionDefinitions = {
     { path: "eligibilityHeading", label: "Eligibility heading" },
     { path: "clientTypeQuestion", label: "Client question", type: "textarea" },
     { path: "newClientMessage", label: "New-client message", type: "textarea" },
-    { path: "returningClientMessage", label: "Returning-client message", type: "textarea" },
     { path: "ageConfirmation", label: "Age confirmation", type: "textarea" },
     { path: "patchConfirmation", label: "Patch-test confirmation", type: "textarea" },
     { path: "newClientButtonText", label: "New-client button" },

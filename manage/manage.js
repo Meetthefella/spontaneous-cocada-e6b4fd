@@ -617,7 +617,7 @@ function renderHomepagePreview(){const section=homepageSections.find(item=>item.
  document.querySelector('#openHomepageButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');history.pushState({view:'homepage'},'','#homepage');});
 document.querySelector('#homepageBackButton').addEventListener('click',()=>showAppView('dashboardView'));
 document.querySelector('#homepageWebsitePreviewButton').addEventListener('click',previewHomepageWebsite);
-document.querySelector('#homepagePublishButton').addEventListener('click',publishHomepage);
+document.querySelector('#homepagePublishButton')?.addEventListener('click',publishHomepage);
 document.querySelector('#homepageSummaryBackButton').addEventListener('click',()=>{renderHomepageSections();showAppView('homepageView');});
 document.querySelector('#homepageSectionList').addEventListener('click',event=>{const row=event.target.closest('[data-homepage-section]');if(row)openHomepageSummary(row.dataset.homepageSection);});
 document.querySelector('#editHomepageSectionButton').addEventListener('click',startHomepageEditor);
@@ -702,7 +702,7 @@ const sectionDefinitions={
     {path:'eyebrow',label:'Small heading',required:true},{path:'heading',label:'Main heading',required:true},{path:'intro',label:'Introduction',type:'textarea',required:true},
     {path:'studioNote',label:'Studio note',type:'textarea'},{path:'bookingUrl',label:'Square booking link',required:true},
     {path:'eligibilityHeading',label:'Eligibility heading'},{path:'clientTypeQuestion',label:'Client question',type:'textarea'},
-    {path:'newClientMessage',label:'New-client message',type:'textarea'},{path:'returningClientMessage',label:'Returning-client message',type:'textarea'},
+    {path:'newClientMessage',label:'New-client message',type:'textarea'},
     {path:'ageConfirmation',label:'Age confirmation',type:'textarea'},{path:'patchConfirmation',label:'Patch-test confirmation',type:'textarea'},
     {path:'newClientButtonText',label:'New-client button'},{path:'returningClientButtonText',label:'Returning-client button'},
     {path:'complianceNote',label:'Compliance note',type:'textarea'},{path:'securityNote',label:'Security note',type:'textarea'}]},

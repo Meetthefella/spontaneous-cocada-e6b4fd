@@ -219,17 +219,19 @@ function renderBooking(data) {
     const confirmed = Boolean(selectedType && ageConfirmation?.checked && patchConfirmation?.checked);
 
     if (routeMessage) {
-      routeMessage.textContent = selectedType === 'new'
+      const routeMessageText = selectedType === 'new'
         ? (data.newClientMessage || '')
         : selectedType === 'returning'
-          ? (data.returningClientMessage || '')
+          ? ''
           : 'Choose the option that applies to you.';
+      routeMessage.textContent = routeMessageText;
+      routeMessage.hidden = !routeMessageText;
       routeMessage.dataset.route = selectedType;
     }
 
     if (!bookingButton) return;
     bookingButton.textContent = selectedType === 'new'
-      ? (data.newClientButtonText || 'Book your free Patch Test')
+      ? (data.newClientButtonText || 'Continue to booking')
       : selectedType === 'returning'
         ? (data.returningClientButtonText || 'Continue to Microblading booking')
         : (data.buttonText || 'Choose an option to continue');
