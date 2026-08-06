@@ -1289,6 +1289,7 @@ var homepageSections = [
 ];
 var DRAFT_VERSION = 1;
 var NEW_TREATMENTS_KEY = "eb-new-treatments-v1";
+var TREATMENT_ORDER_DRAFT_KEY = "eb-treatment-order-draft-v1";
 var newTreatmentIds = /* @__PURE__ */ new Set();
 var draftKey = (id) => `eb-treatment-draft:${id}`;
 var clone = (value) => JSON.parse(JSON.stringify(value));
@@ -1328,6 +1329,7 @@ function updatePublishedDisplay(value) {
 }
 async function loadPublishedTreatments() {
   restoreNewTreatments();
+  restoreTreatmentOrder();
   try {
     const response = await fetch(TREATMENTS_API, { cache: "no-store" });
     if (response.status === 404) {
@@ -1338,6 +1340,7 @@ async function loadPublishedTreatments() {
         treatments = fallback.items.map((item) => ({ ...item }));
         ensureWaxingTreatments();
         restoreNewTreatments();
+        restoreTreatmentOrder();
         renderTreatments();
       }
       return;
@@ -1348,6 +1351,7 @@ async function loadPublishedTreatments() {
       treatments = result.data.items.map((item) => ({ ...item }));
       ensureWaxingTreatments();
       restoreNewTreatments();
+      restoreTreatmentOrder();
       updatePublishedDisplay(result.data.updatedAt);
       renderTreatments();
     }
@@ -1398,6 +1402,7 @@ async function publishTreatments() {
     treatments.forEach((item) => localStorage.removeItem(draftKey(item.id)));
     newTreatmentIds.clear();
     localStorage.removeItem(NEW_TREATMENTS_KEY);
+    localStorage.removeItem(TREATMENT_ORDER_DRAFT_KEY);
     editorDirty = false;
     updatePublishedDisplay(result.updatedAt);
     setDraftStatus(`\u2713 Published \xB7 ${relativeTime(result.updatedAt)}`);
@@ -1562,6 +1567,20 @@ function restoreNewTreatments() {
   } catch {
   }
 }
+function persistTreatmentOrder() {
+  localStorage.setItem(TREATMENT_ORDER_DRAFT_KEY, JSON.stringify(treatments.map((item) => item.id)));
+}
+function restoreTreatmentOrder() {
+  try {
+    const order = JSON.parse(localStorage.getItem(TREATMENT_ORDER_DRAFT_KEY) || "[]");
+    if (!Array.isArray(order)) return;
+    const byId = new Map(treatments.map((item) => [item.id, item]));
+    const ordered = order.map((id) => byId.get(id)).filter(Boolean);
+    const known = new Set(ordered.map((item) => item.id));
+    treatments = [...ordered, ...treatments.filter((item) => !known.has(item.id))];
+  } catch {
+  }
+}
 function treatmentIdFromTitle(title) {
   const stem = String(title || "new-treatment").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-treatment";
   let id = stem;
@@ -1598,6 +1617,21 @@ function addTreatment() {
   editorDirty = true;
   populateEditor(clone(record), 0);
   setDraftStatus("\u2713 New treatment started \xB7 hidden until you publish");
+}
+function moveTreatment(id, direction) {
+  const currentIndex = treatments.findIndex((item) => item.id === id);
+  if (currentIndex < 0) return;
+  const categoryIndexes = treatments.reduce((indexes, item, index) => {
+    if (item.category === treatments[currentIndex].category) indexes.push(index);
+    return indexes;
+  }, []);
+  const position = categoryIndexes.indexOf(currentIndex);
+  const nextPosition = position + direction;
+  if (nextPosition < 0 || nextPosition >= categoryIndexes.length) return;
+  const nextIndex = categoryIndexes[nextPosition];
+  [treatments[currentIndex], treatments[nextIndex]] = [treatments[nextIndex], treatments[currentIndex]];
+  persistTreatmentOrder();
+  renderTreatments();
 }
 function readDraft(id) {
   try {
@@ -1659,12 +1693,25 @@ function flushDraft() {
 function renderTreatments() {
   document.querySelectorAll('.treatment-tabs [role="tab"]').forEach((btn) => btn.setAttribute("aria-selected", String(btn.dataset.category === activeCategory)));
   const items = treatments.filter((item) => item.category === activeCategory);
-  document.querySelector("#treatmentList").innerHTML = items.map((item) => {
+  document.querySelector("#treatmentList").innerHTML = items.map((item, index) => {
     const draft = readDraft(item.id);
     const displayItem = draft?.record || item;
     const draftLabel = draft ? `<em data-draft-time="${escapeHtml(draft.savedAt)}">Unpublished \xB7 ${escapeHtml(relativeTime(draft.savedAt))}</em>` : "";
     return `<button class="treatment-row" type="button" data-treatment-id="${item.id}"><span><strong>${escapeHtml(displayItem.title)}</strong><small>${escapeHtml(displayItem.price)} \xB7 ${escapeHtml(displayItem.duration)}</small></span><span class="row-meta">${draftLabel}<b aria-hidden="true">\u203A</b></span></button>`;
   }).join("");
+  document.querySelectorAll("#treatmentList .treatment-row").forEach((row, index) => {
+    const title = row.querySelector("strong")?.textContent || "treatment";
+    const shell = document.createElement("article");
+    shell.className = "treatment-row";
+    row.classList.add("treatment-row-open");
+    row.parentNode.replaceChild(shell, row);
+    shell.appendChild(row);
+    const actions = document.createElement("div");
+    actions.className = "treatment-order-actions";
+    actions.setAttribute("aria-label", `Order ${title}`);
+    actions.innerHTML = `<button type="button" data-treatment-order="up" data-treatment-id="${escapeHtml(row.dataset.treatmentId)}" ${index === 0 ? "disabled" : ""} aria-label="Move ${escapeHtml(title)} up">\u2191</button><button type="button" data-treatment-order="down" data-treatment-id="${escapeHtml(row.dataset.treatmentId)}" ${index === items.length - 1 ? "disabled" : ""} aria-label="Move ${escapeHtml(title)} down">\u2193</button>`;
+    shell.appendChild(actions);
+  });
   const addButton = document.querySelector("#addTreatmentButton");
   if (addButton) {
     const label = `${categoryLabel(activeCategory)} treatment`;
@@ -1952,7 +1999,12 @@ document.querySelectorAll('.treatment-tabs [role="tab"]').forEach((btn) => btn.a
   renderTreatments();
 }));
 document.querySelector("#treatmentList").addEventListener("click", (event) => {
-  const row = event.target.closest("[data-treatment-id]");
+  const orderButton = event.target.closest("[data-treatment-order]");
+  if (orderButton) {
+    moveTreatment(orderButton.dataset.treatmentId, orderButton.dataset.treatmentOrder === "up" ? -1 : 1);
+    return;
+  }
+  const row = event.target.closest(".treatment-row-open[data-treatment-id]");
   if (row) openSummary(row.dataset.treatmentId);
 });
 document.querySelector("#addTreatmentButton").addEventListener("click", addTreatment);
