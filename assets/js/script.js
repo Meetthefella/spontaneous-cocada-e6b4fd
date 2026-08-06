@@ -328,7 +328,7 @@ function renderGallery(data) {
   setText('#galleryEyebrow', data.eyebrow); setText('#galleryHeading', data.heading); setText('#galleryIntro', data.intro);
   const root = document.querySelector('#galleryGrid'); if (!root) return;
   const items=(data.items||[]).filter(item=>item.visible!==false);
-  root.innerHTML = items.length ? items.map(item=>`<article class="card gallery-card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" loading="lazy" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card gallery-card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
+  root.innerHTML = items.length ? items.map(item=>`<article class="card in-view gallery-card">${item.image?`<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt||item.title||'Effortless Beauty work')}" loading="lazy" />`:''}<h2>${escapeHtml(item.title||'Recent work')}</h2><p>${escapeHtml(item.caption||'')}</p></article>`).join('') : '<article class="card in-view gallery-card"><h2>Gallery coming soon</h2><p>Approved client photographs will appear here.</p></article>';
 }
 function renderMerchandise(data) {
   setText('#merchandiseEyebrow', data.eyebrow); setText('#merchandiseHeading', data.heading); setText('#merchandiseIntro', data.intro);
