@@ -57,7 +57,7 @@ let treatments = [
     ['threading','Threading','Precise hair removal using a traditional threading technique.'],
     ['cream-tanning','Cream Tanning','An even, sun-kissed finish applied using a professional tanning cream.'],
     ['spray-tanning','Spray Tanning','A professionally applied tan for an even, natural-looking glow.']
-  ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true}))
+  ].map(([id,title,shortDescription]) => ({id,category:'coming-soon',title,shortDescription,fullDescription:shortDescription,price:'Coming soon',duration:'Coming soon',detailedPricing:'',followUpPricing:'',patchTest:false,visible:true,showBookingButton:false}))
 ];
 
 const views = ['sectionEditorView','dashboardView','homepageView','homepageSummaryView','homepageEditorView','homepagePreviewView','treatmentsView','treatmentSummaryView','editorView','previewView'];
@@ -402,7 +402,8 @@ function addTreatment(){
     detailedPricing:'',
     followUpPricing:'',
     patchTest:false,
-    visible:false
+    visible:false,
+    showBookingButton:activeCategory!=='coming-soon'
   };
   treatments.push(record);
   newTreatmentIds.add(record.id);
@@ -450,7 +451,8 @@ function setDraftStatus(text){document.querySelector('#draftStatus').textContent
 function currentRecord(){
   const base=clone(findTreatment(activeTreatmentId));
   const form=new FormData(document.querySelector('#treatmentEditorForm'));
-  return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,visible:document.querySelector('#editVisible').checked,initialPriceLinked};
+  const showBookingButton=base.category==='coming-soon'?document.querySelector('#editShowBookingButton').checked:base.showBookingButton;
+  return {...base,title:form.get('title')?.trim()||'',shortDescription:form.get('shortDescription')?.trim()||'',price:form.get('price')?.trim()||'',duration:form.get('duration')?.trim()||'',fullDescription:form.get('fullDescription')?.trim()||'',detailedPricing:form.get('detailedPricing')?.trim()||'',followUpPricing:form.get('followUpPricing')?.trim()||'',patchTest:document.querySelector('#editPatchTest').checked,visible:document.querySelector('#editVisible').checked,showBookingButton,initialPriceLinked};
 }
 function flushDraft(){
   if(!activeTreatmentId||document.querySelector('#editorView').hidden)return null;
@@ -480,7 +482,8 @@ function refreshDraftTimes(){
   if(draft&&!document.querySelector('#editorView').hidden)setDraftStatus(`✓ Saved · ${relativeTime(draft.savedAt)}`);
 }
 function summaryMarkup(record,{preview=false}={}){
-  return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div></dl>${preview?'<p class="preview-note">This is an unpublished preview. The live website has not changed.</p>':''}</div>`;
+  const bookingButtonStatus=record.category==='coming-soon'?`<div><dt>Book Now button</dt><dd>${record.showBookingButton!==false?'Shown':'Hidden'}</dd></div>`:'';
+  return `<div class="summary-hero"><div class="summary-image-placeholder" aria-hidden="true">${record.imageData?`<img src="${record.imageData}" alt="">`:'✦'}</div><p class="eyebrow">${escapeHtml(record.category.replace('-', ' '))}</p><h1>${escapeHtml(record.title)}</h1><p class="summary-intro">${escapeHtml(record.shortDescription)}</p><div class="summary-facts"><span><small>Price</small><strong>${escapeHtml(record.price||'Not set')}</strong></span><span><small>Treatment time</small><strong>${escapeHtml(record.duration||'Not set')}</strong></span></div></div><div class="summary-details"><h2>About this treatment</h2><p>${nl2br(record.fullDescription||'No full description has been added yet.')}</p>${record.detailedPricing?`<h3>Detailed pricing</h3><p>${nl2br(record.detailedPricing)}</p>`:''}${record.followUpPricing?`<h3>Follow-up pricing</h3><p>${nl2br(record.followUpPricing)}</p>`:''}<dl><div><dt>Patch test</dt><dd>${record.patchTest?'Required':'Not required'}</dd></div><div><dt>Website visibility</dt><dd>${record.visible?'Visible':'Hidden'}</dd></div>${bookingButtonStatus}</dl>${preview?'<p class="preview-note">This is an unpublished preview. The live website has not changed.</p>':''}</div>`;
 }
 function openSummary(id){activeTreatmentId=id;const draft=readDraft(id);const record=draft?.record||findTreatment(id);document.querySelector('#treatmentSummary').innerHTML=summaryMarkup(record,{preview:Boolean(draft)});showAppView('treatmentSummaryView');history.pushState({view:'summary'},'',`#treatment-${id}`);}
 function populateEditor(record,restoredStep=0){
@@ -495,6 +498,9 @@ function populateEditor(record,restoredStep=0){
   document.querySelector('#editFollowUpPricing').value=record.followUpPricing||'';
   document.querySelector('#editPatchTest').checked=Boolean(record.patchTest);
   document.querySelector('#editVisible').checked=Boolean(record.visible);
+  const bookingButtonOption=document.querySelector('#bookingButtonOption');
+  bookingButtonOption.hidden=record.category!=='coming-soon';
+  document.querySelector('#editShowBookingButton').checked=record.showBookingButton!==false;
   const img=document.querySelector('#editorImagePreview');img.hidden=true;img.removeAttribute('src');
   editorStep=Math.max(0,Math.min(4,restoredStep||0));sessionImageUrl='';renderEditorStep();showAppView('editorView');history.pushState({view:'editor'},'',`#edit-${activeTreatmentId}`);
 }
