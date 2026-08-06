@@ -135,10 +135,10 @@ textarea { min-height: 132px; resize: vertical; }
 .feature-row h3, .treatment-grid h2 { text-transform: uppercase; letter-spacing: .16em; font-size: .88rem; }
 .feature-row p, .treatment-grid p, .policy-card p { color: var(--muted); line-height: 1.65; }
 .treatment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-.treatment-category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 26px; padding: 7px; border: 1px solid transparent; border-radius: 18px; background: var(--gold-dark); box-shadow: 0 9px 24px rgba(75,62,52,.16); }
-.treatment-category-tabs button { min-height: 52px; padding: 0 21px; border: 1px solid rgba(255,250,241,.62); border-radius: 13px; background: transparent; color: #fffaf1; font: inherit; font-size: clamp(1rem, 2vw, 1.1rem); font-weight: 800; letter-spacing: .055em; cursor: pointer; }
-.treatment-category-tabs button[aria-selected="true"] { border-color: #fffaf1; background: #fffaf1; box-shadow: 0 2px 9px rgba(42,29,20,.18); color: var(--gold-dark); }
-.treatment-category-tabs button:focus-visible { outline: 3px solid #fffaf1; outline-offset: 2px; }
+.treatment-category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 26px; padding: 7px; border: 1px solid transparent; border-radius: 18px; background: transparent; box-shadow: none; }
+.treatment-category-tabs button { min-height: 52px; padding: 0 21px; border: 1px solid var(--gold); border-radius: 13px; background: var(--gold); color: white; font: inherit; font-size: clamp(1rem, 2vw, 1.1rem); font-weight: 800; letter-spacing: .055em; cursor: pointer; }
+.treatment-category-tabs button[aria-selected="true"] { border-color: var(--gold); background: var(--paper); box-shadow: 0 2px 9px rgba(75,62,52,.11); color: var(--gold-dark); }
+.treatment-category-tabs button:focus-visible { outline: 3px solid rgba(185,133,85,.45); outline-offset: 2px; }
 .treatment-grid article { display: flex; flex-direction: column; padding: 28px; min-height: 230px; }
 .treatment-grid .treatment-icon { color: var(--gold-dark); font-size: 2.2rem; }
 .treatment-grid strong { color: var(--gold-dark); }
@@ -147,8 +147,8 @@ textarea { min-height: 132px; resize: vertical; }
 .treatment-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: auto; padding-top: 18px; }
 .treatment-card-price { min-width: 0; color: var(--muted); }
 .treatment-card-price small { color: var(--muted); }
-.treatment-book-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-height: 42px; margin: 0; padding: 0 16px; border-radius: 999px; background: var(--gold-dark); color: #fffaf1; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
-.treatment-book-button:hover, .treatment-book-button:focus-visible { background: var(--ink); color: #fffaf1; outline: 3px solid rgba(185,133,85,.35); outline-offset: 3px; }
+.treatment-book-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-height: 42px; margin: 0; padding: 0 16px; border-radius: 999px; background: var(--gold); color: white; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+.treatment-book-button:hover, .treatment-book-button:focus-visible { background: var(--gold-dark); color: white; outline: 3px solid rgba(185,133,85,.35); outline-offset: 3px; }
 .contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .contact-form { grid-column: 1 / -1; }
 .policy-card { text-align: left; max-width: 860px; margin: 0 auto; }
